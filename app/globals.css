@@ -1,26 +1,149 @@
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Rock+Salt&display=swap");
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-sans: var(--font-poppins), "Poppins", sans-serif;
+  --font-display: "Instrument Serif", serif;
+  --font-handwriting: "Caveat", cursive;
+  --font-script: "Reenie Beanie", cursive;
+
+  /* Base */
+  --color-background: var(--color-background);
+  --color-foreground: var(--text-primary);
+
+  /* Exact old surfaces */
+  --color-surface: var(--color-surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-tint: var(--surface-tint);
+
+  /* Semantic */
+  --color-card: var(--surface-elevated);
+  --color-card-foreground: var(--text-primary);
+
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
+
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--text-on-primary);
+  --color-primary-hover: var(--primary-hover);
+
+  --color-secondary: var(--surface-soft);
+  --color-secondary-foreground: var(--text-primary);
+
+  --color-muted: var(--surface-soft);
+  --color-muted-foreground: var(--text-muted);
+
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-background);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
+
+  /* Your existing custom text classes */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+
+  /* Borders */
+  --color-border: var(--border-default);
+  --color-input: var(--border-default);
+  --color-ring: var(--color-accent);
+
+  /* Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+:root {
+  /* Core Colors */
+  --color-surface: #f7f1e3;
+  --color-background: #fbf6ec;
+  --color-primary: #102418;
+  --color-accent: #c45520;
+  --color-popover: var(--color-background);
+  --color-popover-foreground: var(--text-primary);
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  /* Surfaces */
+  --surface-elevated: color-mix(in oklab, var(--color-surface) 88%, black 8%);
+  --surface-hover: color-mix(in oklab, var(--color-surface) 80%, black 15%);
+  --surface-soft: color-mix(in oklab, var(--color-surface) 60%, var(--color-background));
+  --surface-tint: color-mix(in oklab, var(--color-surface) 92%, var(--color-primary) 8%);
+
+  /* Typography */
+  --text-primary: color-mix(in oklab, var(--color-background) 3%, black 97%);
+  --text-secondary: color-mix(in oklab, var(--color-background) 28%, black 72%);
+  --text-muted: color-mix(in oklab, var(--color-background) 52%, black 48%);
+  --text-on-primary: color-mix(in oklab, var(--color-primary) 10%, white 90%);
+
+  /* Borders */
+  --border-default: color-mix(in oklab, var(--color-background) 82%, black 18%);
+  --border-hover: var(--color-accent);
+  --ring: var(--color-accent);
+
+  /* Interactive States */
+  --primary-hover: color-mix(in oklab, var(--color-primary) 84%, black 16%);
+  --primary-soft: color-mix(in oklab, var(--color-primary) 16%, transparent);
+  --primary-glow: color-mix(in oklab, var(--color-primary) 28%, transparent);
+  --accent-hover: color-mix(in oklab, var(--color-accent) 84%, black 16%);
+  --accent-soft: color-mix(in oklab, var(--color-accent) 13%, transparent);
+  --overlay: color-mix(in oklab, var(--color-background) 72%, transparent);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg,
+      var(--color-primary),
+      color-mix(in oklab, var(--color-primary) 55%, var(--color-accent)));
+  --gradient-surface: linear-gradient(145deg, var(--surface-elevated), var(--color-surface));
+
+  /* Shadows & Radii */
+  --shadow-soft: 0 22px 65px color-mix(in oklab, var(--color-background) 80%, transparent);
+  --shadow-book: 12px 22px 40px color-mix(in oklab, var(--color-background) 68%, transparent);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--color-background);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--text-primary);
+  font-family: var(--font-poppins), "Poppins", sans-serif;
+  overflow-x: hidden;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
