@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Instrument_Serif, Poppins } from "next/font/google";
 import { AppProvider } from "@/providers/app-provider";
 import "./globals.css";
 
@@ -7,6 +7,14 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
@@ -37,7 +45,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={poppins.variable} data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className={`${poppins.variable} ${instrumentSerif.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <body className={`${poppins.className} antialiased`}>
         <AppProvider>{children}</AppProvider>
       </body>

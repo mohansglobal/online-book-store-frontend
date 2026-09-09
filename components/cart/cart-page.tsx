@@ -338,7 +338,7 @@ export default function CartPage() {
     return (
         <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-accent selection:text-white">
             <CategoryBanner
-                categoryName="Shopping Cart"
+                categoryName=""
                 compact
             />
 

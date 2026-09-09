@@ -113,9 +113,21 @@ export function BookCard({
         >
           <Rating value={book.rating} />
 
-          <span className="font-semibold">
-            {book.price}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold">
+              {book.price}
+            </span>
+            {book.originalPrice && (
+              <span className="text-[11px] text-muted-foreground/70 line-through">
+                {book.originalPrice}
+              </span>
+            )}
+            {book.priceIn && book.priceIn !== book.price && (
+              <span className="text-[10px] text-muted-foreground/80 font-normal">
+                ({book.priceIn})
+              </span>
+            )}
+          </div>
         </div>
 
         {book.detail && !isSmall && (

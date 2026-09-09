@@ -24,7 +24,9 @@ export function AuthRedirectHandler() {
     const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
     if (!isAuthPage) {
       const redirectTarget = getCurrentRedirectPath(pathname, searchParams);
-      router.replace(`/login?redirect=${encodeURIComponent(redirectTarget)}`);
+      const targetUrl = `/login?redirect=${encodeURIComponent(redirectTarget)}`;
+
+      router.replace(targetUrl);
     }
   }, [isSessionExpired, pathname, resetSession, router, searchParams]);
 

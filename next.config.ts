@@ -59,9 +59,15 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
-      protocol: "https",
-      hostname: "i.pinimg.com",
-    },
+        protocol: "https",
+        hostname: "i.pinimg.com",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5000",
+        pathname: "/**",
+      },
     ],
   },
 };

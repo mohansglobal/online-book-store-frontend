@@ -132,7 +132,7 @@ export function CategoryBookGrid({ books }: { books: Book[] }) {
             </p>
 
             {/* Price */}
-            <div className="mt-2.5 flex items-center">
+            <div className="mt-2.5 flex items-center gap-1.5">
               <span
                 className="
                   text-[14px]
@@ -143,6 +143,16 @@ export function CategoryBookGrid({ books }: { books: Book[] }) {
               >
                 {book.price}
               </span>
+              {book.originalPrice && (
+                <span className="text-[12px] text-muted-foreground/70 line-through">
+                  {book.originalPrice}
+                </span>
+              )}
+              {book.priceIn && book.priceIn !== book.price && (
+                <span className="text-[11px] text-muted-foreground">
+                  ({book.priceIn})
+                </span>
+              )}
             </div>
           </div>
         </article>

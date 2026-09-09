@@ -6,6 +6,8 @@ export type Book = {
   author: string;
   cover: string | StaticImageData;
   price: string;
+  priceIn?: string;
+  originalPrice?: string;
   rating: string;
   category: string;
   detail?: string;

@@ -17,3 +17,4 @@ export * from "./components/register-form";
 export * from "./components/login-form";
 export * from "./components/logout-alert-dialog";
 export * from "./components/auth-redirect-handler";
+export * from "./components/guest-only-route";

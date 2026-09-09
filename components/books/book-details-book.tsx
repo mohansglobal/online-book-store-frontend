@@ -1361,7 +1361,7 @@ export function BookDetailsClient({
               </div>
 
               <Link
-                href="/category/prep"
+                href="/books"
                 className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-accent transition-transform hover:translate-x-0.5 hover:underline"
               >
                 View All

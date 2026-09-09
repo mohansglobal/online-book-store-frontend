@@ -21,6 +21,7 @@ import {
 
 import { IconButton } from "./icon-button";
 import { useCurrentUser, useLogoutModalStore } from "@/features/auth";
+import { useCategories } from "@/features/categories";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,21 +41,8 @@ const MOBILE_LINKS = [
   { label: "Books", href: "/#books" },
   { label: "Authors", href: "/#authors" },
   { label: "Publishers", href: "/publishers" },
-  { label: "Categories", href: "/#categories" },
+  { label: "Categories", href: "/categories" },
   { label: "Cart", href: "/cart" },
-] as const;
-
-const CATEGORY_LINKS = [
-  "NOVEL",
-  "POEMS",
-  "STORY",
-  "RELIGIOUS BOOKS",
-  "POLITICAL",
-  "SPORTS",
-  "ONUBAD",
-  "E-BOOK",
-  "SCHOOL BOOKS",
-  "BEST SELLER",
 ] as const;
 
 const NAVBAR_ANIMATION_TRANSITION: Transition = {
@@ -64,10 +52,6 @@ const NAVBAR_ANIMATION_TRANSITION: Transition = {
 
 let hasNavbarHomeAnimated = false;
 
-function createCategorySlug(category: string): string {
-  return category.toLowerCase().replace(/\s+/g, "-");
-}
-
 export function Navbar({ wish, cart }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -75,10 +59,15 @@ export function Navbar({ wish, cart }: NavbarProps) {
   const { data: user } = useCurrentUser();
   const openLogoutModal = useLogoutModalStore((state) => state.open);
 
+  const { data: categoriesResponse, isLoading: isCategoriesLoading } =
+    useCategories({ limit: 10 });
+  const categoriesList = categoriesResponse?.data || [];
+
   const userAvatar = user?.profilePicture || user?.avatar;
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const isHomePage = pathname === "/";
@@ -109,6 +98,7 @@ export function Navbar({ wish, cart }: NavbarProps) {
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
+    setCategoriesOpen(false);
   }, [pathname]);
 
   const iconButtonClassName = scrolled
@@ -194,33 +184,71 @@ export function Navbar({ wish, cart }: NavbarProps) {
             </Link>
 
             {/* Categories Mega Menu */}
-            <div className="group relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setCategoriesOpen(true)}
+              onMouseLeave={() => setCategoriesOpen(false)}
+            >
               <Link
-                href="/#categories"
+                href="/categories"
+                onClick={() => setCategoriesOpen(false)}
                 className={`${navLinkClassName} -my-4 py-4`}
               >
                 Categories
               </Link>
 
-              <div className="invisible absolute top-full left-1/2 z-50 w-max -translate-x-1/2 pt-12 opacity-0 transition-all duration-300 group-hover:visible group-hover:opacity-100">
-                <div
-                  className="relative rounded-2xl border border-border bg-background p-4 shadow-2xl md:p-5"
-                >
+              <div
+                className={`absolute top-full left-1/2 z-50 w-max min-w-[300px] -translate-x-1/2 pt-12 transition-all duration-300 ${
+                  categoriesOpen
+                    ? "visible opacity-100 pointer-events-auto"
+                    : "invisible opacity-0 pointer-events-none"
+                }`}
+              >
+                <div className="relative rounded-2xl border border-border bg-background p-4 shadow-2xl md:p-5">
                   {/* Arrow */}
-                  <div
-                    className="absolute -top-[7px] left-1/2 h-3.5 w-3.5 -translate-x-1/2 rotate-45 rounded-tl-[3px] border-t border-l border-border bg-background"
-                  />
+                  <div className="absolute -top-[7px] left-1/2 h-3.5 w-3.5 -translate-x-1/2 rotate-45 rounded-tl-[3px] border-t border-l border-border bg-background" />
 
-                  <div className="relative z-10 grid grid-cols-2 gap-x-6 gap-y-3">
-                    {CATEGORY_LINKS.map((category) => (
-                      <Link
-                        key={category}
-                        href={`/category/${createCategorySlug(category)}`}
-                        className="block transform whitespace-nowrap text-[11px] font-semibold tracking-wider text-text-secondary transition-colors duration-200 hover:-translate-y-0.5 hover:text-foreground"
-                      >
-                        {category}
-                      </Link>
-                    ))}
+                  {isCategoriesLoading && categoriesList.length === 0 ? (
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-1">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-4 w-28 rounded bg-muted/60 animate-pulse"
+                        />
+                      ))}
+                    </div>
+                  ) : categoriesList.length > 0 ? (
+                    <div className="relative z-10 grid grid-cols-2 gap-x-6 gap-y-3">
+                      {categoriesList.slice(0, 10).map((category) => (
+                        <Link
+                          key={category._id || category.slug}
+                          href={`/books?category=${category._id}`}
+                          onClick={() => setCategoriesOpen(false)}
+                          className="block transform whitespace-nowrap text-[11px] font-semibold tracking-wider text-text-secondary transition-colors duration-200 hover:-translate-y-0.5 hover:text-foreground uppercase"
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-2 text-center text-xs text-muted-foreground">
+                      No categories found
+                    </div>
+                  )}
+
+                  {/* See more link */}
+                  <div className="relative z-10 mt-4 border-t border-border/70 pt-3">
+                    <Link
+                      href="/categories"
+                      onClick={() => setCategoriesOpen(false)}
+                      className="group/more flex items-center justify-between text-[11px] font-bold tracking-wider text-accent transition-colors hover:text-accent-hover uppercase"
+                    >
+                      <span>See all categories</span>
+                      <ArrowUpRight
+                        size={14}
+                        className="transition-transform group-hover/more:translate-x-0.5 group-hover/more:-translate-y-0.5"
+                      />
+                    </Link>
                   </div>
                 </div>
               </div>

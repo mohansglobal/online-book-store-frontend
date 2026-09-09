@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
-import { ArrowUpRight, Search } from "lucide-react";
+import Link from "next/link";
+import {
+  AlertCircle,
+  ArrowUpRight,
+  RefreshCw,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
 import { NoData } from "../ui/no-data";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthors } from "@/features/authors";
 
 import author1 from "../../assets/author-1.jpg";
 import author2 from "../../assets/author-2.jpg";
@@ -36,16 +46,6 @@ import book14 from "../../assets/trainPakistan.jpeg";
 import book15 from "../../assets/translation.jpeg";
 import book16 from "../../assets/whiteTiger.jpeg";
 import book17 from "../../assets/ebook.jpeg";
-
-interface Author {
-  id: number;
-  name: string;
-  image: string;
-  rank: string;
-  badge: string;
-  categories: readonly string[];
-  description: string;
-}
 
 const ALL_IMAGES: readonly StaticImageData[] = [
   author1,
@@ -85,73 +85,69 @@ const CAROUSEL_COLUMNS = Array.from(
       { length: 6 },
       (_, imageIndex) =>
         ALL_IMAGES[
-          (columnIndex * 4 + imageIndex * 7) %
-            ALL_IMAGES.length
+        (columnIndex * 4 + imageIndex * 7) %
+        ALL_IMAGES.length
         ],
     ),
 );
 
-const AUTHORS = [
-  {
-    id: 1,
-    name: "Rabindranath Tagore",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRM1qBsjaMPs9D00G12QGLwHclccepERlku-OHdBPWkBviHmB7UikEIzMg&s=10",
-    rank: "01",
-    badge: "CLASSIC ICON",
-    categories: [
-      "POETRY",
-      "PHILOSOPHY",
-      "NOBEL LAUREATE",
-    ],
-    description:
-      "Asia's first Nobel laureate, whose poetry, stories and songs transformed Bengali literature and music in the late 19th and early 20th centuries.",
-  },
-  {
-    id: 2,
-    name: "A. P. J. Abdul Kalam",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/b/b0/A._P._J._Abdul_Kalam_in_2008.jpg",
-    rank: "02",
-    badge: "VISIONARY",
-    categories: [
-      "SCIENCE",
-      "AUTOBIOGRAPHY",
-      "INSPIRATIONAL",
-    ],
-    description:
-      "An Indian aerospace scientist and statesman who served as the 11th president of India. Widely known as the Missile Man of India.",
-  },
-  {
-    id: 3,
-    name: "Satyajit Ray",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsS5CDp911FarOEtnSk-IaPY2T-U2LEsxOMb2yz7j96UCoiHxuG7Od1uUF&s=10",
-    rank: "03",
-    badge: "MASTER STORYTELLER",
-    categories: [
-      "MYSTERY",
-      "FICTION",
-      "FILMMAKING",
-    ],
-    description:
-      "Considered one of the greatest filmmakers of all time, he was also a prolific writer, creating the famous detective Feluda and scientist Professor Shonku.",
-  },
-  {
-    id: 4,
-    name: "Ashapurna Debi",
-    image:
-      "https://assets-in.bmscdn.com/iedb/artist/images/website/poster/large/ashapoorna-devi-iein010376-24-03-2017-14-59-11.jpg",
-    rank: "04",
-    badge: "FEMINIST VOICE",
-    categories: [
-      "LITERARY FICTION",
-      "SOCIAL REALISM",
-    ],
-    description:
-      "A prominent Bengali novelist and poet, known for her sharp critique of patriarchal society and deeply moving portrayals of women's lives.",
-  },
-] as const satisfies readonly Author[];
+const DEFAULT_AUTHOR_FALLBACK = "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
+
+function cleanBio(bio?: string): string {
+  if (!bio) return "";
+  return bio
+    .replace(/<[^>]*>?/gm, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lsquo;|&rsquo;|&#39;/g, "'")
+    .replace(/&ldquo;|&rdquo;|&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&mdash;/g, "—")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getAuthorImage(photo?: string): string {
+  if (photo && (photo.startsWith("http://") || photo.startsWith("https://"))) {
+    return photo;
+  }
+  if (photo) {
+    const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
+    return `${backendBase}/assets/upload/author/${photo}`;
+  }
+  return DEFAULT_AUTHOR_FALLBACK;
+}
+
+function AuthorAvatar({
+  src,
+  alt,
+  fallback = DEFAULT_AUTHOR_FALLBACK,
+  className = "",
+  sizes = "80px",
+}: {
+  src: StaticImageData | string;
+  alt: string;
+  fallback?: StaticImageData | string;
+  className?: string;
+  sizes?: string;
+}) {
+  const [currentSrc, setCurrentSrc] = useState<StaticImageData | string>(src);
+
+  return (
+    <Image
+      src={currentSrc}
+      alt={alt}
+      fill
+      sizes={sizes}
+      unoptimized={typeof currentSrc === "string"}
+      onError={() => {
+        if (currentSrc !== fallback) {
+          setCurrentSrc(fallback);
+        }
+      }}
+      className={className}
+    />
+  );
+}
 
 const ALPHABET = [
   "All",
@@ -163,28 +159,33 @@ const ALPHABET = [
 
 export default function AuthorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeLetter, setActiveLetter] =
-    useState("All");
+  const [activeLetter, setActiveLetter] = useState("All");
 
-  const normalizedSearch = searchTerm
-    .trim()
-    .toLowerCase();
+  const { data: authorsResponse, isLoading, error, refetch } = useAuthors({
+    limit: 100,
+  });
 
-  const filteredAuthors = AUTHORS.filter(
-    (author) => {
-      const matchesSearch = author.name
-        .toLowerCase()
-        .includes(normalizedSearch);
+  const authorsList = useMemo(() => {
+    return authorsResponse?.data ?? [];
+  }, [authorsResponse]);
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredAuthors = useMemo(() => {
+    return authorsList.filter((author) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        author.name?.toLowerCase().includes(normalizedSearch) ||
+        author.nameBn?.toLowerCase().includes(normalizedSearch) ||
+        author.slug?.toLowerCase().includes(normalizedSearch);
 
       const matchesLetter =
         activeLetter === "All" ||
-        author.name
-          .toUpperCase()
-          .startsWith(activeLetter);
+        author.name?.toUpperCase().startsWith(activeLetter);
 
       return matchesSearch && matchesLetter;
-    },
-  );
+    });
+  }, [authorsList, normalizedSearch, activeLetter]);
 
   return (
     <main className="min-h-screen bg-background pb-20 font-sans text-foreground">
@@ -233,14 +234,12 @@ export default function AuthorsPage() {
                   key={columnIndex}
                   className="flex shrink-0 flex-col"
                   style={{
-                    animation: `scroll-${
-                      columnIndex % 2 === 0
-                        ? "up"
-                        : "down"
-                    } ${
-                      30 +
+                    animation: `scroll-${columnIndex % 2 === 0
+                      ? "up"
+                      : "down"
+                      } ${30 +
                       (columnIndex % 3) * 10
-                    }s linear infinite`,
+                      }s linear infinite`,
                   }}
                 >
                   {/* First copy */}
@@ -299,11 +298,11 @@ export default function AuthorsPage() {
       <div className="relative z-20 mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Search */}
         <div className="mb-8 flex justify-center">
-          <div className="relative flex w-full max-w-2xl items-center overflow-hidden rounded-full border border-border bg-background bg-surface shadow-sm">
+          <div className="relative flex w-full max-w-2xl items-center overflow-hidden rounded-full border border-border/70 bg-[#F7F1E3] shadow-xs">
             <Search
               size={20}
               aria-hidden="true"
-              className="ml-4 shrink-0  text-muted-foreground"
+              className="ml-4 shrink-0 text-muted-foreground"
             />
 
             <input
@@ -314,12 +313,12 @@ export default function AuthorsPage() {
               }
               placeholder="Search author by name..."
               aria-label="Search author by name"
-              className="w-full bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground"
             />
 
             <button
               type="button"
-              className="bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-hover"
+              className="bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-hover cursor-pointer"
             >
               Search
             </button>
@@ -340,11 +339,10 @@ export default function AuthorsPage() {
                   setActiveLetter(letter)
                 }
                 aria-pressed={isActive}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-surface text-text-secondary hover:border-primary hover:text-foreground"
-                }`}
+                className={`flex h-8 min-w-8 items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors cursor-pointer ${isActive
+                  ? "border-accent bg-accent text-white shadow-xs"
+                  : "border-border/70 bg-[#F7F1E3] text-foreground/80 hover:border-accent hover:text-accent"
+                  }`}
               >
                 {letter}
               </button>
@@ -352,61 +350,139 @@ export default function AuthorsPage() {
           })}
         </div>
 
-        {/* Authors Grid */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {filteredAuthors.map((author) => (
-            <article
-              key={author.id}
-              className="flex flex-col rounded-xl border border-border bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-soft md:p-8"
+        {/* Error State */}
+        {error && (
+          <div className="mx-auto mb-10 flex max-w-md flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <h3 className="font-semibold text-foreground">Failed to load authors</h3>
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : "An unexpected error occurred while fetching authors."}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-2 gap-2"
             >
-              {/* Avatar */}
-              <div className="mb-6 flex">
-                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-background shadow-sm">
-                  <Image
-                    src={author.image}
-                    alt={`Portrait of ${author.name}`}
-                    fill
-                    sizes="80px"
-                    className="object-cover grayscale contrast-125"
-                  />
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        )}
+
+        {/* Loading Skeletons */}
+        {isLoading && (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col justify-between rounded-xl border border-border/70 bg-[#F7F1E3] p-6 shadow-xs md:p-8"
+              >
+                <div>
+                  <div className="mb-6 flex items-start justify-between">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                  <Skeleton className="mb-4 h-8 w-3/4 rounded-md" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-4 w-5/6 rounded" />
+                    <Skeleton className="h-4 w-2/3 rounded" />
+                  </div>
+                </div>
+                <div className="mt-8 border-t border-border/60 pt-4">
+                  <Skeleton className="h-5 w-28 rounded" />
                 </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Author Information */}
-              <h2 className="mb-4 font-display text-3xl leading-tight text-foreground sm:text-4xl">
-                {author.name}
-              </h2>
+        {/* Authors Grid */}
+        {!isLoading && !error && filteredAuthors.length > 0 && (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {filteredAuthors.map((author, index) => {
+              const imageSrc = getAuthorImage(author.photo);
+              const bioText = author.bio
+                ? cleanBio(author.bio)
+                : "Celebrated literary author and thinker.";
 
-              <p className="line-clamp-3 flex-grow text-sm leading-relaxed text-muted-foreground sm:text-base">
-                {author.description}
-              </p>
-
-              <hr className="my-6 w-full border-t border-border" />
-
-              {/* Action */}
-              <div className="mt-auto flex items-center">
-                <button
-                  type="button"
-                  className="group flex items-center gap-1 font-bold text-foreground transition-colors hover:text-accent"
+              return (
+                <article
+                  key={author._id || author.slug || index}
+                  className="group flex flex-col rounded-xl border border-border/70 bg-[#F7F1E3] p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md md:p-8"
                 >
-                  View details
+                  {/* Top Avatar & Badge */}
+                  <div className="mb-6 flex items-start justify-between gap-4">
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-border/80 bg-[#ebe4d2] shadow-xs transition-colors duration-300 group-hover:border-accent">
+                      <AuthorAvatar
+                        src={imageSrc}
+                        alt={`Portrait of ${author.name}`}
+                        fallback={DEFAULT_AUTHOR_FALLBACK}
+                        sizes="80px"
+                        className="object-cover object-top grayscale contrast-[1.12] brightness-95 transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                      />
+                    </div>
 
-                  <ArrowUpRight
-                    size={18}
-                    aria-hidden="true"
-                    className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                  />
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className="rounded-full border border-border/50 bg-[#ebe4d2]/80 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-muted-foreground">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      {author.nameBn && (
+                        <span className="flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                          <Sparkles className="h-3 w-3" />
+                          {author.nameBn}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Author Information */}
+                  <h2 className="mb-2.5 font-display text-3xl sm:text-[32px] font-normal leading-tight tracking-wide text-foreground transition-colors group-hover:text-accent">
+                    {author.name}
+                  </h2>
+
+                  <p className="line-clamp-4 flex-grow text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                    {bioText}
+                  </p>
+
+                  <hr className="my-6 w-full border-t border-border/60" />
+
+                  {/* Action */}
+                  <div className="mt-auto flex items-center justify-between">
+                    <Link
+                      href={`/books?author=${author._id}`}
+                      className="group/link flex items-center gap-1 text-sm font-bold text-foreground transition-colors hover:text-accent"
+                    >
+                      Explore Books
+
+                      <ArrowUpRight
+                        size={16}
+                        aria-hidden="true"
+                        className="transition-transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5"
+                      />
+                    </Link>
+
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Author
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         {/* Empty State */}
-        {filteredAuthors.length === 0 && (
+        {!isLoading && !error && filteredAuthors.length === 0 && (
           <NoData
             size={350}
-            text="No authors found matching your criteria."
+            text={
+              searchTerm || activeLetter !== "All"
+                ? "No authors found matching your criteria."
+                : "No authors available at the moment."
+            }
             className="w-full"
           />
         )}

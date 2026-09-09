@@ -26,6 +26,13 @@ import {
 import { toast } from "sonner";
 
 import { CategoryBanner } from "../categories/components/CategoryBanner";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 
 import coverKhoab from "../../assets/khoabnama.jpg";
@@ -487,60 +494,38 @@ export default function CheckoutPage() {
                                                     Country
                                                 </FieldLabel>
 
-                                                <div className="relative">
-                                                    <select
-                                                        value={
-                                                            billing.country
-                                                        }
-                                                        onChange={(
-                                                            event,
-                                                        ) => {
-                                                            const country =
-                                                                event
-                                                                    .target
-                                                                    .value;
-
-                                                            handleBillingChange(
-                                                                "country",
-                                                                country,
-                                                            );
-
-                                                            handleBillingChange(
-                                                                "state",
-                                                                country ===
-                                                                    "Bangladesh"
-                                                                    ? "Dhaka"
-                                                                    : "West Bengal",
-                                                            );
-                                                        }}
-                                                        className={`${INPUT_BASE_CLASS} appearance-none pr-7`}
-                                                    >
+                                                <Select
+                                                    value={billing.country}
+                                                    onValueChange={(country) => {
+                                                        handleBillingChange(
+                                                            "country",
+                                                            country,
+                                                        );
+                                                        handleBillingChange(
+                                                            "state",
+                                                            country === "Bangladesh"
+                                                                ? "Dhaka"
+                                                                : "West Bengal",
+                                                        );
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-9 w-full rounded-md border-border bg-background text-sm text-foreground focus:ring-1 focus:ring-accent">
+                                                        <SelectValue placeholder="Select country" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-popover border-border">
                                                         {COUNTRIES.map(
-                                                            (
-                                                                country,
-                                                            ) => (
-                                                                <option
-                                                                    key={
-                                                                        country
-                                                                    }
-                                                                    value={
-                                                                        country
-                                                                    }
+                                                            (country) => (
+                                                                <SelectItem
+                                                                    key={country}
+                                                                    value={country}
+                                                                    className="text-sm cursor-pointer"
                                                                 >
-                                                                    {
-                                                                        country
-                                                                    }
-                                                                </option>
+                                                                    {country}
+                                                                </SelectItem>
                                                             ),
                                                         )}
-                                                    </select>
-
-                                                    <ChevronDown
-                                                        size={14}
-                                                        aria-hidden="true"
-                                                        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
-                                                    />
-                                                </div>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
 
                                             <div>
@@ -548,43 +533,32 @@ export default function CheckoutPage() {
                                                     State
                                                 </FieldLabel>
 
-                                                <div className="relative">
-                                                    <select
-                                                        value={
-                                                            billing.state
-                                                        }
-                                                        onChange={(
-                                                            event,
-                                                        ) =>
-                                                            handleBillingChange(
-                                                                "state",
-                                                                event
-                                                                    .target
-                                                                    .value,
-                                                            )
-                                                        }
-                                                        className={`${INPUT_BASE_CLASS} appearance-none pr-7`}
-                                                    >
+                                                <Select
+                                                    value={billing.state}
+                                                    onValueChange={(state) =>
+                                                        handleBillingChange(
+                                                            "state",
+                                                            state,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="h-9 w-full rounded-md border-border bg-background text-sm text-foreground focus:ring-1 focus:ring-accent">
+                                                        <SelectValue placeholder="Select state" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-popover border-border">
                                                         {getStatesList(
                                                             billing.country,
-                                                        ).map(
-                                                            (state) => (
-                                                                <option
-                                                                    key={state}
-                                                                    value={state}
-                                                                >
-                                                                    {state}
-                                                                </option>
-                                                            ),
-                                                        )}
-                                                    </select>
-
-                                                    <ChevronDown
-                                                        size={14}
-                                                        aria-hidden="true"
-                                                        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
-                                                    />
-                                                </div>
+                                                        ).map((state) => (
+                                                            <SelectItem
+                                                                key={state}
+                                                                value={state}
+                                                                className="text-sm cursor-pointer"
+                                                            >
+                                                                {state}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
 
@@ -869,60 +843,38 @@ export default function CheckoutPage() {
                                                         Country
                                                     </FieldLabel>
 
-                                                    <div className="relative">
-                                                        <select
-                                                            value={
-                                                                shipping.country
-                                                            }
-                                                            onChange={(
-                                                                event,
-                                                            ) => {
-                                                                const country =
-                                                                    event
-                                                                        .target
-                                                                        .value;
-
-                                                                handleShippingChange(
-                                                                    "country",
-                                                                    country,
-                                                                );
-
-                                                                handleShippingChange(
-                                                                    "state",
-                                                                    country ===
-                                                                        "Bangladesh"
-                                                                        ? "Dhaka"
-                                                                        : "West Bengal",
-                                                                );
-                                                            }}
-                                                            className={`${INPUT_BASE_CLASS} appearance-none pr-7`}
-                                                        >
+                                                    <Select
+                                                        value={shipping.country}
+                                                        onValueChange={(country) => {
+                                                            handleShippingChange(
+                                                                "country",
+                                                                country,
+                                                            );
+                                                            handleShippingChange(
+                                                                "state",
+                                                                country === "Bangladesh"
+                                                                    ? "Dhaka"
+                                                                    : "West Bengal",
+                                                            );
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="h-9 w-full rounded-md border-border bg-background text-sm text-foreground focus:ring-1 focus:ring-accent">
+                                                            <SelectValue placeholder="Select country" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-popover border-border">
                                                             {COUNTRIES.map(
-                                                                (
-                                                                    country,
-                                                                ) => (
-                                                                    <option
-                                                                        key={
-                                                                            country
-                                                                        }
-                                                                        value={
-                                                                            country
-                                                                        }
+                                                                (country) => (
+                                                                    <SelectItem
+                                                                        key={country}
+                                                                        value={country}
+                                                                        className="text-sm cursor-pointer"
                                                                     >
-                                                                        {
-                                                                            country
-                                                                        }
-                                                                    </option>
+                                                                        {country}
+                                                                    </SelectItem>
                                                                 ),
                                                             )}
-                                                        </select>
-
-                                                        <ChevronDown
-                                                            size={14}
-                                                            aria-hidden="true"
-                                                            className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
-                                                        />
-                                                    </div>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
 
                                                 <div>
@@ -930,51 +882,32 @@ export default function CheckoutPage() {
                                                         State
                                                     </FieldLabel>
 
-                                                    <div className="relative">
-                                                        <select
-                                                            value={
-                                                                shipping.state
-                                                            }
-                                                            onChange={(
-                                                                event,
-                                                            ) =>
-                                                                handleShippingChange(
-                                                                    "state",
-                                                                    event
-                                                                        .target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            className={`${INPUT_BASE_CLASS} appearance-none pr-7`}
-                                                        >
+                                                    <Select
+                                                        value={shipping.state}
+                                                        onValueChange={(state) =>
+                                                            handleShippingChange(
+                                                                "state",
+                                                                state,
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger className="h-9 w-full rounded-md border-border bg-background text-sm text-foreground focus:ring-1 focus:ring-accent">
+                                                            <SelectValue placeholder="Select state" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-popover border-border">
                                                             {getStatesList(
                                                                 shipping.country,
-                                                            ).map(
-                                                                (
-                                                                    state,
-                                                                ) => (
-                                                                    <option
-                                                                        key={
-                                                                            state
-                                                                        }
-                                                                        value={
-                                                                            state
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            state
-                                                                        }
-                                                                    </option>
-                                                                ),
-                                                            )}
-                                                        </select>
-
-                                                        <ChevronDown
-                                                            size={14}
-                                                            aria-hidden="true"
-                                                            className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
-                                                        />
-                                                    </div>
+                                                            ).map((state) => (
+                                                                <SelectItem
+                                                                    key={state}
+                                                                    value={state}
+                                                                    className="text-sm cursor-pointer"
+                                                                >
+                                                                    {state}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             </div>
 

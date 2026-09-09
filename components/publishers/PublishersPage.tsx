@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
 import {
+    AlertCircle,
     ArrowUpRight,
+    Building2,
     Library,
     MapPin,
     Phone,
+    RefreshCw,
     Search,
 } from "lucide-react";
 
 import { NoData } from "@/components/ui/no-data";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePublishers, useAllPublishers, type Publisher } from "@/features/publishers";
 
 import author1 from "@/assets/author-1.jpg";
 import author2 from "@/assets/author-2.jpg";
@@ -43,16 +50,7 @@ import book15 from "@/assets/translation.jpeg";
 import book16 from "@/assets/whiteTiger.jpeg";
 import book17 from "@/assets/ebook.jpeg";
 
-interface Publisher {
-    id: number;
-    name: string;
-    logo: string;
-    established: string;
-    publications: string;
-    phone: string;
-    address: string;
-    description: string;
-}
+const DEFAULT_PUBLISHER_FALLBACK = "https://i.pinimg.com/1200x/96/6a/23/966a235a132f8b5e7312c877d99aa9c1.jpg";
 
 const ALL_IMAGES: readonly StaticImageData[] = [
     author1,
@@ -98,141 +96,6 @@ const CAROUSEL_COLUMNS = Array.from(
         ),
 );
 
-const PUBLISHERS = [
-    {
-        id: 1,
-        name: "Ananda Publishers",
-        logo:
-            "https://media.licdn.com/dms/image/v2/C510BAQGhr_-1xBVe2g/company-logo_200_200/company-logo_200_200/0/1630614473016/ananda_publishers_pvt_ltd_logo?e=2147483647&v=beta&t=607HgR7RT302lTtLYJufP2tQiXxo2oXgkh5xQhqKkHQ",
-        established: "1957",
-        publications: "5,000+",
-        phone: "+91 33 2241 4352",
-        address: "9 Prafulla Sarkar St, Kolkata",
-        description:
-            "One of the most prominent Bengali publishing houses, known for publishing major literary works in Bengali.",
-    },
-    {
-        id: 2,
-        name: "Penguin Random House",
-        logo:
-            "https://www.haveagonews.com.au/wp-content/uploads/2022/07/Survey_1600x800_2.jpg",
-        established: "2013",
-        publications: "100,000+",
-        phone: "+91 124 478 5600",
-        address: "Gurugram, Haryana",
-        description:
-            "The multinational conglomerate publishing company, bringing a vast collection of international and regional literature.",
-    },
-    {
-        id: 3,
-        name: "Dey's Publishing",
-        logo:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwSzvR0l79w_E1ByRpd4NBgODDlLK31MfCLXmP1Z6jlNhRrT4FnFn_uME&s=10",
-        established: "1971",
-        publications: "3,000+",
-        phone: "+91 33 2241 2330",
-        address: "13 Bankim Chatterjee St, Kolkata",
-        description:
-            "A renowned publishing house in Kolkata, significantly contributing to Bengali literature and academic texts.",
-    },
-    {
-        id: 4,
-        name: "Rupa Publications",
-        logo:
-            "https://upload.wikimedia.org/wikipedia/commons/e/e9/Rupa_Publications_logo.png",
-        established: "1936",
-        publications: "8,000+",
-        phone: "+91 11 4322 6666",
-        address: "Ansari Road, Daryaganj, New Delhi",
-        description:
-            "An Indian publishing company, famously known for publishing biographies, business guides, and contemporary fiction.",
-    },
-    {
-        id: 5,
-        name: "Oxford University Press",
-        logo:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmfvZ0lev9BW9TvOqOaVJimTaau8eljGt3plAuDOSaqg&s=10",
-        established: "1586",
-        publications: "1M+",
-        phone: "+91 11 4360 0300",
-        address: "YMCA Library Building, New Delhi",
-        description:
-            "The largest university press in the world, publishing dictionaries, educational resources, and academic journals.",
-    },
-    {
-        id: 6,
-        name: "HarperCollins",
-        logo:
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTH5rgOO_DzMPh3wiyuItLwj-s_Ftl2ogjsoFz4TiBBtkA0ZlCJCu2H6bby&s=10",
-        established: "1989",
-        publications: "50,000+",
-        phone: "+91 120 404 4800",
-        address: "Noida, Uttar Pradesh",
-        description:
-            "One of the 'Big Five' English-language publishing companies, offering a wide variety of popular fiction and non-fiction.",
-    },
-    {
-        id: 7,
-        name: "Indo Bangla Books",
-        logo:
-            "https://indobanglabooks.in/upload/author/1618992250.jpg",
-        established: "2001",
-        publications: "1,200+",
-        phone: "+91 98300 12345",
-        address: "College Street, Kolkata",
-        description:
-            "A leading distributor and publisher promoting cultural exchange through literature.",
-    },
-    {
-        id: 8,
-        name: "Mitra & Ghosh Publishers",
-        logo:
-            "https://indobanglabooks.in/upload/author/1618983105.jpg",
-        established: "1934",
-        publications: "4,000+",
-        phone: "+91 33 2241 6262",
-        address: "10 Shyama Charan De St, Kolkata",
-        description:
-            "A historic publishing house in Kolkata, known for publishing seminal Bengali authors.",
-    },
-    {
-        id: 9,
-        name: "Patra Bharati",
-        logo:
-            "https://indobanglabooks.in/upload/author/1618991382.jpg",
-        established: "1981",
-        publications: "2,500+",
-        phone: "+91 33 2219 2311",
-        address: "1/1, Brindaban Mallick Lane, Kolkata",
-        description:
-            "Renowned for popularizing children's literature and contemporary Bengali fiction.",
-    },
-    {
-        id: 10,
-        name: "Sishu Sahitya Samsad",
-        logo:
-            "https://indobanglabooks.in/upload/author/1618990309.jpg",
-        established: "1951",
-        publications: "1,500+",
-        phone: "+91 33 2241 3612",
-        address: "32A APC Road, Kolkata",
-        description:
-            "Dedicated to producing high-quality educational materials and literature for children.",
-    },
-    {
-        id: 11,
-        name: "Purbashaa Publishers",
-        logo:
-            "https://indobanglabooks.in/upload/author/1618982265.jpg",
-        established: "1995",
-        publications: "800+",
-        phone: "+91 98310 98765",
-        address: "Jadavpur, Kolkata",
-        description:
-            "A modern publishing house focusing on diverse contemporary voices in Bengal.",
-    },
-] as const satisfies readonly Publisher[];
-
 const ALPHABET = [
     "All",
     ...Array.from(
@@ -241,35 +104,92 @@ const ALPHABET = [
     ),
 ];
 
+function getPublisherImage(publisher: Publisher): string {
+    const rawImage = publisher.logo || publisher.image;
+    const hasImage = (publisher.isImage === "1" || publisher.isImage === 1) && Boolean(rawImage);
+
+    if (!hasImage || !rawImage) {
+        return DEFAULT_PUBLISHER_FALLBACK;
+    }
+
+    if (rawImage.startsWith("http://") || rawImage.startsWith("https://")) {
+        return rawImage;
+    }
+
+    const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
+    return `${backendBase}/assets/upload/author/${rawImage}`;
+}
+
+function PublisherAvatar({
+    publisher,
+    sizes = "72px",
+}: {
+    publisher: Publisher;
+    sizes?: string;
+}) {
+    const initialSrc = getPublisherImage(publisher);
+    const [currentSrc, setCurrentSrc] = useState<string>(initialSrc);
+    const [hasError, setHasError] = useState(false);
+
+    return (
+        <div className="relative flex h-[88px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background shadow-xs transition-colors group-hover:border-primary">
+            {!hasError ? (
+                <Image
+                    src={currentSrc}
+                    alt={`${publisher.name} logo`}
+                    fill
+                    sizes={sizes}
+                    unoptimized={true}
+                    onError={() => {
+                        if (currentSrc !== DEFAULT_PUBLISHER_FALLBACK) {
+                            setCurrentSrc(DEFAULT_PUBLISHER_FALLBACK);
+                        } else {
+                            setHasError(true);
+                        }
+                    }}
+                    className={
+                        currentSrc === DEFAULT_PUBLISHER_FALLBACK
+                            ? "object-cover transition-transform duration-500 group-hover:scale-110"
+                            : "object-contain p-1 transition-transform duration-500 group-hover:scale-110"
+                    }
+                />
+            ) : (
+                <Building2 size={26} strokeWidth={1.7} className="text-muted-foreground group-hover:text-primary" />
+            )}
+        </div>
+    );
+}
+
 export default function PublishersPage() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeLetter, setActiveLetter] =
-        useState("All");
+    const [activeLetter, setActiveLetter] = useState("All");
 
-    const normalizedSearch = searchTerm
-        .trim()
-        .toLowerCase();
+    const { data: allPublishers, isLoading, error, refetch } = useAllPublishers();
 
-    const filteredPublishers = PUBLISHERS.filter(
-        (publisher) => {
-            const matchesSearch = publisher.name
-                .toLowerCase()
-                .includes(normalizedSearch);
+    const publishersList = useMemo(() => {
+        return allPublishers ?? [];
+    }, [allPublishers]);
+
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    const filteredPublishers = useMemo(() => {
+        return publishersList.filter((publisher) => {
+            const matchesSearch =
+                !normalizedSearch ||
+                publisher.name?.toLowerCase().includes(normalizedSearch) ||
+                publisher.nameBn?.toLowerCase().includes(normalizedSearch) ||
+                publisher.slug?.toLowerCase().includes(normalizedSearch);
 
             const matchesLetter =
                 activeLetter === "All" ||
-                publisher.name
-                    .toUpperCase()
-                    .startsWith(activeLetter);
+                publisher.name?.toUpperCase().startsWith(activeLetter);
 
             return matchesSearch && matchesLetter;
-        },
-    );
+        });
+    }, [publishersList, normalizedSearch, activeLetter]);
 
     return (
         <main className="min-h-screen bg-background pb-20 font-sans text-foreground">
-            {/* <Navbar wish={0} cart={0} /> */}
-
             {/* Header Banner */}
             <section className="relative flex h-78 w-full items-center justify-center overflow-hidden bg-black">
                 <style>{`
@@ -323,7 +243,7 @@ export default function PublishersPage() {
                                             }s linear infinite`,
                                     }}
                                 >
-                                    {/* First Copy */}
+                                    {/* First copy */}
                                     <div className="flex flex-col gap-4 pb-4">
                                         {column.map(
                                             (image, imageIndex) => (
@@ -343,7 +263,7 @@ export default function PublishersPage() {
                                         )}
                                     </div>
 
-                                    {/* Duplicate */}
+                                    {/* Duplicate for seamless animation */}
                                     <div className="flex flex-col gap-4 pb-4">
                                         {column.map(
                                             (image, imageIndex) => (
@@ -377,8 +297,9 @@ export default function PublishersPage() {
 
             <div className="relative z-20 mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
                 {/* Search */}
+                {/* Search */}
                 <div className="mb-8 flex justify-center">
-                    <div className="relative  bg-background flex w-full max-w-2xl items-center overflow-hidden rounded-full border border-border bg-surface shadow-sm">
+                    <div className="relative flex w-full max-w-2xl items-center overflow-hidden rounded-full border border-border/70 bg-[#F7F1E3] shadow-xs">
                         <Search
                             size={20}
                             aria-hidden="true"
@@ -393,12 +314,12 @@ export default function PublishersPage() {
                             }
                             placeholder="Search publisher by name..."
                             aria-label="Search publisher by name"
-                            className="w-full bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground"
+                            className="w-full bg-transparent px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground"
                         />
 
                         <button
                             type="button"
-                            className="bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-hover"
+                            className="bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-hover cursor-pointer"
                         >
                             Search
                         </button>
@@ -419,9 +340,9 @@ export default function PublishersPage() {
                                     setActiveLetter(letter)
                                 }
                                 aria-pressed={isActive}
-                                className={`flex h-8 min-w-8 items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors ${isActive
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-border bg-surface text-text-secondary hover:border-primary hover:text-foreground"
+                                className={`flex h-8 min-w-8 items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors cursor-pointer ${isActive
+                                    ? "border-accent bg-accent text-white shadow-xs"
+                                    : "border-border/70 bg-[#F7F1E3] text-foreground/80 hover:border-accent hover:text-accent"
                                     }`}
                             >
                                 {letter}
@@ -430,24 +351,59 @@ export default function PublishersPage() {
                     })}
                 </div>
 
+                {/* Error State */}
+                {error && (
+                    <div className="mx-auto mb-10 flex max-w-md flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+                        <AlertCircle className="h-8 w-8 text-destructive" />
+                        <h3 className="font-semibold text-foreground">Failed to load publishers</h3>
+                        <p className="text-sm text-muted-foreground">
+                            {error instanceof Error ? error.message : "An unexpected error occurred while fetching publishers."}
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => refetch()}
+                            className="mt-2 gap-2"
+                        >
+                            <RefreshCw className="h-4 w-4" />
+                            Try Again
+                        </Button>
+                    </div>
+                )}
+
+                {/* Loading Skeleton Grid */}
+                {isLoading && (
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                            <div
+                                key={idx}
+                                className="flex min-h-[118px] items-start gap-3 rounded-xl border border-border/70 bg-[#F7F1E3] p-3 shadow-xs"
+                            >
+                                <Skeleton className="h-[88px] w-[72px] shrink-0 rounded-lg" />
+                                <div className="flex-1 space-y-2 py-0.5">
+                                    <Skeleton className="h-4 w-3/4 rounded" />
+                                    <Skeleton className="h-3 w-1/2 rounded" />
+                                    <Skeleton className="h-6 w-full rounded" />
+                                    <div className="space-y-1 pt-2">
+                                        <Skeleton className="h-3 w-2/3 rounded" />
+                                        <Skeleton className="h-3 w-1/2 rounded" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Publishers Grid */}
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredPublishers.map(
-                        (publisher) => (
+                {!isLoading && !error && filteredPublishers.length > 0 && (
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredPublishers.map((publisher) => (
                             <article
-                                key={publisher.id}
-                                className="group relative flex min-h-[118px] items-center gap-3 rounded-xl border border-border bg-surface p-3 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
+                                key={publisher._id || publisher.slug}
+                                className="group relative flex min-h-[118px] items-center gap-3 rounded-xl border border-border/70 bg-[#F7F1E3] p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md"
                             >
                                 {/* Publisher Logo */}
-                                <div className="relative flex h-[88px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
-                                    <Image
-                                        src={publisher.logo}
-                                        alt={`${publisher.name} logo`}
-                                        fill
-                                        sizes="72px"
-                                        className="object-contain transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                </div>
+                                <PublisherAvatar key={publisher._id || publisher.slug} publisher={publisher} />
 
                                 {/* Content */}
                                 <div className="flex min-w-0 flex-1 flex-col py-0.5">
@@ -463,7 +419,7 @@ export default function PublishersPage() {
                                             {/* Meta */}
                                             <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                                                 <span>
-                                                    Est. {publisher.established}
+                                                    Est. {publisher.established || (publisher.createdAt ? new Date(publisher.createdAt).getFullYear() : "-")}
                                                 </span>
 
                                                 <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
@@ -475,13 +431,13 @@ export default function PublishersPage() {
                                                         aria-hidden="true"
                                                     />
 
-                                                    {publisher.publications} books
+                                                    <span>{publisher.publications || "-"} books</span>
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <button
-                                            type="button"
+                                        <Link
+                                            href={`/books?publisher=${publisher._id}`}
                                             aria-label={`View ${publisher.name}`}
                                             className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-all duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-white"
                                         >
@@ -490,12 +446,12 @@ export default function PublishersPage() {
                                                 aria-hidden="true"
                                                 className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                                             />
-                                        </button>
+                                        </Link>
                                     </div>
 
                                     {/* Description */}
                                     <p className="mt-2 line-clamp-2 text-[11px] leading-[1.45] text-muted-foreground sm:text-xs">
-                                        {publisher.description}
+                                        {publisher.description || "-"}
                                     </p>
 
                                     {/* Contact */}
@@ -504,11 +460,11 @@ export default function PublishersPage() {
                                             <Phone
                                                 size={11}
                                                 aria-hidden="true"
-                                                className="shrink-0 text-text-secondary"
+                                                className="shrink-0 text-muted-foreground"
                                             />
 
                                             <span className="truncate">
-                                                {publisher.phone}
+                                                {publisher.phone || "-"}
                                             </span>
                                         </div>
 
@@ -516,25 +472,29 @@ export default function PublishersPage() {
                                             <MapPin
                                                 size={11}
                                                 aria-hidden="true"
-                                                className="shrink-0 text-text-secondary"
+                                                className="shrink-0 text-muted-foreground"
                                             />
 
                                             <span className="truncate">
-                                                {publisher.address}
+                                                {publisher.address || "-"}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                             </article>
-                        ),
-                    )}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* Empty State */}
-                {filteredPublishers.length === 0 && (
+                {!isLoading && !error && filteredPublishers.length === 0 && (
                     <NoData
                         size={350}
-                        text="No publishers found matching your criteria."
+                        text={
+                            searchTerm || activeLetter !== "All"
+                                ? "No publishers found matching your criteria."
+                                : "No publishers available at the moment."
+                        }
                         className="w-full"
                     />
                 )}
@@ -543,4 +503,4 @@ export default function PublishersPage() {
     );
 }
 
-export { PublishersPage };
+export { PublishersPage, PublishersPage as PublishersPageIntegrated };
