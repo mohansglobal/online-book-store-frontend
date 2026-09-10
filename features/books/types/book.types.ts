@@ -4,11 +4,16 @@ import type { StaticImageData } from "next/image";
 export const FALLBACK_BOOK_COVER =
   "https://i.pinimg.com/736x/57/69/7a/57697aeaa7fa70578f344fb6ee4aa1d9.jpg";
 
+export const DEFAULT_AUTHOR_FALLBACK =
+  "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
+
 export type BookAuthor = {
   _id: string;
   name: string;
   nameBn?: string;
   slug: string;
+  bio?: string;
+  photo?: string;
 };
 
 export type BookPublisher = {
@@ -54,6 +59,8 @@ export type ApiBook = {
   legacyId?: string;
   edition?: string;
   translation?: string;
+  country?: string;
+  weight?: string | number;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -79,7 +86,17 @@ export type SingleBookResponse = {
   data: ApiBook;
 };
 
-export type BookSortBy = "title" | "createdAt" | "publicationDate";
+export type BookSortBy =
+  | "title"
+  | "createdAt"
+  | "publicationDate"
+  | "price_high_to_low"
+  | "price_low_to_high"
+  | "price"
+  | "rating"
+  | "newest"
+  | "oldest";
+
 export type BookSortOrder = "asc" | "desc";
 
 export type GetBooksParams = {
@@ -89,17 +106,16 @@ export type GetBooksParams = {
   author?: string;
   publisher?: string;
   category?: string;
+  minPrice?: number | string;
+  maxPrice?: number | string;
   status?: string;
   language?: string;
   format?: string;
-  sortBy?: BookSortBy;
+  sortBy?: BookSortBy | string;
   sortOrder?: BookSortOrder;
   [key: string]: string | number | boolean | undefined;
 };
 
-/**
- * UI View Model for Catalog Book
- */
 export interface CatalogBook {
   id: string;
   slug: string;
@@ -124,130 +140,44 @@ export interface CatalogBook {
   language?: string;
 }
 
-/**
- * Transforms an ApiBook into a CatalogBook with '-' fallback for missing properties
- */
+function parsePrice(val?: number | string): { text: string; num: number } {
+  if (val === undefined || val === null || val === "") return { text: "-", num: 0 };
+  const num = typeof val === "number" ? val : parseFloat(String(val).replace(/[^0-9.]/g, ""));
+  if (!isNaN(num)) {
+    return { text: num === 0 ? "Free" : `₹${num}`, num };
+  }
+  return { text: typeof val === "string" && val.trim() ? val.trim() : "-", num: 0 };
+}
+
 export function transformApiBookToCatalogBook(
   book: ApiBook,
   fallbackCover: StaticImageData | string = FALLBACK_BOOK_COVER,
 ): CatalogBook {
   const authorsText =
     book.authors && book.authors.length > 0
-      ? book.authors
-          .map((a) => a?.name?.trim())
-          .filter(Boolean)
-          .join(", ")
+      ? book.authors.map((a) => a?.name?.trim()).filter(Boolean).join(", ")
       : "-";
 
   const publisherText = book.publisher?.name?.trim() || "-";
-
   const categoryText =
     book.categories && book.categories.length > 0
-      ? book.categories
-          .map((c) => c?.name?.trim())
-          .filter(Boolean)
-          .join(", ")
+      ? book.categories.map((c) => c?.name?.trim()).filter(Boolean).join(", ")
       : "-";
 
-  let priceText = "-";
-  let rawPrice = 0;
-  if (book.price !== undefined && book.price !== null && book.price !== "") {
-    const numPrice =
-      typeof book.price === "number"
-        ? book.price
-        : parseFloat(String(book.price).replace(/[^0-9.]/g, ""));
-    if (!isNaN(numPrice)) {
-      if (numPrice === 0) {
-        priceText = "Free";
-        rawPrice = 0;
-      } else {
-        priceText = `₹${numPrice}`;
-        rawPrice = numPrice;
-      }
-    } else if (typeof book.price === "string" && book.price.trim().length > 0) {
-      priceText = book.price.trim();
-    }
-  }
+  const { text: priceText, num: rawPrice } = parsePrice(book.price);
+  const { text: priceInText, num: rawPriceIn } = parsePrice(book.priceIn);
+  const finalPrice = priceText !== "-" ? priceText : (priceInText !== "-" ? priceInText : "-");
+  const finalRawPrice = rawPrice || rawPriceIn || 0;
 
-  let priceInText: string | undefined = undefined;
-  let rawPriceIn: number | undefined = undefined;
-  if (book.priceIn !== undefined && book.priceIn !== null && book.priceIn !== "") {
-    const numPriceIn =
-      typeof book.priceIn === "number"
-        ? book.priceIn
-        : parseFloat(String(book.priceIn).replace(/[^0-9.]/g, ""));
-    if (!isNaN(numPriceIn)) {
-      if (numPriceIn === 0) {
-        priceInText = "Free";
-        rawPriceIn = 0;
-      } else {
-        priceInText = `₹${numPriceIn}`;
-        rawPriceIn = numPriceIn;
-      }
-    } else if (typeof book.priceIn === "string" && book.priceIn.trim().length > 0) {
-      priceInText = book.priceIn.trim();
-    }
-  }
+  const { text: origPriceText } = parsePrice(book.originalPrice);
+  const { text: origPriceInText } = parsePrice(book.originalPriceIn);
 
-  // If base price is missing or not given, fallback to priceIn
-  if (priceText === "-" && priceInText) {
-    priceText = priceInText;
-    rawPrice = rawPriceIn ?? 0;
-  }
-
-  let originalPriceText: string | undefined = undefined;
-  if (
-    book.originalPrice !== undefined &&
-    book.originalPrice !== null &&
-    book.originalPrice !== ""
-  ) {
-    const numOrig =
-      typeof book.originalPrice === "number"
-        ? book.originalPrice
-        : parseFloat(String(book.originalPrice).replace(/[^0-9.]/g, ""));
-    if (!isNaN(numOrig) && numOrig > 0) {
-      originalPriceText = `₹${numOrig}`;
-    } else if (
-      typeof book.originalPrice === "string" &&
-      book.originalPrice.trim().length > 0
-    ) {
-      originalPriceText = book.originalPrice.trim();
-    }
-  }
-
-  let originalPriceInText: string | undefined = undefined;
-  if (
-    book.originalPriceIn !== undefined &&
-    book.originalPriceIn !== null &&
-    book.originalPriceIn !== ""
-  ) {
-    const numOrigIn =
-      typeof book.originalPriceIn === "number"
-        ? book.originalPriceIn
-        : parseFloat(String(book.originalPriceIn).replace(/[^0-9.]/g, ""));
-    if (!isNaN(numOrigIn) && numOrigIn > 0) {
-      originalPriceInText = `₹${numOrigIn}`;
-    } else if (
-      typeof book.originalPriceIn === "string" &&
-      book.originalPriceIn.trim().length > 0
-    ) {
-      originalPriceInText = book.originalPriceIn.trim();
-    }
-  }
-
-  let ratingText = "-";
-  if (book.rating !== undefined && book.rating !== null && book.rating !== "") {
-    ratingText = String(book.rating);
-  }
-
-  // Cover image resolution
   let coverSrc: StaticImageData | string = fallbackCover;
   if (book.coverImage && typeof book.coverImage === "string" && book.coverImage.trim()) {
     const trimmedCover = book.coverImage.trim();
     if (trimmedCover.startsWith("http://") || trimmedCover.startsWith("https://")) {
       coverSrc = trimmedCover;
     } else if (!trimmedCover.includes("/")) {
-      // Relative filename in upload directory
       coverSrc = `https://indobanglabooks.in/upload/product/${trimmedCover}`;
     } else {
       coverSrc = trimmedCover;
@@ -261,13 +191,13 @@ export function transformApiBookToCatalogBook(
     author: authorsText,
     publisher: publisherText,
     category: categoryText,
-    price: priceText,
-    rawPrice,
-    priceIn: priceInText,
-    rawPriceIn,
-    originalPrice: originalPriceText,
-    originalPriceIn: originalPriceInText,
-    rating: ratingText,
+    price: finalPrice,
+    rawPrice: finalRawPrice,
+    priceIn: priceInText !== "-" ? priceInText : undefined,
+    rawPriceIn: rawPriceIn || undefined,
+    originalPrice: origPriceText !== "-" ? origPriceText : undefined,
+    originalPriceIn: origPriceInText !== "-" ? origPriceInText : undefined,
+    rating: book.rating !== undefined && book.rating !== null && book.rating !== "" ? String(book.rating) : "-",
     cover: coverSrc,
     detail: book.description ? book.description.replace(/<[^>]*>?/gm, "").trim() : "-",
     publishedYear: book.publishedYear ? String(book.publishedYear) : "-",
@@ -277,4 +207,18 @@ export function transformApiBookToCatalogBook(
     isbn: book.isbn || "-",
     language: book.language || "-",
   };
+}
+
+export function resolveAuthorPhoto(photo?: string | null): string {
+  if (!photo || typeof photo !== "string" || !photo.trim()) {
+    return DEFAULT_AUTHOR_FALLBACK;
+  }
+  const trimmed = photo.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  const backendBase =
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
+    "http://localhost:5000";
+  return `${backendBase}/assets/upload/author/${trimmed}`;
 }

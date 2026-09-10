@@ -10,7 +10,7 @@ export default function BuyerLayout({
 }) {
   return (
     <>
-      <Navbar wish={0} cart={0} />
+      <Navbar wish={0} />
       <main>{children}</main>
       <Footer />
     </>

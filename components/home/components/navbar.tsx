@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 
 import { IconButton } from "./icon-button";
-import { useCurrentUser, useLogoutModalStore } from "@/features/auth";
+import { useCurrentUser, useLogoutModalStore, useRequireAuth } from "@/features/auth";
+import { useGuestCartStore, selectCartTotalCount, selectIsHydrated } from "@/features/cart";
+import { useWishlistStore, selectWishlistCount, selectIsWishlistHydrated } from "@/features/wishlist";
 import { useCategories } from "@/features/categories";
 import {
   DropdownMenu,
@@ -32,16 +34,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface NavbarProps {
-  wish: number;
-  cart: number;
+  wish?: number;
+  cart?: number;
 }
 
 const MOBILE_LINKS = [
   { label: "Home", href: "/#top" },
-  { label: "Books", href: "/#books" },
+  { label: "Books", href: "/books" },
   { label: "Authors", href: "/#authors" },
   { label: "Publishers", href: "/publishers" },
   { label: "Categories", href: "/categories" },
+  { label: "Wishlist", href: "/wishlist" },
   { label: "Cart", href: "/cart" },
 ] as const;
 
@@ -50,13 +53,22 @@ const NAVBAR_ANIMATION_TRANSITION: Transition = {
   ease: [0.16, 1, 0.3, 1],
 };
 
-let hasNavbarHomeAnimated = false;
-
-export function Navbar({ wish, cart }: NavbarProps) {
+export function Navbar({ wish = 0, cart }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const storeCartCount = useGuestCartStore(selectCartTotalCount);
+  const isCartHydrated = useGuestCartStore(selectIsHydrated);
+  const resolvedCartCount =
+    cart !== undefined ? cart : isCartHydrated ? storeCartCount : 0;
+
+  const storeWishCount = useWishlistStore(selectWishlistCount);
+  const isWishHydrated = useWishlistStore(selectIsWishlistHydrated);
+  const resolvedWishCount =
+    wish > 0 ? wish : isWishHydrated ? storeWishCount : 0;
+
   const { data: user } = useCurrentUser();
+  const { withAuth, redirectToLogin } = useRequireAuth();
   const openLogoutModal = useLogoutModalStore((state) => state.open);
 
   const { data: categoriesResponse, isLoading: isCategoriesLoading } =
@@ -66,18 +78,12 @@ export function Navbar({ wish, cart }: NavbarProps) {
   const userAvatar = user?.profilePicture || user?.avatar;
 
   const [searchOpen, setSearchOpen] = useState(false);
+  const [navSearch, setNavSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const isHomePage = pathname === "/";
-  const shouldAnimate = isHomePage && !hasNavbarHomeAnimated;
-
-  useEffect(() => {
-    if (isHomePage) {
-      hasNavbarHomeAnimated = true;
-    }
-  }, [isHomePage]);
 
   useEffect(() => {
     const handleScroll = (): void => {
@@ -95,11 +101,14 @@ export function Navbar({ wish, cart }: NavbarProps) {
     };
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-    setSearchOpen(false);
-    setCategoriesOpen(false);
-  }, [pathname]);
+  const handleNavSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (navSearch.trim()) {
+      router.push(`/books?search=${encodeURIComponent(navSearch.trim())}`);
+      setSearchOpen(false);
+      setNavSearch("");
+    }
+  };
 
   const iconButtonClassName = scrolled
     ? "text-foreground hover:bg-surface-hover hover:border-border"
@@ -112,23 +121,12 @@ export function Navbar({ wish, cart }: NavbarProps) {
   return (
     <>
       <motion.nav
-        initial={
-          shouldAnimate
-            ? {
-              y: -16,
-              opacity: 0,
-            }
-            : false
-        }
+        initial={isHomePage ? { y: -16, opacity: 0 } : false}
         animate={{
           y: 0,
           opacity: 1,
         }}
-        transition={
-          shouldAnimate
-            ? NAVBAR_ANIMATION_TRANSITION
-            : { duration: 0 }
-        }
+        transition={isHomePage ? NAVBAR_ANIMATION_TRANSITION : { duration: 0 }}
         className={`fixed inset-x-0 top-0 z-50 h-[76px] transition-all duration-300 ${scrolled
           ? "border-b border-border bg-background/88 shadow-sm backdrop-blur-xl"
           : "border-0 bg-gradient-to-b from-black/60 via-black/25 to-transparent"
@@ -165,7 +163,7 @@ export function Navbar({ wish, cart }: NavbarProps) {
               Home
             </Link>
 
-            <Link href="/#books" className={navLinkClassName}>
+            <Link href="/books" className={navLinkClassName}>
               Books
             </Link>
 
@@ -198,11 +196,10 @@ export function Navbar({ wish, cart }: NavbarProps) {
               </Link>
 
               <div
-                className={`absolute top-full left-1/2 z-50 w-max min-w-[300px] -translate-x-1/2 pt-12 transition-all duration-300 ${
-                  categoriesOpen
-                    ? "visible opacity-100 pointer-events-auto"
-                    : "invisible opacity-0 pointer-events-none"
-                }`}
+                className={`absolute top-full left-1/2 z-50 w-max min-w-[300px] -translate-x-1/2 pt-12 transition-all duration-300 ${categoriesOpen
+                  ? "visible opacity-100 pointer-events-auto"
+                  : "invisible opacity-0 pointer-events-none"
+                  }`}
               >
                 <div className="relative rounded-2xl border border-border bg-background p-4 shadow-2xl md:p-5">
                   {/* Arrow */}
@@ -290,39 +287,42 @@ export function Navbar({ wish, cart }: NavbarProps) {
               </div>
             </div>
 
-            {/* Search Input */}
-            {/* <div
-              className={`flex h-11 items-center gap-2.5 overflow-hidden rounded-sm transition-all duration-300 ${scrolled
+            {/* Search Input Form */}
+            <form
+              onSubmit={handleNavSearchSubmit}
+              className={`flex h-11 items-center gap-2.5 overflow-hidden rounded-md transition-all duration-300 ${scrolled
                 ? "border border-border bg-card"
                 : "border border-white/20 bg-black/50"
                 } ${searchOpen
-                  ? "w-[220px] pr-2 pl-3.5 opacity-100 sm:w-[320px]"
-                  : "pointer-events-none w-0 p-0 opacity-0"
+                  ? "w-[200px] pr-2 pl-3 opacity-100 sm:w-[300px]"
+                  : "pointer-events-none w-0 p-0 opacity-0 border-0"
                 }`}
             >
               <Search
                 size={18}
-                className={`shrink-0 ${scrolled
-                  ? "text-muted-foreground"
-                  : "text-zinc-400"
+                className={`shrink-0 ${scrolled ? "text-muted-foreground" : "text-zinc-400"
                   }`}
               />
 
               <input
                 type="search"
-                className={`w-full border-0 bg-transparent text-[13px] outline-none ${scrolled
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                className={`w-full border-0 bg-transparent text-[13px] outline-none [&::-webkit-search-cancel-button]:hidden ${scrolled
                   ? "text-foreground placeholder:text-muted-foreground"
                   : "text-white placeholder:text-zinc-400"
                   }`}
                 aria-label="Search books"
-                autoFocus={searchOpen}
-                placeholder="Search books, authors or publishers…"
+                placeholder="Search books, authors, publishers…"
               />
 
               <button
                 type="button"
                 aria-label="Close search"
-                onClick={() => setSearchOpen(false)}
+                onClick={() => {
+                  setSearchOpen(false);
+                  setNavSearch("");
+                }}
                 className={`grid cursor-pointer place-items-center border-0 bg-transparent ${scrolled
                   ? "text-muted-foreground hover:text-foreground"
                   : "text-zinc-400 hover:text-white"
@@ -330,7 +330,7 @@ export function Navbar({ wish, cart }: NavbarProps) {
               >
                 <X size={17} />
               </button>
-            </div> */}
+            </form>
 
             {!searchOpen && (
               <IconButton
@@ -344,7 +344,8 @@ export function Navbar({ wish, cart }: NavbarProps) {
 
             <IconButton
               label="Wishlist"
-              count={wish}
+              count={resolvedWishCount}
+              onClick={() => router.push("/wishlist")}
               className={iconButtonClassName}
             >
               <Heart size={19} />
@@ -352,7 +353,7 @@ export function Navbar({ wish, cart }: NavbarProps) {
 
             <IconButton
               label="Shopping cart"
-              count={cart}
+              count={resolvedCartCount}
               onClick={() => router.push("/cart")}
               className={iconButtonClassName}
             >
@@ -367,8 +368,8 @@ export function Navbar({ wish, cart }: NavbarProps) {
                       type="button"
                       aria-label="Open user menu"
                       className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${scrolled
-                          ? "hover:bg-muted"
-                          : "hover:bg-white/10"
+                        ? "hover:bg-muted"
+                        : "hover:bg-white/10"
                         }`}
                     >
                       {userAvatar ? (
@@ -409,33 +410,26 @@ export function Navbar({ wish, cart }: NavbarProps) {
                             />
                           </div>
                         ) : (
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white">
-                            {user.name?.charAt(0).toUpperCase() || "U"}
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
+                            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                           </div>
                         )}
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {user.name}
+                        <div className="flex flex-col space-y-0.5 overflow-hidden">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {user.name || "User"}
                           </p>
-
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {user.email}
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user.email || user.mobileNumber || ""}
                           </p>
                         </div>
                       </div>
-
-                      <p className="mt-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {user.role}
-                      </p>
                     </DropdownMenuLabel>
-
                     <DropdownMenuSeparator />
 
                     {user.role === "SELLER" && (
                       <DropdownMenuItem
                         onClick={() => router.push("/dashboard")}
-                        className="h-9 cursor-pointer rounded-lg px-2.5"
+                        className="cursor-pointer py-2 text-xs font-medium"
                       >
                         <LayoutDashboard className="mr-2.5 h-4 w-4 text-muted-foreground" />
                         Seller Dashboard
@@ -443,8 +437,33 @@ export function Navbar({ wish, cart }: NavbarProps) {
                     )}
 
                     <DropdownMenuItem
-                      onClick={() => openLogoutModal()}
-                      className="h-9 cursor-pointer rounded-lg px-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                      onClick={() => router.push("/orders")}
+                      className="cursor-pointer py-2 text-xs font-medium"
+                    >
+                      <BookOpen className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      My Orders
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => router.push("/wishlist")}
+                      className="cursor-pointer py-2 text-xs font-medium"
+                    >
+                      <Heart className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      My Wishlist
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => router.push("/profile")}
+                      className="cursor-pointer py-2 text-xs font-medium"
+                    >
+                      <User className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      Profile Settings
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={openLogoutModal}
+                      className="cursor-pointer py-2 text-xs font-medium text-destructive focus:bg-destructive/10 focus:text-destructive"
                     >
                       <LogOut className="mr-2.5 h-4 w-4" />
                       Log out
@@ -456,7 +475,7 @@ export function Navbar({ wish, cart }: NavbarProps) {
               <div className="hidden sm:block">
                 <IconButton
                   label="Log in"
-                  onClick={() => router.push("/login")}
+                  onClick={() => redirectToLogin()}
                   className={iconButtonClassName}
                 >
                   <User size={19} />

@@ -17,7 +17,7 @@ export default function BooksPage() {
         </div>
       }
     >
-      <BooksCatalogPage title="ALL BOOKS" />
+      <BooksCatalogPage title="BOOKS" />
     </Suspense>
   );
 }

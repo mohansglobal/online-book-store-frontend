@@ -189,7 +189,8 @@ async function request<T>(
       endpoint.includes("/auth/login") ||
       endpoint.includes("/auth/register") ||
       endpoint.includes("/auth/refresh-token") ||
-      endpoint.includes("/auth/logout");
+      endpoint.includes("/auth/logout") ||
+      endpoint.includes("/auth/me");
 
     // handle 401: attempt cookie refresh and retry request seamlessly
     if (response.status === 401 && !skipAuthRefresh && !isAuthEndpoint) {

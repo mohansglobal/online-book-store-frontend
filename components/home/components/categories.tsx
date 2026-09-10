@@ -5,157 +5,22 @@ import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-import { categories as staticCategories } from "../data";
 import { SectionHeading } from "./section-heading";
+import { getCategoryImage } from "./category-images";
 import { useCategories } from "@/features/categories";
-
-import novelsImg from "@/assets/novels.jpeg";
-import poetryImg from "@/assets/poetry.jpeg";
-import shortImg from "@/assets/short.jpeg";
-import sportImg from "@/assets/sport.jpeg";
-import spiritualityImg from "@/assets/sprit.jpeg";
-import politicsImg from "@/assets/politics.jpeg";
-import translationImg from "@/assets/translation.jpeg";
-import eBooksImg from "@/assets/ebook.jpeg";
-import textBooksImg from "@/assets/text-book.jpeg";
-import fineBalance from "@/assets/fineBalance.jpeg";
-import midnightsChildren from "@/assets/midnightsChildren.jpeg";
-import namesake from "@/assets/namesake.jpeg";
-import palaceIllusions from "@/assets/palaceIllusions.jpeg";
-import smallThings from "@/assets/smallThings.jpeg";
-import suitableBoy from "@/assets/suitableBoy.jpeg";
-import trainPakistan from "@/assets/trainPakistan.jpeg";
-import whiteTiger from "@/assets/whiteTiger.jpeg";
-import coverCode from "@/assets/cover-code.jpg";
-import coverGarden from "@/assets/cover-garden.jpg";
-import coverLight from "@/assets/cover-light.jpg";
-import coverMidnight from "@/assets/cover-midnight.jpg";
-import coverOcean from "@/assets/cover-ocean.jpg";
-import coverOrbit from "@/assets/cover-orbit.jpg";
-import coverRiver from "@/assets/cover-river.jpg";
-import coverSilence from "@/assets/cover-silence.jpg";
-import khoabnama from "@/assets/khoabnama.jpg";
-import mastiskerMalikana from "@/assets/mastisker-malikana.jpg";
-import patherpanchali from "@/assets/patherpanchali.jpeg";
-import freshnew from "@/assets/freshnew.jpeg";
-import newbook from "@/assets/newbook.jpeg";
-import verynew from "@/assets/verynew.jpeg";
-
-const CATEGORY_IMAGE_MAP: Record<string, StaticImageData> = {
-  novel: novelsImg,
-  fiction: novelsImg,
-  poetry: poetryImg,
-  poem: poetryImg,
-  kobita: poetryImg,
-  short: shortImg,
-  story: shortImg,
-  stories: shortImg,
-  spirituality: spiritualityImg,
-  spiritual: spiritualityImg,
-  religion: spiritualityImg,
-  dhormo: spiritualityImg,
-  politics: politicsImg,
-  history: politicsImg,
-  sport: sportImg,
-  sports: sportImg,
-  translation: translationImg,
-  translations: translationImg,
-  anubad: translationImg,
-  ebook: eBooksImg,
-  ebooks: eBooksImg,
-  academic: textBooksImg,
-  textbook: textBooksImg,
-  textbooks: textBooksImg,
-  education: textBooksImg,
-  thriller: midnightsChildren,
-  mystery: midnightsChildren,
-  mythology: palaceIllusions,
-  drama: fineBalance,
-  biography: suitableBoy,
-  classics: trainPakistan,
-  classic: trainPakistan,
-  philosophy: coverSilence,
-  science: coverCode,
-  tech: coverCode,
-  technology: coverCode,
-  nature: coverGarden,
-  environment: coverRiver,
-  ocean: coverOcean,
-  space: coverOrbit,
-  night: coverMidnight,
-  light: coverLight,
-  bengali: patherpanchali,
-  literature: smallThings,
-  mind: mastiskerMalikana,
-  dream: khoabnama,
-  new: freshnew,
-  latest: verynew,
-  book: newbook,
-  tiger: whiteTiger,
-  identity: namesake,
-};
-
-const ASSET_IMAGES: StaticImageData[] = [
-  novelsImg,
-  poetryImg,
-  shortImg,
-  spiritualityImg,
-  politicsImg,
-  sportImg,
-  translationImg,
-  eBooksImg,
-  textBooksImg,
-  fineBalance,
-  midnightsChildren,
-  namesake,
-  palaceIllusions,
-  smallThings,
-  suitableBoy,
-  trainPakistan,
-  whiteTiger,
-  coverCode,
-  coverGarden,
-  coverLight,
-  coverMidnight,
-  coverOcean,
-  coverOrbit,
-  coverRiver,
-  coverSilence,
-  khoabnama,
-  mastiskerMalikana,
-  patherpanchali,
-  freshnew,
-  newbook,
-  verynew,
-];
-
-function getCategoryImage(name = "", slug = "", index = 0): StaticImageData {
-  const query = `${name} ${slug}`.toLowerCase();
-  for (const [key, img] of Object.entries(CATEGORY_IMAGE_MAP)) {
-    if (query.includes(key)) {
-      return img;
-    }
-  }
-  return ASSET_IMAGES[index % ASSET_IMAGES.length];
-}
 
 function getGridClasses(index: number): string {
   switch (index) {
     case 0:
       return "col-span-2";
-
     case 3:
       return "row-span-1 md:row-span-2";
-
     case 5:
       return "col-span-2 row-span-1 md:row-span-2";
-
     case 7:
       return "col-span-1 md:col-span-2";
-
     case 8:
       return "col-span-2";
-
     default:
       return "";
   }
@@ -170,14 +35,15 @@ export function Categories() {
     if (categoriesResponse?.data && categoriesResponse.data.length > 0) {
       return categoriesResponse.data.slice(0, 9);
     }
-    return staticCategories.slice(0, 9);
+    return [];
   }, [categoriesResponse]);
 
+  if (!isLoading && categoriesList.length === 0) {
+    return null;
+  }
+
   return (
-    <section
-      id="categories"
-      className="bg-card py-[76px] md:py-[120px]"
-    >
+    <section id="categories" className="bg-card py-[76px] md:py-[120px]">
       <div className="mx-auto w-[min(1320px,calc(100%-36px))] md:w-[min(1320px,calc(100%-72px))]">
         <div className="relative md:pr-24">
           <SectionHeading
@@ -191,7 +57,6 @@ export function Categories() {
               className="group mr-3 flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               See all
-
               <ArrowUpRight
                 size={16}
                 className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -243,9 +108,7 @@ export function Categories() {
                     : "text-[22px] md:text-[28px]";
 
               const categoryTarget =
-                "_id" in category && category._id
-                  ? category._id
-                  : slug;
+                "_id" in category && category._id ? category._id : slug;
 
               return (
                 <Link

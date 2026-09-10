@@ -220,7 +220,7 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-accent selection:text-white">
-            <Navbar wish={0} cart={0} />
+            <Navbar wish={0} />
 
             <CategoryBanner
                 categoryName=""

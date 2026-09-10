@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Check, Loader2, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+import { RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
-import { usePublishers, type Publisher } from "@/features/publishers";
-import { useAuthors, type Author } from "@/features/authors";
-import { useCategories, type Category } from "@/features/categories";
+import { usePublishers } from "@/features/publishers";
+import { useAuthors } from "@/features/authors";
+import { useCategories } from "@/features/categories";
+import { FilterSection } from "./filter-section";
+import { PriceFilterSection } from "./price-filter-section";
+import { useRetainedFilterItems } from "../hooks/use-retained-filter-items";
 
 export interface FilterItem {
   _id: string;
@@ -15,153 +18,146 @@ export interface FilterItem {
 }
 
 export interface BooksFilterSidebarProps {
-  selectedPublisherId?: string;
-  onSelectPublisher: (publisherId: string) => void;
-  selectedAuthorId?: string;
-  onSelectAuthor: (authorId: string) => void;
-  selectedCategoryId?: string;
-  onSelectCategory: (categoryId: string) => void;
+  selectedPublisherIds?: string[] | string;
+  selectedPublisherId?: string[] | string;
+  onSelectPublisher: (publisherId: string, item?: FilterItem) => void;
+  selectedAuthorIds?: string[] | string;
+  selectedAuthorId?: string[] | string;
+  onSelectAuthor: (authorId: string, item?: FilterItem) => void;
+  selectedCategoryIds?: string[] | string;
+  selectedCategoryId?: string[] | string;
+  onSelectCategory: (categoryId: string, item?: FilterItem) => void;
+  minPrice?: number;
+  maxPrice?: number;
+  onApplyPrice?: (min?: number, max?: number) => void;
+  onClearPrice?: () => void;
   onClearAll: () => void;
   showCategoriesSection?: boolean;
   className?: string;
 }
 
+function normalizeIds(val?: string[] | string): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter(Boolean);
+  return val
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function deduplicateFilterItems(items: FilterItem[]): FilterItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = (item.name || item._id || item.slug || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function BooksFilterSidebar({
+  selectedPublisherIds,
   selectedPublisherId,
   onSelectPublisher,
+  selectedAuthorIds,
   selectedAuthorId,
   onSelectAuthor,
+  selectedCategoryIds,
   selectedCategoryId,
   onSelectCategory,
+  minPrice,
+  maxPrice,
+  onApplyPrice,
+  onClearPrice,
   onClearAll,
   showCategoriesSection = true,
   className = "",
 }: BooksFilterSidebarProps) {
-  // Local search inputs for each filter category
+  const publisherIds = useMemo(
+    () => normalizeIds(selectedPublisherIds ?? selectedPublisherId),
+    [selectedPublisherIds, selectedPublisherId],
+  );
+
+  const authorIds = useMemo(
+    () => normalizeIds(selectedAuthorIds ?? selectedAuthorId),
+    [selectedAuthorIds, selectedAuthorId],
+  );
+
+  const categoryIds = useMemo(
+    () => normalizeIds(selectedCategoryIds ?? selectedCategoryId),
+    [selectedCategoryIds, selectedCategoryId],
+  );
+
+  // Search input state per filter type
   const [publisherSearch, setPublisherSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
 
-  // Debounce search terms (300ms) before querying the backend
   const debouncedPublisherSearch = useDebounce(publisherSearch.trim(), 300);
   const debouncedAuthorSearch = useDebounce(authorSearch.trim(), 300);
   const debouncedCategorySearch = useDebounce(categorySearch.trim(), 300);
 
-  // Backend queries with default limit of 10 items
+  // Queries
   const { data: publishersData, isFetching: isFetchingPublishers } = usePublishers({
-    limit: 10,
+    limit: 100,
     search: debouncedPublisherSearch || undefined,
   });
 
   const { data: authorsData, isFetching: isFetchingAuthors } = useAuthors({
-    limit: 10,
+    limit: 100,
     search: debouncedAuthorSearch || undefined,
   });
 
   const { data: categoriesData, isFetching: isFetchingCategories } = useCategories({
-    limit: 10,
+    limit: 100,
     search: debouncedCategorySearch || undefined,
   });
 
-  const rawPublishers: FilterItem[] = useMemo(() => {
-    return (publishersData?.data ?? []) as FilterItem[];
-  }, [publishersData]);
+  const rawPublishers: FilterItem[] = useMemo(
+    () => deduplicateFilterItems((publishersData?.data ?? []) as FilterItem[]),
+    [publishersData],
+  );
 
-  const rawAuthors: FilterItem[] = useMemo(() => {
-    return (authorsData?.data ?? []) as FilterItem[];
-  }, [authorsData]);
+  const rawAuthors: FilterItem[] = useMemo(
+    () => deduplicateFilterItems((authorsData?.data ?? []) as FilterItem[]),
+    [authorsData],
+  );
 
-  const rawCategories: FilterItem[] = useMemo(() => {
-    return (categoriesData?.data ?? []) as FilterItem[];
-  }, [categoriesData]);
+  const rawCategories: FilterItem[] = useMemo(
+    () => deduplicateFilterItems((categoriesData?.data ?? []) as FilterItem[]),
+    [categoriesData],
+  );
 
-  // Keep a reference of selected items so they remain visible when filtering/searching
-  const [savedSelectedPublisher, setSavedSelectedPublisher] = useState<FilterItem | null>(null);
-  const [savedSelectedAuthor, setSavedSelectedAuthor] = useState<FilterItem | null>(null);
-  const [savedSelectedCategory, setSavedSelectedCategory] = useState<FilterItem | null>(null);
+  // Retain selected items
+  const { displayedItems: displayedPublishers, saveItem: savePublisher } =
+    useRetainedFilterItems(rawPublishers, publisherIds);
+  const { displayedItems: displayedAuthors, saveItem: saveAuthor } =
+    useRetainedFilterItems(rawAuthors, authorIds);
+  const { displayedItems: displayedCategories, saveItem: saveCategory } =
+    useRetainedFilterItems(rawCategories, categoryIds);
 
-  // Save selected item info whenever found in returned data
-  React.useEffect(() => {
-    if (selectedPublisherId) {
-      const found = rawPublishers.find(
-        (p) => p._id === selectedPublisherId || p.slug === selectedPublisherId,
-      );
-      if (found) setSavedSelectedPublisher(found);
-    } else {
-      setSavedSelectedPublisher(null);
-    }
-  }, [selectedPublisherId, rawPublishers]);
-
-  React.useEffect(() => {
-    if (selectedAuthorId) {
-      const found = rawAuthors.find(
-        (a) => a._id === selectedAuthorId || a.slug === selectedAuthorId,
-      );
-      if (found) setSavedSelectedAuthor(found);
-    } else {
-      setSavedSelectedAuthor(null);
-    }
-  }, [selectedAuthorId, rawAuthors]);
-
-  React.useEffect(() => {
-    if (selectedCategoryId) {
-      const found = rawCategories.find(
-        (c) => c._id === selectedCategoryId || c.slug === selectedCategoryId,
-      );
-      if (found) setSavedSelectedCategory(found);
-    } else {
-      setSavedSelectedCategory(null);
-    }
-  }, [selectedCategoryId, rawCategories]);
-
-  // Merge selected item into list if not already present among the 10 results
-  const displayedPublishers = useMemo(() => {
-    if (
-      selectedPublisherId &&
-      savedSelectedPublisher &&
-      !rawPublishers.some(
-        (p) => p._id === selectedPublisherId || p.slug === selectedPublisherId,
-      )
-    ) {
-      return [savedSelectedPublisher, ...rawPublishers];
-    }
-    return rawPublishers;
-  }, [rawPublishers, selectedPublisherId, savedSelectedPublisher]);
-
-  const displayedAuthors = useMemo(() => {
-    if (
-      selectedAuthorId &&
-      savedSelectedAuthor &&
-      !rawAuthors.some(
-        (a) => a._id === selectedAuthorId || a.slug === selectedAuthorId,
-      )
-    ) {
-      return [savedSelectedAuthor, ...rawAuthors];
-    }
-    return rawAuthors;
-  }, [rawAuthors, selectedAuthorId, savedSelectedAuthor]);
-
-  const displayedCategories = useMemo(() => {
-    if (
-      selectedCategoryId &&
-      savedSelectedCategory &&
-      !rawCategories.some(
-        (c) => c._id === selectedCategoryId || c.slug === selectedCategoryId,
-      )
-    ) {
-      return [savedSelectedCategory, ...rawCategories];
-    }
-    return rawCategories;
-  }, [rawCategories, selectedCategoryId, savedSelectedCategory]);
-
+  const hasPriceFilter = minPrice !== undefined || maxPrice !== undefined;
   const activeFiltersCount =
-    (selectedPublisherId ? 1 : 0) +
-    (selectedAuthorId ? 1 : 0) +
-    (selectedCategoryId ? 1 : 0);
+    publisherIds.length + authorIds.length + categoryIds.length + (hasPriceFilter ? 1 : 0);
+
+  const handleTogglePublisher = (id: string, item: FilterItem) => {
+    savePublisher(id, item);
+    onSelectPublisher(id, item);
+  };
+
+  const handleToggleAuthor = (id: string, item: FilterItem) => {
+    saveAuthor(id, item);
+    onSelectAuthor(id, item);
+  };
+
+  const handleToggleCategory = (id: string, item: FilterItem) => {
+    saveCategory(id, item);
+    onSelectCategory(id, item);
+  };
 
   return (
     <aside
-      className={`w-full md:w-64 shrink-0 space-y-8 pr-2 md:pr-4 py-6 md:py-8 ${className}`}
+      className={`w-full md:w-64 shrink-0 space-y-6 pr-2 md:pr-4 py-4 md:py-6 ${className}`}
       aria-label="Book Catalog Filters"
     >
       {/* Top Header & Reset action */}
@@ -190,285 +186,55 @@ export function BooksFilterSidebar({
         )}
       </div>
 
-      {/* 1. PUBLISHERS SECTION */}
-      <div>
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/80">
-          <h3 className="text-[12px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-            Publisher
-          </h3>
-          {selectedPublisherId && (
-            <span className="text-[11px] font-medium text-accent">
-              1 selected
-            </span>
-          )}
-        </div>
+      {/* 1. Price Range Section */}
+      {onApplyPrice && onClearPrice && (
+        <PriceFilterSection
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          onApplyPrice={onApplyPrice}
+          onClearPrice={onClearPrice}
+        />
+      )}
 
-        {/* Backend search input */}
-        <div className="relative mb-3">
-          {isFetchingPublishers ? (
-            <Loader2
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-accent animate-spin"
-            />
-          ) : (
-            <Search
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-          )}
-          <input
-            type="text"
-            placeholder="Search publishers..."
-            value={publisherSearch}
-            onChange={(e) => setPublisherSearch(e.target.value)}
-            className="w-full rounded-md border border-border/70 bg-muted/30 py-1.5 pl-8 pr-7 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-          />
-          {publisherSearch && (
-            <button
-              type="button"
-              onClick={() => setPublisherSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-              aria-label="Clear publisher search"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
+      {/* 2. Publishers */}
+      <FilterSection
+        title="Publisher"
+        items={displayedPublishers}
+        selectedIds={publisherIds}
+        onToggle={handleTogglePublisher}
+        searchValue={publisherSearch}
+        onSearchChange={setPublisherSearch}
+        isLoading={isFetchingPublishers}
+        searchPlaceholder="Search publishers..."
+        emptyText="No publisher found"
+      />
 
-        <div className="space-y-2.5 max-h-60 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {displayedPublishers.map((pub) => {
-            const isSelected = Boolean(
-              selectedPublisherId &&
-                (selectedPublisherId === pub._id ||
-                  (pub.slug && selectedPublisherId === pub.slug)),
-            );
-            return (
-              <label
-                key={pub._id}
-                className="flex items-center gap-3 cursor-pointer group select-none py-0.5"
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={isSelected}
-                  onChange={() => {
-                    if (!isSelected) setSavedSelectedPublisher(pub);
-                    onSelectPublisher(pub._id);
-                  }}
-                />
-                <div
-                  className={`w-4 h-4 rounded-[3px] border flex items-center justify-center transition-colors shrink-0 ${isSelected
-                    ? "bg-accent border-accent text-white shadow-xs"
-                    : "border-border bg-transparent group-hover:border-accent/70"
-                    }`}
-                >
-                  {isSelected && <Check size={12} strokeWidth={4} />}
-                </div>
-                <span
-                  className={`text-[13px] transition-colors leading-tight ${isSelected
-                    ? "text-foreground font-semibold"
-                    : "text-foreground/80 group-hover:text-foreground"
-                    }`}
-                >
-                  {pub.name}
-                </span>
-              </label>
-            );
-          })}
-          {displayedPublishers.length === 0 && (
-            <p className="text-[12px] text-muted-foreground italic py-1">
-              {isFetchingPublishers ? "Searching publishers..." : "No publisher found"}
-            </p>
-          )}
-        </div>
-      </div>
+      {/* 3. Authors */}
+      <FilterSection
+        title="Author"
+        items={displayedAuthors}
+        selectedIds={authorIds}
+        onToggle={handleToggleAuthor}
+        searchValue={authorSearch}
+        onSearchChange={setAuthorSearch}
+        isLoading={isFetchingAuthors}
+        searchPlaceholder="Search authors..."
+        emptyText="No author found"
+      />
 
-      {/* 2. AUTHORS SECTION */}
-      <div>
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/80">
-          <h3 className="text-[12px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-            Author
-          </h3>
-          {selectedAuthorId && (
-            <span className="text-[11px] font-medium text-accent">
-              1 selected
-            </span>
-          )}
-        </div>
-
-        {/* Backend search input */}
-        <div className="relative mb-3">
-          {isFetchingAuthors ? (
-            <Loader2
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-accent animate-spin"
-            />
-          ) : (
-            <Search
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-          )}
-          <input
-            type="text"
-            placeholder="Search authors..."
-            value={authorSearch}
-            onChange={(e) => setAuthorSearch(e.target.value)}
-            className="w-full rounded-md border border-border/70 bg-muted/30 py-1.5 pl-8 pr-7 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-          />
-          {authorSearch && (
-            <button
-              type="button"
-              onClick={() => setAuthorSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-              aria-label="Clear author search"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-2.5 max-h-60 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {displayedAuthors.map((author) => {
-            const isSelected = Boolean(
-              selectedAuthorId &&
-                (selectedAuthorId === author._id ||
-                  (author.slug && selectedAuthorId === author.slug)),
-            );
-            return (
-              <label
-                key={author._id}
-                className="flex items-center gap-3 cursor-pointer group select-none py-0.5"
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={isSelected}
-                  onChange={() => {
-                    if (!isSelected) setSavedSelectedAuthor(author);
-                    onSelectAuthor(author._id);
-                  }}
-                />
-                <div
-                  className={`w-4 h-4 rounded-[3px] border flex items-center justify-center transition-colors shrink-0 ${isSelected
-                    ? "bg-accent border-accent text-white shadow-xs"
-                    : "border-border bg-transparent group-hover:border-accent/70"
-                    }`}
-                >
-                  {isSelected && <Check size={12} strokeWidth={4} />}
-                </div>
-                <span
-                  className={`text-[13px] transition-colors leading-tight ${isSelected
-                    ? "text-foreground font-semibold"
-                    : "text-foreground/80 group-hover:text-foreground"
-                    }`}
-                >
-                  {author.name}
-                </span>
-              </label>
-            );
-          })}
-          {displayedAuthors.length === 0 && (
-            <p className="text-[12px] text-muted-foreground italic py-1">
-              {isFetchingAuthors ? "Searching authors..." : "No author found"}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* 3. CATEGORIES SECTION */}
+      {/* 4. Categories */}
       {showCategoriesSection && (
-        <div>
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/80">
-            <h3 className="text-[12px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-              Category
-            </h3>
-            {selectedCategoryId && (
-              <span className="text-[11px] font-medium text-accent">
-                1 selected
-              </span>
-            )}
-          </div>
-
-          {/* Backend search input */}
-          <div className="relative mb-3">
-            {isFetchingCategories ? (
-              <Loader2
-                size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-accent animate-spin"
-              />
-            ) : (
-              <Search
-                size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-            )}
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={categorySearch}
-              onChange={(e) => setCategorySearch(e.target.value)}
-              className="w-full rounded-md border border-border/70 bg-muted/30 py-1.5 pl-8 pr-7 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-accent"
-            />
-            {categorySearch && (
-              <button
-                type="button"
-                onClick={() => setCategorySearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Clear category search"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-2.5 max-h-60 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {displayedCategories.map((cat) => {
-              const isSelected = Boolean(
-                selectedCategoryId &&
-                  (selectedCategoryId === cat._id ||
-                    (cat.slug && selectedCategoryId === cat.slug)),
-              );
-              return (
-                <label
-                  key={cat._id}
-                  className="flex items-center gap-3 cursor-pointer group select-none py-0.5"
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={isSelected}
-                    onChange={() => {
-                      if (!isSelected) setSavedSelectedCategory(cat);
-                      onSelectCategory(cat._id);
-                    }}
-                  />
-                  <div
-                    className={`w-4 h-4 rounded-[3px] border flex items-center justify-center transition-colors shrink-0 ${isSelected
-                      ? "bg-accent border-accent text-white shadow-xs"
-                      : "border-border bg-transparent group-hover:border-accent/70"
-                      }`}
-                  >
-                    {isSelected && <Check size={12} strokeWidth={4} />}
-                  </div>
-                  <span
-                    className={`text-[13px] transition-colors leading-tight ${isSelected
-                      ? "text-foreground font-semibold"
-                      : "text-foreground/80 group-hover:text-foreground"
-                      }`}
-                  >
-                    {cat.name}
-                  </span>
-                </label>
-              );
-            })}
-            {displayedCategories.length === 0 && (
-              <p className="text-[12px] text-muted-foreground italic py-1">
-                {isFetchingCategories ? "Searching categories..." : "No category found"}
-              </p>
-            )}
-          </div>
-        </div>
+        <FilterSection
+          title="Category"
+          items={displayedCategories}
+          selectedIds={categoryIds}
+          onToggle={handleToggleCategory}
+          searchValue={categorySearch}
+          onSearchChange={setCategorySearch}
+          isLoading={isFetchingCategories}
+          searchPlaceholder="Search categories..."
+          emptyText="No category found"
+        />
       )}
     </aside>
   );

@@ -1,5 +1,4 @@
-// auth api endpoints
-import { apiClient } from "@/lib/api";
+import { apiClient, isApiClientError } from "@/lib/api";
 import type {
   AuthResponse,
   CurrentUserResponse,
@@ -41,9 +40,17 @@ export async function logoutUser(): Promise<LogoutResponse> {
 // get current authenticated user profile
 export async function getCurrentUser(options?: {
   signal?: AbortSignal;
-}): Promise<CurrentUserResponse> {
-  return apiClient.get<CurrentUserResponse>("/auth/me", {
-    signal: options?.signal,
-  });
+}): Promise<CurrentUserResponse | null> {
+  try {
+    return await apiClient.get<CurrentUserResponse>("/auth/me", {
+      signal: options?.signal,
+      skipAuthRefresh: true,
+    });
+  } catch (err: unknown) {
+    if (isApiClientError(err) && (err.status === 401 || err.status === 403)) {
+      return null;
+    }
+    throw err;
+  }
 }
 

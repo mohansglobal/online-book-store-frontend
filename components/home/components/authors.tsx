@@ -10,12 +10,11 @@ import {
   BookOpen,
 } from "lucide-react";
 
-import { authors as staticAuthors } from "../data";
 import { IconButton } from "./icon-button";
 import { SectionHeading } from "./section-heading";
 import { useAuthors } from "@/features/authors";
 
- const DEFAULT_AUTHOR_FALLBACK = "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
+const DEFAULT_AUTHOR_FALLBACK = "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
 
 function cleanBio(bio?: string): string {
   if (!bio) return "";
@@ -86,8 +85,12 @@ export function Authors() {
     if (authorsResponse?.data && authorsResponse.data.length > 0) {
       return authorsResponse.data.slice(0, 10);
     }
-    return staticAuthors.slice(0, 10);
+    return [];
   }, [authorsResponse]);
+
+  if (!isLoading && authorsList.length === 0) {
+    return null;
+  }
 
   const moveCarousel = (direction: CarouselDirection): void => {
     railRef.current?.scrollBy({
@@ -173,17 +176,17 @@ export function Authors() {
               const photo = "photo" in author ? author.photo : "image" in author ? (author.image as string) : undefined;
               const imageSrc = getAuthorImage(photo);
 
-              const bioText =
-                "bio" in author && author.bio
+              const bioText: string =
+                "bio" in author && typeof author.bio === "string" && author.bio
                   ? cleanBio(author.bio)
-                  : "works" in author && author.works
+                  : "works" in author && typeof author.works === "string" && author.works
                     ? author.works
                     : "Celebrated literary author";
 
-              const badgeText =
-                "nameBn" in author && author.nameBn
+              const badgeText: string =
+                "nameBn" in author && typeof author.nameBn === "string" && author.nameBn
                   ? author.nameBn
-                  : "genre" in author && author.genre
+                  : "genre" in author && typeof author.genre === "string" && author.genre
                     ? author.genre
                     : "Classic Icon";
 

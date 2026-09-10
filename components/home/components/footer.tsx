@@ -19,7 +19,7 @@ const FOOTER_COLUMNS = [
   {
     heading: "Discover",
     links: [
-      { label: "New Releases", href: "/#books" },
+      { label: "New Releases", href: "/books" },
       { label: "Best Sellers", href: "/#bestsellers" },
       { label: "Authors", href: "/authors" },
       { label: "Publishers", href: "/publishers" },

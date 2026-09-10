@@ -8,6 +8,7 @@ export function SectionHeading({
   title,
   copy,
   action,
+  actionHref = "/books",
 }: SectionHeadingProps) {
   return (
     <header className="mb-9 flex flex-col justify-between gap-6 md:mb-[52px] md:flex-row md:items-end md:gap-[30px]">
@@ -29,9 +30,9 @@ export function SectionHeading({
         )}
       </div>
 
-      {action && (
+      {/* {action && (
         <Link
-          href="/#books"
+          href={actionHref}
           className="hidden items-center gap-2 whitespace-nowrap text-sm font-medium text-muted-foreground transition-all hover:gap-3 hover:text-foreground md:inline-flex"
         >
           {action}
@@ -41,7 +42,7 @@ export function SectionHeading({
             aria-hidden="true"
           />
         </Link>
-      )}
+      )} */}
     </header>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 
 import type { BookCarouselProps } from "../types";
 import { BookCard } from "./book-card";
@@ -14,6 +15,8 @@ export function BookCarousel({
   title,
   eyebrow,
   items,
+  actionText = "See all",
+  actionHref = "/books",
   onWish,
   onCart,
   className = "bg-card",
@@ -35,9 +38,26 @@ export function BookCarousel({
     >
       <div className="mx-auto w-[min(1320px,calc(100%-36px))] md:w-[min(1320px,calc(100%-72px))]">
         <div className="relative md:pr-32">
-          <SectionHeading eyebrow={eyebrow} title={title} />
+          <SectionHeading
+            eyebrow={eyebrow}
+            title={title}
+            action={actionText}
+            actionHref={actionHref}
+          />
 
-          <div className="absolute right-0 bottom-1 hidden gap-1.5 md:flex">
+          <div className="absolute right-0 bottom-1 hidden items-center gap-1.5 md:flex">
+            <Link
+              href={actionHref}
+              className="group mr-3 flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              {actionText}
+
+              <ArrowUpRight
+                size={16}
+                className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+              />
+            </Link>
+
             <IconButton
               label="Previous"
               onClick={() => moveCarousel(-1)}
@@ -66,6 +86,19 @@ export function BookCarousel({
               onCart={onCart}
             />
           ))}
+        </div>
+
+        <div className="mt-6 flex justify-center md:hidden">
+          <Link
+            href={actionHref}
+            className="group inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent-hover transition-colors uppercase tracking-wider"
+          >
+            <span>{actionText}</span>
+            <ArrowUpRight
+              size={14}
+              className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </Link>
         </div>
       </div>
     </section>

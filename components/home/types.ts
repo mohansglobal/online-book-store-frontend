@@ -2,10 +2,13 @@ import type { ReactNode } from "react";
 import type { StaticImageData } from "next/image";
 
 export type Book = {
+  id?: string;
+  slug?: string;
   title: string;
   author: string;
   cover: string | StaticImageData;
   price: string;
+  rawPrice?: number;
   priceIn?: string;
   originalPrice?: string;
   rating: string;
@@ -47,6 +50,7 @@ export type SectionHeadingProps = {
   title: string;
   copy?: string;
   action?: string;
+  actionHref?: string;
 };
 
 export type BookCardProps = {
@@ -54,16 +58,18 @@ export type BookCardProps = {
   compact?: boolean;
   size?: "sm" | "md";
   className?: string;
-  onWish: () => void;
-  onCart: () => void;
+  onWish?: () => void;
+  onCart?: () => void;
 };
 
 export type BookCarouselProps = {
   title: string;
   eyebrow?: string;
   items: Book[];
-  onWish: () => void;
-  onCart: () => void;
+  actionText?: string;
+  actionHref?: string;
+  onWish?: () => void;
+  onCart?: () => void;
   className?: string;
   id?: string;
 };

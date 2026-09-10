@@ -207,7 +207,7 @@ export default function Page() {
 }
 ```
 
-Avoid 400-line `page.tsx` files containing:
+Avoid bloated `page.tsx` files (> 80 lines). Keep `page.tsx` strictly as a lightweight entry point and never include:
 
 ```text
 API logic
@@ -410,38 +410,43 @@ Do not place bookstore business logic inside `components/ui`.
 
 ---
 
-# 9. Component Size
+# 9. Component & File Size Limit (Strict < 300 Lines Rule)
 
-There is no strict maximum line count.
+**STRICT RULE: No single file or component may exceed 300 lines of code or JSX. Files with 300+ lines are strictly prohibited.**
 
-Use this as guidance:
+Any file or component that approaches or exceeds 250–300 lines **MUST** be decomposed immediately into multiple focused subcomponents, hooks, or utility files.
 
-```text
-< 120 lines       usually ideal
-120–200 lines     acceptable when cohesive
-200–300 lines     review responsibilities
-300–400 lines     usually split
-> 400 lines       strongly consider decomposition
-```
-
-Do not split files merely to satisfy a number.
-
-A cohesive 180-line component is better than five meaningless 35-line components.
-
-Split when responsibilities differ.
-
-Typical extraction signs:
+Line count guidelines:
 
 ```text
-large independent UI section
-separate form
-complex table
-complex modal
-reusable list item
-independent state
-independent data fetching
-large transformation logic
+< 120 lines       Ideal component size
+120–200 lines     Acceptable when cohesive and single-purpose
+200–250 lines     Warning zone: Review and prepare to split
+≥ 300 lines       STRICTLY FORBIDDEN — Must be broken down into subcomponents
 ```
+
+### Mandatory Decomposition Rules:
+
+When a component grows or has complex JSX/logic, decompose it according to these patterns:
+
+1. **Extract UI Subcomponents**:
+   - Break large JSX trees into smaller, reusable subcomponents in a `components/` subfolder.
+   - Examples: `books-filter-sidebar.tsx` decomposed into `filter-section.tsx`, `books-search-bar.tsx`, `books-catalog-toolbar.tsx`, `books-active-filters.tsx`.
+   - Never write monolithic JSX trees with multiple embedded collapsible sections, forms, and toolbars in one file.
+
+2. **Extract Logic into Custom Hooks**:
+   - Move state management, URL filter syncing, event handlers, and calculations into custom hooks (e.g., `use-book-filters.ts`, `use-cart-calculations.ts`).
+
+3. **Extract Schemas, Types, and Constants**:
+   - Types belong in `*.types.ts`.
+   - Zod schemas belong in `*.schema.ts`.
+   - Static filter lists, select options, and static configs belong in `*.constants.ts`.
+
+4. **Decomposition Triggers (Split immediately if you see)**:
+   - Multiple distinct UI sections in a single JSX return
+   - Complex nested forms, tables, sidebars, or modals
+   - File length approaching 250 lines
+   - Mixed responsibilities (e.g. data fetching + UI layout + toolbar + filtering)
 
 ---
 
@@ -2287,7 +2292,7 @@ Is any `any` being used unnecessarily?
 
 Is the component doing multiple unrelated jobs?
 
-Is the file becoming too large?
+Is the file approaching or exceeding 250–300 lines? (Must be broken into subcomponents)
 
 Is business/security logic incorrectly enforced only in frontend?
 
@@ -2305,8 +2310,9 @@ Can another developer understand this quickly?
 Avoid:
 
 ```text
-500+ line page components
-500+ line feature components
+300+ line components or files (STRICTLY PROHIBITED)
+monolithic components containing multiple sections instead of modular subcomponents
+overly bloated page.tsx files (> 80 lines)
 API calls scattered across components
 useEffect for normal data fetching
 everything marked "use client"
