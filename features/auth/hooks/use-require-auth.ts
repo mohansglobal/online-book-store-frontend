@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCurrentUser } from "./use-current-user";
 import { getCurrentRedirectPath } from "../utils/auth-redirect";
 import type { User } from "../types/auth.types";
@@ -30,19 +30,19 @@ export interface UseRequireAuthReturn {
 export function useRequireAuth(): UseRequireAuthReturn {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { data: user = null, isLoading } = useCurrentUser();
 
   const isAuthenticated = Boolean(user);
 
   const redirectToLogin = useCallback(
     (customReturnUrl?: string) => {
+      const search = typeof window !== "undefined" ? window.location.search : "";
       const returnUrl =
-        customReturnUrl || getCurrentRedirectPath(pathname, searchParams);
+        customReturnUrl || getCurrentRedirectPath(pathname, search);
       const target = `/login?redirect=${encodeURIComponent(returnUrl)}`;
       router.push(target);
     },
-    [pathname, router, searchParams],
+    [pathname, router],
   );
 
   const withAuth = useCallback(

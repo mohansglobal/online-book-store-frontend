@@ -13,11 +13,17 @@ import {
   LogoutAlertDialog,
   useAuthSessionStore,
 } from "@/features/auth";
+import { useCartSync } from "@/features/cart";
 
 declare global {
   interface Window {
     __TANSTACK_QUERY_CLIENT__?: QueryClient;
   }
+}
+
+function CartSyncHandler() {
+  useCartSync();
+  return null;
 }
 
 export function AppProvider({
@@ -55,6 +61,7 @@ export function AppProvider({
 
   return (
     <QueryClientProvider client={queryClient}>
+      <CartSyncHandler />
       {children}
 
       <LogoutAlertDialog />
@@ -76,7 +83,6 @@ export function AppProvider({
             description:
               "!text-[13px] !text-muted-foreground !leading-relaxed",
 
-            // Rather than tinting the entire background, we just color the icons
             icon:
               "!mt-0.5 group-data-[type=error]:!text-red-500 group-data-[type=success]:!text-emerald-500 group-data-[type=warning]:!text-amber-500 group-data-[type=info]:!text-blue-500",
 
@@ -88,4 +94,3 @@ export function AppProvider({
     </QueryClientProvider>
   );
 }
-

@@ -26,9 +26,13 @@ export const useWishlistStore = create<WishlistStore>()(
 
       addItem: (input) => {
         set((state) => {
-          const itemId = input.id || input.bookId || input.slug;
+          const itemId = input.id || input.bookId || input.slug || input.title;
           const existingIndex = state.items.findIndex(
-            (i) => i.id === itemId || i.bookId === input.bookId || (input.slug && i.slug === input.slug),
+            (i) =>
+              (input.id && i.id === input.id) ||
+              (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
+              (input.slug && (i.slug === input.slug || i.id === input.slug)) ||
+              (input.title && i.title.toLowerCase() === input.title.toLowerCase()),
           );
 
           if (existingIndex !== -1) {
@@ -68,20 +72,30 @@ export const useWishlistStore = create<WishlistStore>()(
       removeItem: (id) => {
         set((state) => ({
           items: state.items.filter(
-            (i) => i.id !== id && i.bookId !== id && i.slug !== id && i.listingId !== id,
+            (i) =>
+              i.id !== id &&
+              i.bookId !== id &&
+              i.slug !== id &&
+              i.listingId !== id &&
+              (i.title ? i.title.toLowerCase() !== id.toLowerCase() : true),
           ),
         }));
       },
 
       toggleItem: (input) => {
         const state = get();
-        const itemId = input.id || input.bookId || input.slug;
-        const exists = state.items.some(
-          (i) => i.id === itemId || i.bookId === input.bookId || (input.slug && i.slug === input.slug),
+        const itemId = input.id || input.bookId || input.slug || input.title;
+        const existing = state.items.find(
+          (i) =>
+            (input.id && i.id === input.id) ||
+            (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
+            (input.slug && (i.slug === input.slug || i.id === input.slug)) ||
+            (input.title && i.title.toLowerCase() === input.title.toLowerCase()) ||
+            i.id === itemId,
         );
 
-        if (exists) {
-          state.removeItem(itemId);
+        if (existing) {
+          state.removeItem(existing.id);
           return false;
         } else {
           state.addItem(input);
@@ -123,14 +137,20 @@ export const selectWishlistItems = (state: WishlistStore) => state.items;
 
 export const selectWishlistCount = (state: WishlistStore) => state.items.length;
 
-export const selectIsWishlistHydrated = (state: WishlistStore) => state._hydrated;
+export const selectIsWishlistHydrated = (state: WishlistStore) =>
+  state._hydrated || (typeof window !== "undefined" && Boolean(useWishlistStore.persist?.hasHydrated?.()));
 
 export const selectIsInWishlist =
-  (idOrSlug: string) => (state: WishlistStore) =>
-    state.items.some(
+  (idOrSlug: string) => (state: WishlistStore) => {
+    if (!idOrSlug) return false;
+    const lower = idOrSlug.toLowerCase();
+    return state.items.some(
       (i) =>
         i.id === idOrSlug ||
         i.bookId === idOrSlug ||
         i.slug === idOrSlug ||
-        i.listingId === idOrSlug,
+        i.listingId === idOrSlug ||
+        (i.title && i.title.toLowerCase() === lower),
     );
+  };
+

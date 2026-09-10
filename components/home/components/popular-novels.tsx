@@ -9,7 +9,7 @@ import {
   transformApiBookToCatalogBook,
   FALLBACK_BOOK_COVER,
 } from "@/features/books/types/book.types";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { BookCard } from "./book-card";
 import { IconButton } from "./icon-button";
 import { SectionHeading } from "./section-heading";
@@ -29,7 +29,7 @@ export function PopularNovels({
   className = "bg-background",
 }: PopularNovelsProps) {
   const railRef = useRef<HTMLDivElement>(null);
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
     category: POPULAR_NOVELS_CATEGORY_ID,
@@ -99,14 +99,6 @@ export function PopularNovels({
     toast.success(`"${book.title}" added to cart!`);
   };
 
-  const handleWishClick = (book: Book) => {
-    if (onWish) {
-      onWish(book);
-      return;
-    }
-    toast.success(`"${book.title}" added to wishlist!`);
-  };
-
   if (!isLoading && novelBooks.length === 0) {
     return null;
   }
@@ -168,8 +160,8 @@ export function PopularNovels({
               <BookCard
                 key={book.slug || `${book.title}-${index}`}
                 book={book}
-                onWish={() => handleWishClick(book)}
-                onCart={() => handleCartClick(book)}
+                onWish={onWish ? () => onWish(book) : undefined}
+                onCart={onCart ? () => onCart(book) : undefined}
               />
             ))}
           </div>

@@ -8,7 +8,7 @@ import { CategoryBanner } from "../categories/components/CategoryBanner";
 import { useBook } from "@/features/books/hooks/use-books";
 import { useRequireAuth } from "@/features/auth";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { useWishlist } from "@/features/wishlist";
 import { BookDetailsGallery } from "./details/book-details-gallery";
 import { BookDetailsHeaderInfo } from "./details/book-details-header-info";
@@ -40,7 +40,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const { data: bookResponse, isLoading, isError, refetch } = useBook(bookId);
   const book = bookResponse?.data;
   const { withAuth } = useRequireAuth();
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const [quantity, setQuantity] = useState(1);

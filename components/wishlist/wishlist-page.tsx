@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { RotateCcw } from "lucide-react";
 import { CategoryBanner } from "../categories/components/CategoryBanner";
+import { NoData } from "@/components/ui/no-data";
 import {
   useWishlist,
   type WishlistFilterOption,
@@ -153,19 +155,22 @@ export function WishlistPage() {
                   />
                 )
               ) : (
-                <div className="rounded-2xl border border-border bg-surface p-12 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No saved books matched your search or active filter.
-                  </p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface p-10 text-center">
+                  <NoData
+                    size={180}
+                    text="No saved books matched your search or active filter."
+                    className="w-full"
+                  />
                   <button
                     type="button"
                     onClick={() => {
                       setSearchQuery("");
                       setSelectedFilter("all");
                     }}
-                    className="mt-3 text-xs font-semibold text-accent hover:underline"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2 text-xs font-semibold text-foreground hover:border-accent hover:bg-accent hover:text-white transition-colors cursor-pointer"
                   >
-                    Reset filters
+                    <RotateCcw size={13} />
+                    <span>Reset filters</span>
                   </button>
                 </div>
               )}
@@ -175,7 +180,7 @@ export function WishlistPage() {
           )}
 
           {/* Recommendations at bottom */}
-          <WishlistRecommendations />
+          {/* <WishlistRecommendations /> */}
 
           {/* Clear dialog */}
           <WishlistClearDialog

@@ -2,14 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Minus, Plus, Trash2 } from "lucide-react";
-
-import type { GuestCartItem } from "@/features/cart/types/cart.types";
+import { AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
+import type { CartItemView } from "@/features/cart/types/cart.types";
 
 type CartItemCardProps = {
-  item: GuestCartItem;
-  onUpdateQuantity: (listingId: string, quantity: number) => void;
-  onRemove: (listingId: string) => void;
+  item: CartItemView;
+  onUpdateQuantity: (identifier: string, quantity: number) => void;
+  onRemove: (identifier: string) => void;
 };
 
 export function CartItemCard({
@@ -24,8 +23,14 @@ export function CartItemCard({
         )
       : 0;
 
+  const isUnavailable = !item.isAvailable || item.isOutOfStock;
+
   return (
-    <article className="group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm">
+    <article
+      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${
+        isUnavailable ? "opacity-85 border-destructive/30" : ""
+      }`}
+    >
       {/* Cover */}
       <div className="relative w-24 shrink-0 overflow-hidden border-r border-border/50 bg-surface-soft sm:w-32">
         <Image
@@ -33,9 +38,18 @@ export function CartItemCard({
           alt={`${item.title} cover`}
           fill
           sizes="(max-width: 640px) 96px, 128px"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
+            isUnavailable ? "grayscale" : ""
+          }`}
           unoptimized
         />
+        {isUnavailable && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center p-1 text-center">
+            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
+              Out of Stock
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -43,7 +57,7 @@ export function CartItemCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <Link
-              href={`/books/${item.slug}`}
+              href={item.slug ? `/books/${item.slug}` : "/books"}
               className="line-clamp-2 text-sm leading-tight font-bold text-foreground transition-colors hover:text-accent sm:text-base"
             >
               {item.title}
@@ -61,8 +75,16 @@ export function CartItemCard({
           </div>
         </div>
 
+        {/* Stock status alerts */}
+        {item.exceedsStock && typeof item.availableStock === "number" && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <AlertCircle size={13} />
+            <span>Only {item.availableStock} unit(s) available in stock.</span>
+          </div>
+        )}
+
         {/* Price */}
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+        <div className="mt-2 flex flex-wrap items-baseline gap-2">
           <span className="text-lg font-bold tracking-tight text-foreground">
             <span className="font-sans">₹</span>
             {item.price.toFixed(2)}
@@ -86,38 +108,33 @@ export function CartItemCard({
         {/* Actions */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div className="flex items-center gap-3">
-            {/* Quantity */}
+            {/* Quantity Controls */}
             <div className="flex h-7 items-center overflow-hidden rounded-md border border-border bg-background">
               <button
                 type="button"
-                onClick={() =>
-                  onUpdateQuantity(item.listingId, item.quantity - 1)
-                }
-                disabled={item.quantity <= 1}
+                onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                disabled={item.quantity <= 1 || isUnavailable}
                 aria-label={`Decrease quantity of ${item.title}`}
                 className="flex h-full w-7 cursor-pointer items-center justify-center text-text-secondary transition-colors hover:bg-surface-soft hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Minus size={12} />
               </button>
 
-              <input
-                type="text"
-                inputMode="numeric"
+              <span
                 aria-label={`Quantity of ${item.title}`}
-                value={item.quantity}
-                onChange={(e) => {
-                  const qty = Number.parseInt(e.target.value, 10);
-                  if (!Number.isNaN(qty) && qty >= 1) {
-                    onUpdateQuantity(item.listingId, qty);
-                  }
-                }}
-                className="h-full w-8 border-x border-border bg-transparent text-center text-xs font-bold text-foreground outline-none"
-              />
+                className="flex h-full min-w-8 items-center justify-center border-x border-border bg-transparent px-2 text-center text-xs font-bold text-foreground"
+              >
+                {item.quantity}
+              </span>
 
               <button
                 type="button"
-                onClick={() =>
-                  onUpdateQuantity(item.listingId, item.quantity + 1)
+                onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                disabled={
+                  isUnavailable ||
+                  (item.exceedsStock &&
+                    typeof item.availableStock === "number" &&
+                    item.quantity >= item.availableStock)
                 }
                 aria-label={`Increase quantity of ${item.title}`}
                 className="flex h-full w-7 cursor-pointer items-center justify-center text-text-secondary transition-colors hover:bg-surface-soft hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
@@ -127,15 +144,14 @@ export function CartItemCard({
             </div>
           </div>
 
-          {/* Remove */}
+          {/* Remove Button */}
           <button
             type="button"
-            onClick={() => onRemove(item.listingId)}
+            onClick={() => onRemove(item.id)}
             title="Remove item"
             className="flex cursor-pointer items-center gap-1 text-xs font-medium text-text-secondary transition-colors hover:text-rose-600 dark:hover:text-rose-400"
           >
             <Trash2 size={14} />
-
             <span className="hidden sm:inline">Remove</span>
           </button>
         </div>

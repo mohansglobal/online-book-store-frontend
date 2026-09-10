@@ -9,7 +9,7 @@ import {
   selectWishlistCount,
   selectIsWishlistHydrated,
 } from "../stores/use-wishlist-store";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import type { WishlistItem, AddWishlistItemInput } from "../types/wishlist.types";
 
 export function useWishlist() {
@@ -22,7 +22,7 @@ export function useWishlist() {
   const toggleItem = useWishlistStore((s) => s.toggleItem);
   const clearWishlist = useWishlistStore((s) => s.clearWishlist);
 
-  const addToCartStore = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCartStore } = useCart();
 
   const handleToggle = useCallback(
     (input: AddWishlistItemInput) => {

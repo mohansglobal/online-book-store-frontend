@@ -7,7 +7,7 @@ import {
   transformApiBookToCatalogBook,
   FALLBACK_BOOK_COVER,
 } from "@/features/books/types/book.types";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { BookCard } from "./book-card";
 import { SectionHeading } from "./section-heading";
 import type { Book } from "../types";
@@ -18,7 +18,7 @@ interface RecentProps {
 }
 
 export function Recent({ onWish, onCart }: RecentProps) {
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
     limit: 6,
@@ -82,14 +82,6 @@ export function Recent({ onWish, onCart }: RecentProps) {
     toast.success(`"${book.title}" added to cart!`);
   };
 
-  const handleWishClick = (book: Book) => {
-    if (onWish) {
-      onWish();
-      return;
-    }
-    toast.success(`"${book.title}" added to wishlist!`);
-  };
-
   if (!isLoading && recentBooks.length === 0) {
     return null;
   }
@@ -122,8 +114,8 @@ export function Recent({ onWish, onCart }: RecentProps) {
                 key={book.slug || book.id || book.title}
                 book={book}
                 compact
-                onWish={() => handleWishClick(book)}
-                onCart={() => handleCartClick(book)}
+                onWish={onWish ? () => onWish() : undefined}
+                onCart={onCart ? () => onCart() : undefined}
               />
             ))}
           </div>

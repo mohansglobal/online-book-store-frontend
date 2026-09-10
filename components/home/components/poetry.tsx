@@ -8,7 +8,7 @@ import {
   transformApiBookToCatalogBook,
   FALLBACK_BOOK_COVER,
 } from "@/features/books/types/book.types";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { BookCard } from "./book-card";
 import type { Book } from "../types";
 
@@ -20,7 +20,7 @@ interface PoetryProps {
 }
 
 export function Poetry({ onWish, onCart }: PoetryProps) {
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
     category: POETRY_CATEGORY_ID,
@@ -81,14 +81,6 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
     });
 
     toast.success(`"${book.title}" added to cart!`);
-  };
-
-  const handleWishClick = (book: Book) => {
-    if (onWish) {
-      onWish(book);
-      return;
-    }
-    toast.success(`"${book.title}" added to wishlist!`);
   };
 
   if (!isLoading && poetryBooks.length === 0) {
@@ -152,8 +144,8 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
               >
                 <BookCard
                   book={book}
-                  onWish={() => handleWishClick(book)}
-                  onCart={() => handleCartClick(book)}
+                  onWish={onWish ? () => onWish(book) : undefined}
+                  onCart={onCart ? () => onCart(book) : undefined}
                 />
               </div>
             ))

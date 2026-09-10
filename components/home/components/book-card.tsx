@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import type { BookCardProps } from "../types";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
 import { useWishlist } from "@/features/wishlist";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { Rating } from "./rating";
 
 export function BookCard({
@@ -30,7 +30,7 @@ export function BookCard({
   }, [book.cover]);
 
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
 
   const isSmall = size === "sm";
   const bookId = book.id || book.slug || book.title;
@@ -80,7 +80,7 @@ export function BookCard({
       return;
     }
 
-    addToCart({
+    void addToCart({
       listingId: bookId,
       bookId: book.id || bookId,
       slug: book.slug || "",
@@ -92,7 +92,6 @@ export function BookCard({
       originalPrice: origPrice,
       quantity: 1,
     });
-    toast.success(`"${book.title}" added to cart!`);
   };
 
   const titleSizeClassName = isSmall

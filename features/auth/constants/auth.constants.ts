@@ -17,7 +17,6 @@ export const SELLER_ROUTES = [
 export const BUYER_ONLY_ROUTES = [
   "/checkout",
   "/orders",
-  "/wishlist",
 ] as const;
 
 export const AUTHENTICATED_ROUTES = [
@@ -33,6 +32,7 @@ export const GUEST_ONLY_ROUTES = [
 export const PUBLIC_ROUTES = [
   "/",
   "/cart",
+  "/wishlist",
   "/books",
   "/authors",
   "/publishers",

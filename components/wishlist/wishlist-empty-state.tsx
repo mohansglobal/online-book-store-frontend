@@ -1,18 +1,27 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Compass, Heart } from "lucide-react";
+import { BookOpen, Compass } from "lucide-react";
+import wishlistIllustration from "@/assets/Wishlist.png";
 
 export function WishlistEmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-3xl border border-border/80 bg-surface px-6 py-16 text-center sm:py-20 shadow-xs">
-      {/* Decorative ambient icon */}
-      <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-surface-soft border border-border/60 text-accent shadow-inner">
+      {/* Decorative Wishlist Illustration */}
+      <div className="relative mb-6 w-48 sm:w-56">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 rounded-full bg-accent/15 blur-xl animate-pulse"
+          className="absolute inset-0 -z-10 rounded-full"
         />
-        <Heart size={44} className="fill-accent/20 stroke-accent" />
+        <Image
+          src={wishlistIllustration}
+          alt="Illustration of empty wishlist"
+          width={220}
+          height={220}
+          className="pointer-events-none mx-auto h-auto w-full select-none object-contain drop-shadow-sm"
+          priority
+        />
       </div>
 
       <div className="mx-auto max-w-md space-y-2.5">
@@ -21,7 +30,7 @@ export function WishlistEmptyState() {
         </h2>
 
         <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Save your favorite classics, poetry collections, regional translations, and textbooks so you can revisit or purchase them anytime.
+          Textbooks so you can revisit or purchase them anytime.
         </p>
       </div>
 

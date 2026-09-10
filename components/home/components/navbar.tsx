@@ -21,7 +21,7 @@ import {
 
 import { IconButton } from "./icon-button";
 import { useCurrentUser, useLogoutModalStore, useRequireAuth } from "@/features/auth";
-import { useGuestCartStore, selectCartTotalCount, selectIsHydrated } from "@/features/cart";
+import { useCart } from "@/features/cart";
 import { useWishlistStore, selectWishlistCount, selectIsWishlistHydrated } from "@/features/wishlist";
 import { useCategories } from "@/features/categories";
 import {
@@ -57,10 +57,9 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const storeCartCount = useGuestCartStore(selectCartTotalCount);
-  const isCartHydrated = useGuestCartStore(selectIsHydrated);
+  const { totalCount: cartTotalCount, isHydrated: isCartHydrated } = useCart();
   const resolvedCartCount =
-    cart !== undefined ? cart : isCartHydrated ? storeCartCount : 0;
+    cart !== undefined ? cart : isCartHydrated ? cartTotalCount : 0;
 
   const storeWishCount = useWishlistStore(selectWishlistCount);
   const isWishHydrated = useWishlistStore(selectIsWishlistHydrated);

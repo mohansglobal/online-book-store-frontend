@@ -7,7 +7,7 @@ import { ArrowUpRight, Heart, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { FALLBACK_BOOK_COVER, type CatalogBook } from "@/features/books/types/book.types";
 import { useWishlist } from "@/features/wishlist";
-import { useGuestCartStore } from "@/features/cart";
+import { useCart } from "@/features/cart";
 
 interface BookCardProps {
   book: CatalogBook;
@@ -20,7 +20,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   );
 
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const addToCart = useGuestCartStore((s) => s.addItem);
+  const { addItem: addToCart } = useCart();
 
   const bookSlugOrId = book.slug || book.id || "";
   const isSaved = isInWishlist(book.id || book.slug || book.title);
@@ -59,7 +59,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart({
+    void addToCart({
       listingId: book.id || book.slug || book.title,
       bookId: book.id || book.slug || book.title,
       slug: book.slug || "",
@@ -71,7 +71,6 @@ export function BookCard({ book, priority = false }: BookCardProps) {
       originalPrice: origPrice,
       quantity: 1,
     });
-    toast.success(`"${book.title}" added to cart!`);
   };
 
   return (
