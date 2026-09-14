@@ -1,22 +1,4 @@
-// Unit tests for guest wishlist zustand store logic
-if (typeof window === "undefined") {
-  const store: Record<string, string> = {};
-  (global as any).window = {
-    localStorage: {
-      getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => {
-        store[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete store[k];
-      },
-      clear: () => {
-        for (const k of Object.keys(store)) delete store[k];
-      },
-    },
-  };
-}
-
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   useWishlistStore,
   selectWishlistItems,
@@ -49,70 +31,41 @@ const SAMPLE_BOOK_2: AddWishlistItemInput = {
   format: "Paperback",
 };
 
-function resetWishlistStore() {
-  useWishlistStore.setState({ items: [], _hydrated: true });
-}
+describe("useWishlistStore", () => {
+  beforeEach(() => {
+    useWishlistStore.setState({ items: [], _hydrated: true });
+  });
 
-export function runGuestWishlistStoreTests(): {
-  passed: boolean;
-  failures: string[];
-} {
-  const failures: string[] = [];
+  it("should add a single item and check membership", () => {
+    useWishlistStore.getState().addItem(SAMPLE_BOOK_1);
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(1);
+    expect(selectIsInWishlist("book-001")(useWishlistStore.getState())).toBe(true);
+    expect(selectIsInWishlist("mati-akasher-majhkhane")(useWishlistStore.getState())).toBe(true);
+  });
 
-  function assertEqual(name: string, actual: unknown, expected: unknown) {
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-      failures.push(
-        `FAIL [${name}]: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`,
-      );
-    }
-  }
+  it("should toggle item properly (add then remove)", () => {
+    const added = useWishlistStore.getState().toggleItem(SAMPLE_BOOK_1);
+    expect(added).toBe(true);
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(1);
 
-  // 1. Add single item
-  resetWishlistStore();
-  useWishlistStore.getState().addItem(SAMPLE_BOOK_1);
-  assertEqual("Add single item - count", selectWishlistCount(useWishlistStore.getState()), 1);
-  assertEqual(
-    "Add single item - inWishlist by id",
-    selectIsInWishlist("book-001")(useWishlistStore.getState()),
-    true,
-  );
-  assertEqual(
-    "Add single item - inWishlist by slug",
-    selectIsInWishlist("mati-akasher-majhkhane")(useWishlistStore.getState()),
-    true,
-  );
+    const removed = useWishlistStore.getState().toggleItem(SAMPLE_BOOK_1);
+    expect(removed).toBe(false);
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(0);
+  });
 
-  // 2. Toggle item (add then remove)
-  resetWishlistStore();
-  const added = useWishlistStore.getState().toggleItem(SAMPLE_BOOK_1);
-  assertEqual("Toggle item - added returns true", added, true);
-  assertEqual("Toggle item - count is 1", selectWishlistCount(useWishlistStore.getState()), 1);
+  it("should remove item by id or slug", () => {
+    useWishlistStore.getState().addItem(SAMPLE_BOOK_1);
+    useWishlistStore.getState().addItem(SAMPLE_BOOK_2);
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(2);
 
-  const removed = useWishlistStore.getState().toggleItem(SAMPLE_BOOK_1);
-  assertEqual("Toggle item - removed returns false", removed, false);
-  assertEqual("Toggle item - count is 0", selectWishlistCount(useWishlistStore.getState()), 0);
+    useWishlistStore.getState().removeItem("book-001");
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(1);
+    expect(selectIsInWishlist("book-002")(useWishlistStore.getState())).toBe(true);
+  });
 
-  // 3. Add multiple distinct items
-  resetWishlistStore();
-  useWishlistStore.getState().addItem(SAMPLE_BOOK_1);
-  useWishlistStore.getState().addItem(SAMPLE_BOOK_2);
-  assertEqual("Add multiple items - count", selectWishlistCount(useWishlistStore.getState()), 2);
-
-  // 4. Remove item by slug / id
-  useWishlistStore.getState().removeItem("book-001");
-  assertEqual("Remove item - count", selectWishlistCount(useWishlistStore.getState()), 1);
-  assertEqual(
-    "Remove item - remaining is book-002",
-    selectIsInWishlist("book-002")(useWishlistStore.getState()),
-    true,
-  );
-
-  // 5. Clear wishlist
-  useWishlistStore.getState().clearWishlist();
-  assertEqual("Clear wishlist - count", selectWishlistCount(useWishlistStore.getState()), 0);
-
-  return {
-    passed: failures.length === 0,
-    failures,
-  };
-}
+  it("should clear wishlist", () => {
+    useWishlistStore.getState().addItem(SAMPLE_BOOK_1);
+    useWishlistStore.getState().clearWishlist();
+    expect(selectWishlistCount(useWishlistStore.getState())).toBe(0);
+  });
+});

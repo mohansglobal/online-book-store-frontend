@@ -105,9 +105,8 @@ export function BookCard({
 
   const cardContent = (
     <article
-      className={`group min-w-0 cursor-pointer [scroll-snap-align:start] flex flex-col justify-between ${
-        isSmall ? "mx-auto w-full max-w-[190px]" : ""
-      } ${className}`}
+      className={`group min-w-0 cursor-pointer [scroll-snap-align:start] flex flex-col justify-between ${isSmall ? "mx-auto w-full max-w-[190px]" : ""
+        } ${className}`}
     >
       {/* Book Cover Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] bg-muted/40 shadow-xs border border-border/60 transition-all duration-500 ease-out group-hover:border-primary/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
@@ -120,6 +119,7 @@ export function BookCard({
               ? "(max-width: 640px) 190px, 190px"
               : "(max-width: 768px) 50vw, 25vw"
           }
+          unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
         />
@@ -127,9 +127,8 @@ export function BookCard({
         {/* Top-Left Category Badge */}
         {book.category && book.category !== "-" && (
           <span
-            className={`absolute top-2 left-2 z-10 rounded-md border border-border/60 bg-background/85 font-semibold tracking-wider text-foreground uppercase backdrop-blur-md shadow-xs ${
-              isSmall ? "px-1.5 py-0.5 text-[8px]" : "px-2 py-0.5 text-[9px]"
-            }`}
+            className={`absolute top-2 left-2 z-10 rounded-md border border-border/60 bg-background/85 font-semibold tracking-wider text-foreground uppercase backdrop-blur-md shadow-xs ${isSmall ? "px-1.5 py-0.5 text-[8px]" : "px-2 py-0.5 text-[9px]"
+              }`}
           >
             {book.category}
           </span>
@@ -143,9 +142,8 @@ export function BookCard({
 
         {/* Bottom Circle Action Buttons on Hover */}
         <div
-          className={`absolute inset-x-0 z-20 flex items-center justify-center gap-2 opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 ${
-            isSmall ? "bottom-2" : "bottom-3"
-          }`}
+          className={`absolute inset-x-0 z-20 flex items-center justify-center gap-2 opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 ${isSmall ? "bottom-2" : "bottom-3"
+            }`}
         >
           {/* Wishlist Circle Button */}
           <button
@@ -153,11 +151,10 @@ export function BookCard({
             onClick={handleWishlistClick}
             aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
             title={isSaved ? "In wishlist" : "Add to wishlist"}
-            className={`flex ${circleButtonSize} cursor-pointer items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 ${
-              isSaved
+            className={`flex ${circleButtonSize} cursor-pointer items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 ${isSaved
                 ? "bg-accent text-white border border-accent"
                 : "bg-white/95 text-neutral-800 hover:bg-accent hover:text-white border border-white/20"
-            }`}
+              }`}
           >
             <Heart size={iconSize} className={isSaved ? "fill-current" : ""} />
           </button>
@@ -193,17 +190,25 @@ export function BookCard({
         </h3>
 
         <p
-          className={`m-0 line-clamp-1 text-muted-foreground ${
-            isSmall ? "text-[11px]" : "text-[13px]"
-          }`}
+          className={`m-0 line-clamp-1 text-muted-foreground ${isSmall ? "text-[11px]" : "text-[13px]"
+            }`}
         >
           {book.author}
         </p>
 
+        {book.seller && (
+          <p
+            className={`m-0 mt-0.5 line-clamp-1 text-muted-foreground/80 ${isSmall ? "text-[10px]" : "text-[11px]"
+              }`}
+            title={`Seller: ${book.seller}`}
+          >
+            Seller: <span className="font-medium text-foreground/90">{book.seller}</span>
+          </p>
+        )}
+
         <div
-          className={`flex items-center justify-between font-medium text-foreground ${
-            isSmall ? "mt-1.5 text-[11px]" : "mt-2.5 text-[13px]"
-          }`}
+          className={`flex items-center justify-between font-medium text-foreground ${isSmall ? "mt-1.5 text-[11px]" : "mt-2.5 text-[13px]"
+            }`}
         >
           <Rating value={book.rating} />
 
@@ -227,9 +232,10 @@ export function BookCard({
     </article>
   );
 
-  if (book.slug) {
+  const targetId = book.id || book.slug;
+  if (targetId && targetId !== "-") {
     return (
-      <Link href={`/books/${book.slug}`} className="block h-full">
+      <Link href={`/books/${targetId}`} className="block h-full">
         {cardContent}
       </Link>
     );

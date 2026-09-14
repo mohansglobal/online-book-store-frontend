@@ -1,5 +1,4 @@
 // Unified Cart hook for seamlessly handling authenticated (API) and guest (Zustand) carts
-
 "use client";
 
 import { useCallback, useMemo } from "react";
@@ -18,11 +17,15 @@ import {
   useRemoveCartItemMutation,
   useUpdateCartItemMutation,
 } from "../mutations/use-cart-mutations";
+import {
+  calculateCartSummary,
+  transformGuestItemsToViews,
+  transformServerItemsToViews,
+} from "../utils/cart-transform";
 import type {
   AddToCartInput,
   CartItemView,
   CartSummaryView,
-  GuestCartItem,
 } from "../types/cart.types";
 
 export type UseCartReturn = {
@@ -31,21 +34,24 @@ export type UseCartReturn = {
   totalCount: number;
   isLoggedIn: boolean;
   isLoading: boolean;
+  isFetching: boolean;
   isHydrated: boolean;
   addItem: (input: {
     listingId?: string;
+    bookListingId?: string;
     bookId?: string;
     slug?: string;
     title: string;
     coverImage?: string;
     author?: string;
+    seller?: string;
     format?: string;
     price: number;
     originalPrice?: number;
     quantity?: number;
   }) => Promise<void>;
-  updateQuantity: (identifier: string, quantity: number) => Promise<void>;
-  removeItem: (identifier: string) => Promise<void>;
+  updateQuantity: (bookListingId: string, quantity: number) => Promise<void>;
+  removeItem: (bookListingId: string) => Promise<void>;
   clearCart: () => Promise<void>;
 };
 
@@ -68,7 +74,7 @@ export function useCart(): UseCartReturn {
   const guestUpdateQuantity = useGuestCartStore((s) => s.updateQuantity);
   const guestClearCart = useGuestCartStore((s) => s.clearCart);
 
-  // Server mutations
+  // Server mutations with optimistic updates
   const addMutation = useAddToCartMutation();
   const updateMutation = useUpdateCartItemMutation();
   const removeMutation = useRemoveCartItemMutation();
@@ -77,98 +83,15 @@ export function useCart(): UseCartReturn {
   // Normalized items view
   const items: CartItemView[] = useMemo(() => {
     if (isLoggedIn && serverCartResponse?.data?.items) {
-      return serverCartResponse.data.items.map((item) => {
-        const book = item.listing?.book;
-        const authorsText =
-          book?.authors && book.authors.length > 0
-            ? book.authors.map((a) => a.name).join(", ")
-            : "Unknown Author";
-
-        const priceInRupees = (item.unitPriceInPaise || 0) / 100;
-        const mrpInRupees = (item.unitMrpInPaise || 0) / 100;
-        const subtotalInRupees = (item.itemSubtotalInPaise || 0) / 100;
-        const savingsInRupees = (item.itemSavingsInPaise || 0) / 100;
-
-        return {
-          id: item.id,
-          listingId: item.listing?._id || item.id,
-          bookId: book?._id || "",
-          slug: book?.slug || "",
-          title: book?.title || "Untitled Book",
-          author: authorsText,
-          coverImage: book?.coverImage || FALLBACK_BOOK_COVER,
-          format: book?.format || "Paperback",
-          price: priceInRupees,
-          originalPrice: mrpInRupees || priceInRupees,
-          quantity: item.quantity,
-          subtotal: subtotalInRupees,
-          savings: savingsInRupees,
-          isAvailable: item.isAvailable,
-          isOutOfStock: item.isOutOfStock,
-          exceedsStock: item.exceedsStock,
-          availableStock: item.availableStock,
-        };
-      });
+      return transformServerItemsToViews(serverCartResponse.data.items);
     }
-
-    // Guest cart view
-    return guestItems.map((g: GuestCartItem) => ({
-      id: g.listingId,
-      listingId: g.listingId,
-      bookId: g.bookId,
-      slug: g.slug,
-      title: g.title,
-      author: g.author,
-      coverImage: g.coverImage,
-      format: g.format,
-      price: g.price,
-      originalPrice: g.originalPrice || g.price,
-      quantity: g.quantity,
-      subtotal: g.price * g.quantity,
-      savings: Math.max(0, (g.originalPrice || g.price) - g.price) * g.quantity,
-      isAvailable: true,
-      isOutOfStock: false,
-      exceedsStock: false,
-    }));
+    return transformGuestItemsToViews(guestItems);
   }, [isLoggedIn, serverCartResponse, guestItems]);
 
   // Normalized summary view
   const summary: CartSummaryView = useMemo(() => {
-    if (isLoggedIn && serverCartResponse?.data?.summary) {
-      const s = serverCartResponse.data.summary;
-      const subtotal = (s.subtotalInPaise || 0) / 100;
-      const totalMrp = (s.totalMrpInPaise || 0) / 100;
-      const totalDiscount = (s.totalDiscountInPaise || 0) / 100;
-      const totalCount = items.reduce((sum, i) => sum + i.quantity, 0);
-
-      return {
-        totalItems: s.totalItems,
-        totalCount,
-        subtotal,
-        totalMrp,
-        mrpSavings: Math.max(0, totalMrp - subtotal),
-        totalDiscount,
-        hasUnavailableItems: s.hasUnavailableItems,
-        hasStockIssues: s.hasStockIssues,
-      };
-    }
-
-    // Guest summary
-    const subtotal = items.reduce((sum, i) => sum + i.subtotal, 0);
-    const totalMrp = items.reduce((sum, i) => sum + i.originalPrice * i.quantity, 0);
-    const totalCount = items.reduce((sum, i) => sum + i.quantity, 0);
-
-    return {
-      totalItems: items.length,
-      totalCount,
-      subtotal,
-      totalMrp,
-      mrpSavings: Math.max(0, totalMrp - subtotal),
-      totalDiscount: Math.max(0, totalMrp - subtotal),
-      hasUnavailableItems: false,
-      hasStockIssues: false,
-    };
-  }, [isLoggedIn, serverCartResponse, items]);
+    return calculateCartSummary(items, serverCartResponse?.data, isLoggedIn);
+  }, [items, serverCartResponse, isLoggedIn]);
 
   const totalCount = summary.totalCount;
 
@@ -176,46 +99,46 @@ export function useCart(): UseCartReturn {
   const handleAddItem = useCallback(
     async (input: {
       listingId?: string;
+      bookListingId?: string;
       bookId?: string;
       slug?: string;
       title: string;
       coverImage?: string;
       author?: string;
+      seller?: string;
       format?: string;
       price: number;
       originalPrice?: number;
       quantity?: number;
     }) => {
       const qty = input.quantity ?? 1;
+      const listingId =
+        input.bookListingId || input.listingId || input.bookId || "";
 
       if (isLoggedIn) {
         try {
           const payload: AddToCartInput = {
+            bookListingId: listingId,
             quantity: qty,
           };
-          if (input.listingId && input.listingId !== input.bookId) {
-            payload.listingId = input.listingId;
-          } else if (input.bookId) {
-            payload.bookId = input.bookId;
-          } else if (input.listingId) {
-            payload.listingId = input.listingId;
-          }
 
           await addMutation.mutateAsync(payload);
           toast.success(`"${input.title}" added to cart!`);
         } catch (err: unknown) {
           const message =
-            (err as { message?: string })?.message || "Failed to add item to cart";
+            (err as { message?: string })?.message ||
+            "Failed to add item to cart";
           toast.error(message);
         }
       } else {
         guestAddItem({
-          listingId: input.listingId || input.bookId || input.title,
-          bookId: input.bookId || input.listingId || input.title,
-          slug: input.slug || "",
+          listingId: listingId || input.title,
+          bookId: input.bookId || listingId || input.title,
+          slug: input.slug || listingId,
           title: input.title,
           coverImage: input.coverImage || FALLBACK_BOOK_COVER,
           author: input.author || "-",
+          seller: input.seller,
           format: input.format || "Paperback",
           price: input.price,
           originalPrice: input.originalPrice || input.price,
@@ -228,29 +151,33 @@ export function useCart(): UseCartReturn {
   );
 
   const handleUpdateQuantity = useCallback(
-    async (identifier: string, quantity: number) => {
+    async (bookListingId: string, quantity: number) => {
       if (quantity < 1) return;
 
       if (isLoggedIn) {
         try {
-          await updateMutation.mutateAsync({ itemId: identifier, quantity });
+          await updateMutation.mutateAsync({
+            bookListingId,
+            quantity,
+          });
         } catch (err: unknown) {
           const message =
-            (err as { message?: string })?.message || "Failed to update quantity";
+            (err as { message?: string })?.message ||
+            "Failed to update quantity";
           toast.error(message);
         }
       } else {
-        guestUpdateQuantity(identifier, quantity);
+        guestUpdateQuantity(bookListingId, quantity);
       }
     },
     [isLoggedIn, updateMutation, guestUpdateQuantity],
   );
 
   const handleRemoveItem = useCallback(
-    async (identifier: string) => {
+    async (bookListingId: string) => {
       if (isLoggedIn) {
         try {
-          await removeMutation.mutateAsync(identifier);
+          await removeMutation.mutateAsync(bookListingId);
           toast.success("Item removed from cart");
         } catch (err: unknown) {
           const message =
@@ -258,8 +185,8 @@ export function useCart(): UseCartReturn {
           toast.error(message);
         }
       } else {
-        const item = guestItems.find((i) => i.listingId === identifier);
-        guestRemoveItem(identifier);
+        const item = guestItems.find((i) => i.listingId === bookListingId);
+        guestRemoveItem(bookListingId);
         if (item) {
           toast.success(`Removed "${item.title}" from cart`);
         }
@@ -284,16 +211,24 @@ export function useCart(): UseCartReturn {
     }
   }, [isLoggedIn, clearMutation, guestClearCart]);
 
+  const isAuthSettled = !isAuthLoading;
+  const isCartLoading =
+    isAuthLoading ||
+    (isLoggedIn && isServerCartLoading) ||
+    (!isLoggedIn && !isGuestHydrated);
+
   return {
     items,
     summary,
     totalCount,
     isLoggedIn,
-    isLoading: isAuthLoading || (isLoggedIn && (isServerCartLoading || isServerCartFetching)),
-    isHydrated: isLoggedIn ? true : isGuestHydrated,
+    isLoading: isCartLoading,
+    isFetching: Boolean(isLoggedIn && isServerCartFetching),
+    isHydrated: isAuthSettled && (isLoggedIn ? !isServerCartLoading : isGuestHydrated),
     addItem: handleAddItem,
     updateQuantity: handleUpdateQuantity,
     removeItem: handleRemoveItem,
     clearCart: handleClearCart,
   };
 }
+

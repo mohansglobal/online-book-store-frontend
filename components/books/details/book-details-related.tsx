@@ -13,20 +13,73 @@ import {
 export interface BookDetailsRelatedProps {
   categoryId?: string;
   currentBookId?: string;
+  currentIsbn?: string;
 }
 
 export function BookDetailsRelated({
   categoryId,
   currentBookId,
+  currentIsbn,
 }: BookDetailsRelatedProps) {
   const { data: apiResponse, isLoading } = useBooks({
     category: categoryId || undefined,
-    limit: 8,
+    limit: 16,
   });
 
   const rawBooks = apiResponse?.data || [];
-  const relatedBooks = rawBooks
-    .filter((b) => b._id !== currentBookId && b.slug !== currentBookId)
+
+  // Group listings by ISBN number (with fallback to bookId/slug/title) to eliminate duplicates
+  const groupedByIsbn = new Map<string, (typeof rawBooks)[0]>();
+
+  for (const book of rawBooks) {
+    const isCurrentBook =
+      book._id === currentBookId ||
+      book.slug === currentBookId ||
+      book.bookId === currentBookId ||
+      book.listingId === currentBookId ||
+      (Boolean(currentIsbn) && Boolean(book.isbn) && book.isbn === currentIsbn);
+
+    if (isCurrentBook) {
+      continue;
+    }
+
+    const isbnKey =
+      (book.isbn && book.isbn !== "-" && book.isbn.trim()) ||
+      book.bookId ||
+      book.slug ||
+      book.title?.toLowerCase().trim() ||
+      book._id;
+
+    if (!isbnKey) {
+      continue;
+    }
+
+    const existing = groupedByIsbn.get(isbnKey);
+    if (!existing) {
+      groupedByIsbn.set(isbnKey, book);
+    } else {
+      // Pick in-stock or lower-priced listing for the same ISBN
+      const currentPrice =
+        typeof book.price === "number"
+          ? book.price
+          : parseFloat(String(book.price || 0)) || Infinity;
+      const existingPrice =
+        typeof existing.price === "number"
+          ? existing.price
+          : parseFloat(String(existing.price || 0)) || Infinity;
+
+      if (book.inStock && !existing.inStock) {
+        groupedByIsbn.set(isbnKey, book);
+      } else if (
+        book.inStock === existing.inStock &&
+        currentPrice < existingPrice
+      ) {
+        groupedByIsbn.set(isbnKey, book);
+      }
+    }
+  }
+
+  const relatedBooks = Array.from(groupedByIsbn.values())
     .slice(0, 6)
     .map((b) => {
       const catalog = transformApiBookToCatalogBook(b, FALLBACK_BOOK_COVER);
@@ -35,6 +88,7 @@ export function BookDetailsRelated({
         slug: catalog.slug,
         title: catalog.title,
         author: catalog.author,
+        seller: catalog.seller,
         cover: catalog.cover,
         price: catalog.price,
         rawPrice: catalog.rawPrice,
@@ -70,9 +124,9 @@ export function BookDetailsRelated({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
-        {relatedBooks.map((book) => (
+        {relatedBooks.map((book, index) => (
           <BookCard
-            key={book.slug || book.title}
+            key={book.id || `${book.title}-${index}`}
             book={book}
             size="sm"
             compact

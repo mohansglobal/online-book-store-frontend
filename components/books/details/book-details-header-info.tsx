@@ -104,10 +104,7 @@ export function BookDetailsHeaderInfo({
 
     {
       label: "Seller",
-      value:
-        typeof book.createdBy === "object" && book.createdBy !== null
-          ? (book.createdBy as { name?: string }).name || "-"
-          : (book.createdBy as string) || "-",
+      value: book.seller?.name || "-",
     },
   ];
 

@@ -57,6 +57,7 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
               ? "(max-width: 640px) 115px, 230px"
               : "(max-width: 640px) 90px, 110px"
           }
+          unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -85,8 +86,9 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
     </article>
   );
 
-  return book.slug ? (
-    <Link href={`/books/${book.slug}`} className="block">
+  const targetId = book.id || book.slug;
+  return targetId && targetId !== "-" ? (
+    <Link href={`/books/${targetId}`} className="block">
       {content}
     </Link>
   ) : (
@@ -97,8 +99,9 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
 export function Bestsellers() {
   const { data: apiResponse, isLoading } = useBooks({
     limit: 5,
-    sortBy: "rating",
+    sortBy: "publicationDate",
     sortOrder: "desc",
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -110,6 +113,7 @@ export function Bestsellers() {
       slug: catalog.slug,
       title: catalog.title,
       author: catalog.author,
+      seller: catalog.seller,
       cover: catalog.cover,
       price: catalog.price,
       rawPrice: catalog.rawPrice,
@@ -140,17 +144,15 @@ export function Bestsellers() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className={`border-t border-border py-6 animate-pulse flex gap-4 ${
-                  i === 0
+                className={`border-t border-border py-6 animate-pulse flex gap-4 ${i === 0
                     ? "md:col-span-2 lg:col-span-1 lg:row-span-2"
                     : ""
-                }`}
+                  }`}
               >
                 <div className="h-10 w-8 rounded bg-muted" />
                 <div
-                  className={`rounded bg-muted ${
-                    i === 0 ? "h-[300px] w-[200px]" : "h-[140px] w-[95px]"
-                  }`}
+                  className={`rounded bg-muted ${i === 0 ? "h-[300px] w-[200px]" : "h-[140px] w-[95px]"
+                    }`}
                 />
                 <div className="flex-1 space-y-3">
                   <div className="h-3 w-1/4 rounded bg-muted" />
@@ -165,7 +167,7 @@ export function Bestsellers() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr]">
             {bestsellerBooks.map((book, index) => (
               <BestsellerItem
-                key={`${book.slug || book.title}-${index}`}
+                key={book.id || `${book.title}-${index}`}
                 book={book}
                 index={index}
               />

@@ -24,9 +24,12 @@ export function Recent({ onWish, onCart }: RecentProps) {
     limit: 6,
     sortBy: "publicationDate",
     sortOrder: "desc",
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
+
+  console.log('apibooks==>', apiBooks)
 
   const recentBooks: Book[] = apiBooks.map((b) => {
     const catalog = transformApiBookToCatalogBook(b, FALLBACK_BOOK_COVER);
@@ -35,6 +38,7 @@ export function Recent({ onWish, onCart }: RecentProps) {
       slug: catalog.slug,
       title: catalog.title,
       author: catalog.author,
+      seller: catalog.seller,
       cover: catalog.cover,
       price: catalog.price,
       rawPrice: catalog.rawPrice,
@@ -109,9 +113,9 @@ export function Recent({ onWish, onCart }: RecentProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-x-3.5 gap-y-9 sm:grid-cols-3 sm:gap-x-7 sm:gap-y-[58px] md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {recentBooks.map((book) => (
+            {recentBooks.map((book, index) => (
               <BookCard
-                key={book.slug || book.id || book.title}
+                key={book.id || `${book.title}-${index}`}
                 book={book}
                 compact
                 onWish={onWish ? () => onWish() : undefined}

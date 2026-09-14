@@ -6,6 +6,7 @@ export type Book = {
   slug?: string;
   title: string;
   author: string;
+  seller?: string;
   cover: string | StaticImageData;
   price: string;
   rawPrice?: number;

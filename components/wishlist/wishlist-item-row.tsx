@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ShoppingBag, Star, Trash2 } from "lucide-react";
 import type { WishlistItem } from "@/features/wishlist";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
+import { resolveCoverUrl } from "@/lib/image-url";
 
 type WishlistItemRowProps = {
   item: WishlistItem;
@@ -18,7 +19,9 @@ export function WishlistItemRow({
   onMoveToCart,
   onRemove,
 }: WishlistItemRowProps) {
-  const [imgSrc, setImgSrc] = useState(item.coverImage || FALLBACK_BOOK_COVER);
+  const [hasError, setHasError] = useState(false);
+  const resolvedCover = resolveCoverUrl(item.coverImage);
+  const imgSrc = hasError ? FALLBACK_BOOK_COVER : resolvedCover;
 
   const discountPercent =
     item.originalPrice && item.originalPrice > item.price
@@ -27,18 +30,20 @@ export function WishlistItemRow({
 
   const isOutOfStock = item.inStock === false;
 
+  const targetBookId = item.id;
+
   return (
     <article className="group flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-3.5 sm:p-4 transition-all duration-200 hover:border-border-hover hover:shadow-sm">
       {/* Left: Thumbnail & Details */}
       <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
         <div className="relative h-20 w-14 sm:h-24 sm:w-16 shrink-0 overflow-hidden rounded-lg bg-surface-soft border border-border/50">
-          <Link href={`/books/${item.slug}`} className="block h-full w-full">
+          <Link href={`/books/${targetBookId}`} className="block h-full w-full">
             <Image
               src={imgSrc}
               alt={`${item.title} cover`}
               fill
               sizes="64px"
-              onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
+              onError={() => setHasError(true)}
               unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
               className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
                 isOutOfStock ? "grayscale opacity-75" : ""
@@ -71,7 +76,7 @@ export function WishlistItemRow({
           </div>
 
           <Link
-            href={`/books/${item.slug}`}
+            href={`/books/${targetBookId}`}
             className="mt-1 line-clamp-1 font-display text-base sm:text-lg font-bold text-foreground transition-colors hover:text-accent"
           >
             {item.title}

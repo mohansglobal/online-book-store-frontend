@@ -7,6 +7,12 @@ import type {
   LogoutResponse,
   RefreshTokenResponse,
   RegisterInput,
+  RemoveProfileImageResponse,
+  SendPhoneOtpInput,
+  SendPhoneOtpResponse,
+  UploadProfileImageResponse,
+  VerifyPhoneOtpInput,
+  VerifyPhoneOtpResponse,
 } from "../types/auth.types";
 
 // register new user account
@@ -52,5 +58,33 @@ export async function getCurrentUser(options?: {
     }
     throw err;
   }
+}
+
+// upload or update user profile picture
+export async function uploadProfileImage(file: File): Promise<UploadProfileImageResponse> {
+  const formData = new FormData();
+  formData.append("profilePicture", file);
+  return apiClient.post<UploadProfileImageResponse>("/auth/profile-image", undefined, {
+    body: formData,
+  });
+}
+
+// remove user profile picture
+export async function removeProfileImage(): Promise<RemoveProfileImageResponse> {
+  return apiClient.delete<RemoveProfileImageResponse>("/auth/profile-image");
+}
+
+// send or resend phone verification OTP
+export async function sendPhoneOtp(input: SendPhoneOtpInput): Promise<SendPhoneOtpResponse> {
+  return apiClient.post<SendPhoneOtpResponse>("/auth/send-otp", input, {
+    skipAuthRefresh: true,
+  });
+}
+
+// verify phone verification OTP
+export async function verifyPhoneOtp(input: VerifyPhoneOtpInput): Promise<VerifyPhoneOtpResponse> {
+  return apiClient.post<VerifyPhoneOtpResponse>("/auth/verify-otp", input, {
+    skipAuthRefresh: true,
+  });
 }
 

@@ -34,6 +34,7 @@ export function CuratedBooks({
   const { data: apiResponse, isLoading } = useBooks({
     category: CURATED_BOOKS_CATEGORY_ID,
     limit: 8,
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -45,6 +46,7 @@ export function CuratedBooks({
       slug: catalog.slug,
       title: catalog.title,
       author: catalog.author,
+      seller: catalog.seller,
       cover: catalog.cover,
       price: catalog.price,
       rawPrice: catalog.rawPrice,

@@ -3,7 +3,15 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { GuestCartItem } from "../types/cart.types";
 
-type AddItemInput = Omit<GuestCartItem, "quantity"> & { quantity?: number };
+type AddItemInput = Partial<GuestCartItem> & {
+  title: string;
+  price: number;
+  quantity?: number;
+  id?: string;
+  listingId?: string;
+  bookListingId?: string;
+  bookId?: string;
+};
 
 type GuestCartState = {
   items: GuestCartItem[];
@@ -12,8 +20,8 @@ type GuestCartState = {
 
 type GuestCartActions = {
   addItem: (item: AddItemInput) => void;
-  removeItem: (listingId: string) => void;
-  updateQuantity: (listingId: string, quantity: number) => void;
+  removeItem: (idOrListingId: string) => void;
+  updateQuantity: (idOrListingId: string, quantity: number) => void;
   clearCart: () => void;
   setHydrated: () => void;
 };
@@ -27,11 +35,12 @@ export const useGuestCartStore = create<GuestCartStore>()(
       _hydrated: false,
 
       addItem: (input) => {
+        const itemId = input.id || input.listingId || input.bookListingId || input.bookId || "";
         const quantity = input.quantity ?? 1;
 
         set((state) => {
           const existingIndex = state.items.findIndex(
-            (i) => i.listingId === input.listingId,
+            (i) => i.id === itemId || i.listingId === itemId,
           );
 
           if (existingIndex !== -1) {
@@ -44,15 +53,18 @@ export const useGuestCartStore = create<GuestCartStore>()(
           }
 
           const newItem: GuestCartItem = {
-            listingId: input.listingId,
-            bookId: input.bookId,
-            slug: input.slug,
+            id: itemId,
+            listingId: itemId,
+            bookListingId: itemId,
+            bookId: itemId,
+            slug: input.slug || itemId,
             title: input.title,
-            coverImage: input.coverImage,
-            author: input.author,
-            format: input.format,
+            coverImage: input.coverImage || "",
+            author: input.author || "-",
+            seller: input.seller,
+            format: input.format || "Paperback",
             price: input.price,
-            originalPrice: input.originalPrice,
+            originalPrice: input.originalPrice || input.price,
             quantity,
           };
 
@@ -60,18 +72,22 @@ export const useGuestCartStore = create<GuestCartStore>()(
         });
       },
 
-      removeItem: (listingId) => {
+      removeItem: (idOrListingId) => {
         set((state) => ({
-          items: state.items.filter((i) => i.listingId !== listingId),
+          items: state.items.filter(
+            (i) => i.id !== idOrListingId && i.listingId !== idOrListingId,
+          ),
         }));
       },
 
-      updateQuantity: (listingId, quantity) => {
+      updateQuantity: (idOrListingId, quantity) => {
         if (quantity < 1) return;
 
         set((state) => ({
           items: state.items.map((i) =>
-            i.listingId === listingId ? { ...i, quantity } : i,
+            i.id === idOrListingId || i.listingId === idOrListingId
+              ? { ...i, quantity }
+              : i,
           ),
         }));
       },

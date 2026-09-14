@@ -69,3 +69,54 @@ export type AuthResponse = {
     token?: string;
   };
 };
+
+export type UploadProfileImageData = {
+  user: User;
+  imageUrl: string;
+  publicId?: string;
+};
+
+export type UploadProfileImageResponse = {
+  success: boolean;
+  message: string;
+  data: UploadProfileImageData;
+};
+
+export type RemoveProfileImageResponse = {
+  success: boolean;
+  message: string;
+  data: User;
+};
+
+export type SendPhoneOtpInput = {
+  mobileNumber?: string;
+};
+
+export type SendPhoneOtpData = {
+  success: boolean;
+  message: string;
+  alreadySent?: boolean;
+};
+
+export type SendPhoneOtpResponse = {
+  success: boolean;
+  message: string;
+  data: SendPhoneOtpData;
+};
+
+export type VerifyPhoneOtpInput = {
+  mobileNumber?: string;
+  otp: string;
+};
+
+export type VerifyPhoneOtpData = {
+  success: boolean;
+  message: string;
+  user?: User;
+};
+
+export type VerifyPhoneOtpResponse = {
+  success: boolean;
+  message: string;
+  data: VerifyPhoneOtpData;
+};

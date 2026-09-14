@@ -39,6 +39,7 @@ function TranslatedCard({ item }: { item: TranslatedBookItem }) {
           alt={`${item.title} cover`}
           fill
           sizes="(max-width: 768px) 120px, 150px"
+          unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -67,8 +68,9 @@ function TranslatedCard({ item }: { item: TranslatedBookItem }) {
     </article>
   );
 
-  return item.slug ? (
-    <Link href={`/books/${item.slug}`} className="block">
+  const targetId = item.id || item.slug;
+  return targetId && targetId !== "-" ? (
+    <Link href={`/books/${targetId}`} className="block">
       {content}
     </Link>
   ) : (
@@ -80,6 +82,7 @@ export function Translated() {
   const { data: apiResponse, isLoading } = useBooks({
     category: TRANSLATED_CATEGORY_ID,
     limit: 3,
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -135,7 +138,7 @@ export function Translated() {
                 </div>
               ))
             : translatedList.map((item) => (
-                <TranslatedCard key={item.slug || item.id} item={item} />
+                <TranslatedCard key={item.id || item.slug} item={item} />
               ))}
         </div>
       </div>

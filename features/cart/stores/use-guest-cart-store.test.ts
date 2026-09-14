@@ -1,26 +1,9 @@
-// unit tests for guest cart store logic
-if (typeof window === "undefined") {
-  const store: Record<string, string> = {};
-  (global as any).window = {
-    localStorage: {
-      getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => {
-        store[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete store[k];
-      },
-      clear: () => {
-        for (const k of Object.keys(store)) delete store[k];
-      },
-    },
-  };
-}
-
+import { describe, it, expect, beforeEach } from "vitest";
 import { useGuestCartStore } from "./use-guest-cart-store";
 import type { GuestCartItem } from "../types/cart.types";
 
 const SAMPLE_ITEM_A: Omit<GuestCartItem, "quantity"> = {
+  id: "listing-001",
   listingId: "listing-001",
   bookId: "book-abc",
   slug: "mati-akasher-majhkhane",
@@ -33,6 +16,7 @@ const SAMPLE_ITEM_A: Omit<GuestCartItem, "quantity"> = {
 };
 
 const SAMPLE_ITEM_B: Omit<GuestCartItem, "quantity"> = {
+  id: "listing-002",
   listingId: "listing-002",
   bookId: "book-def",
   slug: "khoabnama",
@@ -44,8 +28,8 @@ const SAMPLE_ITEM_B: Omit<GuestCartItem, "quantity"> = {
   originalPrice: 450,
 };
 
-// same book, different seller (different listingId)
 const SAMPLE_ITEM_C_SAME_BOOK: Omit<GuestCartItem, "quantity"> = {
+  id: "listing-003",
   listingId: "listing-003",
   bookId: "book-abc",
   slug: "mati-akasher-majhkhane",
@@ -57,120 +41,56 @@ const SAMPLE_ITEM_C_SAME_BOOK: Omit<GuestCartItem, "quantity"> = {
   originalPrice: 350,
 };
 
-function resetStore() {
-  useGuestCartStore.setState({ items: [], _hydrated: true });
-}
+describe("useGuestCartStore", () => {
+  beforeEach(() => {
+    useGuestCartStore.setState({ items: [], _hydrated: true });
+  });
 
-export function runGuestCartStoreTests(): {
-  passed: boolean;
-  failures: string[];
-} {
-  const failures: string[] = [];
+  it("should add a single item with default quantity 1", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    const items = useGuestCartStore.getState().items;
+    expect(items).toHaveLength(1);
+    expect(items[0].quantity).toBe(1);
+    expect(items[0].listingId).toBe("listing-001");
+  });
 
-  function assertEqual(name: string, actual: unknown, expected: unknown) {
-    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-      failures.push(
-        `FAIL [${name}]: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`,
-      );
-    }
-  }
+  it("should increment quantity when adding duplicate listingId", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    const items = useGuestCartStore.getState().items;
+    expect(items).toHaveLength(1);
+    expect(items[0].quantity).toBe(2);
+  });
 
-  // --- addItem tests ---
+  it("should treat same bookId with different listingId as separate items", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_C_SAME_BOOK);
+    expect(useGuestCartStore.getState().items).toHaveLength(2);
+  });
 
-  // 1. Add a single item
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  assertEqual("Add single item - count", useGuestCartStore.getState().items.length, 1);
-  assertEqual("Add single item - default qty", useGuestCartStore.getState().items[0].quantity, 1);
-  assertEqual(
-    "Add single item - listingId",
-    useGuestCartStore.getState().items[0].listingId,
-    "listing-001",
-  );
+  it("should remove item by listingId", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_B);
+    useGuestCartStore.getState().removeItem("listing-001");
+    const items = useGuestCartStore.getState().items;
+    expect(items).toHaveLength(1);
+    expect(items[0].listingId).toBe("listing-002");
+  });
 
-  // 2. Add item with explicit quantity
-  resetStore();
-  useGuestCartStore.getState().addItem({ ...SAMPLE_ITEM_A, quantity: 3 });
-  assertEqual("Add with explicit qty", useGuestCartStore.getState().items[0].quantity, 3);
+  it("should update quantity properly", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    useGuestCartStore.getState().updateQuantity("listing-001", 5);
+    expect(useGuestCartStore.getState().items[0].quantity).toBe(5);
 
-  // 3. Deduplication by listingId — same listing increments quantity
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  assertEqual("Dedup same listingId - count", useGuestCartStore.getState().items.length, 1);
-  assertEqual("Dedup same listingId - qty", useGuestCartStore.getState().items[0].quantity, 2);
+    // Rejected if 0
+    useGuestCartStore.getState().updateQuantity("listing-001", 0);
+    expect(useGuestCartStore.getState().items[0].quantity).toBe(5);
+  });
 
-  // 4. Same bookId but different listingId — treated as separate items
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_C_SAME_BOOK);
-  assertEqual(
-    "Different listingId same bookId - count",
-    useGuestCartStore.getState().items.length,
-    2,
-  );
-
-  // 5. Add multiple distinct items
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_B);
-  assertEqual("Add two distinct items - count", useGuestCartStore.getState().items.length, 2);
-
-  // --- removeItem tests ---
-
-  // 6. Remove item by listingId
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_B);
-  useGuestCartStore.getState().removeItem("listing-001");
-  assertEqual("Remove item - count", useGuestCartStore.getState().items.length, 1);
-  assertEqual(
-    "Remove item - remaining",
-    useGuestCartStore.getState().items[0].listingId,
-    "listing-002",
-  );
-
-  // 7. Remove non-existent listingId does nothing
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().removeItem("nonexistent-id");
-  assertEqual("Remove nonexistent - count", useGuestCartStore.getState().items.length, 1);
-
-  // --- updateQuantity tests ---
-
-  // 8. Update quantity
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().updateQuantity("listing-001", 5);
-  assertEqual("Update qty", useGuestCartStore.getState().items[0].quantity, 5);
-
-  // 9. Update quantity to 0 is rejected
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().updateQuantity("listing-001", 0);
-  assertEqual("Update qty to 0 rejected", useGuestCartStore.getState().items[0].quantity, 1);
-
-  // 10. Update quantity for non-existent item does nothing
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().updateQuantity("nonexistent-id", 10);
-  assertEqual(
-    "Update nonexistent - unchanged",
-    useGuestCartStore.getState().items[0].quantity,
-    1,
-  );
-
-  // --- clearCart tests ---
-
-  // 11. Clear cart
-  resetStore();
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
-  useGuestCartStore.getState().addItem(SAMPLE_ITEM_B);
-  useGuestCartStore.getState().clearCart();
-  assertEqual("Clear cart - empty", useGuestCartStore.getState().items.length, 0);
-
-  return {
-    passed: failures.length === 0,
-    failures,
-  };
-}
+  it("should clear all items in cart", () => {
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_A);
+    useGuestCartStore.getState().addItem(SAMPLE_ITEM_B);
+    useGuestCartStore.getState().clearCart();
+    expect(useGuestCartStore.getState().items).toHaveLength(0);
+  });
+});

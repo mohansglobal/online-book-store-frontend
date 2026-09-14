@@ -1,32 +1,48 @@
-// Book API endpoint functions
+// Book and Listing API endpoint functions
 import { apiClient } from "@/lib/api";
-import type {
-  BooksResponse,
-  GetBooksParams,
-  SingleBookResponse,
+import {
+  normalizeListingToApiBook,
+  type BooksResponse,
+  type GetBooksParams,
+  type SingleBookResponse,
 } from "../types/book.types";
 
 /**
- * Fetches books from /api/v1/books
+ * Fetches listings/books from /api/v1/listings
  */
 export async function getBooks(
   params?: GetBooksParams,
   options?: { signal?: AbortSignal },
 ): Promise<BooksResponse> {
-  return apiClient.get<BooksResponse>("/books", {
+  const response = await apiClient.get<BooksResponse>("/listings", {
     params: params as Record<string, string | number | boolean | undefined>,
     signal: options?.signal,
   });
+
+  return {
+    ...response,
+    data: Array.isArray(response?.data)
+      ? response.data.map(normalizeListingToApiBook)
+      : [],
+  };
 }
 
 /**
- * Fetches a single book by slug or id from /api/v1/books/:identifier
+ * Fetches a single listing/book by id from /api/v1/listings/:identifier
  */
 export async function getBookByIdOrSlug(
   identifier: string,
   options?: { signal?: AbortSignal },
 ): Promise<SingleBookResponse> {
-  return apiClient.get<SingleBookResponse>(`/books/${encodeURIComponent(identifier)}`, {
-    signal: options?.signal,
-  });
+  const response = await apiClient.get<SingleBookResponse>(
+    `/listings/${encodeURIComponent(identifier)}`,
+    {
+      signal: options?.signal,
+    },
+  );
+
+  return {
+    ...response,
+    data: response?.data ? normalizeListingToApiBook(response.data) : response?.data,
+  };
 }

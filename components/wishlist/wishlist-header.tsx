@@ -97,7 +97,7 @@ export function WishlistHeader({
               <span className="hidden sm:inline">Clear</span>
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={onMoveAllToCart}
               disabled={inStockCount === 0}
@@ -109,7 +109,7 @@ export function WishlistHeader({
             >
               <ShoppingBag size={14} />
               <span>Move All to Cart ({inStockCount})</span>
-            </button>
+            </button> */}
           </div>
         )}
       </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AnimatePresence,
   motion,
@@ -72,6 +74,7 @@ const itemVariants: Variants = {
 };
 
 export function Hero() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
   const [placeholderText, setPlaceholderText] = useState("");
@@ -147,27 +150,23 @@ export function Hero() {
     };
   }, []);
 
-  const scrollToBooks = (): void => {
-    document.getElementById("books")?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
-
   const handleSearchSubmit = (
     event: React.FormEvent<HTMLFormElement>,
   ): void => {
     event.preventDefault();
 
-    if (!searchQuery.trim()) {
-      return;
+    const query = searchQuery.trim();
+    if (query) {
+      router.push(`/books?search=${encodeURIComponent(query)}`);
+    } else if (placeholderText) {
+      router.push(`/books?search=${encodeURIComponent(placeholderText)}`);
+    } else {
+      router.push("/books");
     }
-
-    scrollToBooks();
   };
 
   const handleTagClick = (tag: string): void => {
-    setSearchQuery(tag);
-    scrollToBooks();
+    router.push(`/books?search=${encodeURIComponent(tag.trim())}`);
   };
 
   return (
@@ -342,8 +341,8 @@ export function Hero() {
           variants={itemVariants}
           className="mb-14 flex w-full flex-col items-center justify-center gap-6 sm:w-auto sm:flex-row"
         >
-          <a
-            href="books"
+          <Link
+            href="/books"
             className="inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black shadow-lg transition-all hover:scale-105 hover:bg-zinc-100 sm:w-auto"
           >
             <BookOpen
@@ -351,7 +350,7 @@ export function Hero() {
               aria-hidden="true"
             />
             Explore Collection
-          </a>
+          </Link>
 
           <a
             href="#authors"

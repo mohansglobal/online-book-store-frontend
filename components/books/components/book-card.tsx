@@ -22,8 +22,8 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
 
-  const bookSlugOrId = book.slug || book.id || "";
-  const isSaved = isInWishlist(book.id || book.slug || book.title);
+  const bookId = book.id || book.slug || "";
+  const isSaved = isInWishlist(bookId);
 
   const rawPrice =
     book.rawPrice ||
@@ -41,9 +41,9 @@ export function BookCard({ book, priority = false }: BookCardProps) {
     e.preventDefault();
     e.stopPropagation();
     toggleWishlist({
-      id: book.id || book.slug || book.title,
-      bookId: book.id || book.slug || book.title,
-      slug: book.slug || "",
+      id: bookId,
+      bookId: bookId,
+      slug: book.slug || bookId,
       title: book.title || "-",
       author: book.author || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
@@ -60,9 +60,9 @@ export function BookCard({ book, priority = false }: BookCardProps) {
     e.preventDefault();
     e.stopPropagation();
     void addToCart({
-      listingId: book.id || book.slug || book.title,
-      bookId: book.id || book.slug || book.title,
-      slug: book.slug || "",
+      listingId: bookId,
+      bookId: bookId,
+      slug: book.slug || bookId,
       title: book.title || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
       author: book.author || "-",
@@ -76,7 +76,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   return (
     <article className="group relative flex flex-col min-w-0 h-full">
       <Link
-        href={`/books/${bookSlugOrId}`}
+        href={`/books/${bookId}`}
         aria-label={`View details for ${book.title || "-"} by ${book.author || "-"}`}
         className="block shrink-0"
       >
@@ -151,7 +151,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
         <div>
           {/* Fixed 2-line Title container */}
           <div className="h-11 overflow-hidden">
-            <Link href={`/books/${bookSlugOrId}`} className="block">
+            <Link href={`/books/${bookId}`} className="block">
               <h3
                 title={book.title || "-"}
                 className="line-clamp-2 font-display text-[15px] sm:text-[16px] font-semibold leading-[1.35] tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary"
@@ -165,6 +165,13 @@ export function BookCard({ book, priority = false }: BookCardProps) {
           <p className="mt-1 h-5 truncate text-[13px] leading-5 text-muted-foreground">
             {book.author || "-"}
           </p>
+
+          {/* Seller line */}
+          {book.seller && (
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground/80" title={`Seller: ${book.seller}`}>
+              Seller: <span className="font-medium text-foreground/90">{book.seller}</span>
+            </p>
+          )}
         </div>
 
         {/* Pinned Bottom Price & Optional Category Tag */}
@@ -178,14 +185,14 @@ export function BookCard({ book, priority = false }: BookCardProps) {
                 {book.originalPrice}
               </span>
             )}
-            {book.priceIn && book.priceIn !== book.price && book.priceIn !== "-" && (
+            {/* {book.priceIn && book.priceIn !== book.price && book.priceIn !== "-" && (
               <span
                 className="inline-flex items-center rounded bg-muted/80 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
                 title={`India Price: ${book.priceIn}`}
               >
                 IN: {book.priceIn}
               </span>
-            )}
+            )} */}
           </div>
 
           <span className="hidden xl:inline-block text-[10px] text-muted-foreground/80 font-medium truncate max-w-[90px]">

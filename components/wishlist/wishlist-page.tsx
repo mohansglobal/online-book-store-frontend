@@ -15,6 +15,7 @@ import { WishlistToolbar } from "./wishlist-toolbar";
 import { WishlistGrid } from "./wishlist-grid";
 import { WishlistListView } from "./wishlist-list-view";
 import { WishlistEmptyState } from "./wishlist-empty-state";
+import { WishlistSkeleton } from "./wishlist-skeleton";
 import { WishlistRecommendations } from "./wishlist-recommendations";
 import { WishlistClearDialog } from "./wishlist-clear-dialog";
 
@@ -22,6 +23,7 @@ export function WishlistPage() {
   const {
     items,
     isHydrated,
+    isLoading,
     moveToCart,
     moveAllToCart,
     removeItem,
@@ -35,6 +37,9 @@ export function WishlistPage() {
     useState<WishlistSortOption>("recently_added");
   const [viewMode, setViewMode] = useState<WishlistViewMode>("grid");
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+
+  const isPageLoading = !isHydrated || isLoading;
+
 
   // Derive unique categories from items
   const categories = useMemo(() => {
@@ -95,34 +100,22 @@ export function WishlistPage() {
     }
   }, [filteredItems, sortOption]);
 
-  if (!isHydrated) {
-    return (
-      <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-        <CategoryBanner categoryName="" compact />
-        <main className="relative z-20 -mt-8 flex-1 px-4 pb-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex items-center justify-center py-24">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-accent selection:text-white">
       <CategoryBanner categoryName="" compact />
 
       <main className="relative z-20 -mt-8 flex-1 px-4 pb-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl space-y-6">
-          {items.length > 0 ? (
+          {isPageLoading ? (
+            <WishlistSkeleton />
+          ) : items.length > 0 ? (
             <>
               {/* Header */}
               <WishlistHeader
                 items={items}
                 onMoveAllToCart={moveAllToCart}
                 onOpenClearDialog={() => setClearDialogOpen(true)}
+
               />
 
               {/* Toolbar */}

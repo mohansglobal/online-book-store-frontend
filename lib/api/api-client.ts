@@ -188,6 +188,8 @@ async function request<T>(
     const isAuthEndpoint =
       endpoint.includes("/auth/login") ||
       endpoint.includes("/auth/register") ||
+      endpoint.includes("/auth/send-otp") ||
+      endpoint.includes("/auth/verify-otp") ||
       endpoint.includes("/auth/refresh-token") ||
       endpoint.includes("/auth/logout") ||
       endpoint.includes("/auth/me");

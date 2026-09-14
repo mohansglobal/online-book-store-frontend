@@ -26,12 +26,12 @@ export const useWishlistStore = create<WishlistStore>()(
 
       addItem: (input) => {
         set((state) => {
-          const itemId = input.id || input.bookId || input.slug || input.title;
+          const itemId = input.id || input.listingId || input.bookId || input.slug || input.title;
           const existingIndex = state.items.findIndex(
             (i) =>
+              i.id === itemId ||
               (input.id && i.id === input.id) ||
-              (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
-              (input.slug && (i.slug === input.slug || i.id === input.slug)) ||
+              (input.slug && i.slug === input.slug) ||
               (input.title && i.title.toLowerCase() === input.title.toLowerCase()),
           );
 
@@ -49,8 +49,6 @@ export const useWishlistStore = create<WishlistStore>()(
 
           const newItem: WishlistItem = {
             id: itemId,
-            bookId: input.bookId || itemId,
-            listingId: input.listingId,
             slug: input.slug || itemId,
             title: input.title,
             author: input.author,
@@ -62,6 +60,8 @@ export const useWishlistStore = create<WishlistStore>()(
             rating: input.rating,
             category: input.category,
             publisher: input.publisher,
+            seller: input.seller,
+            quantity: input.quantity ?? 1,
             addedAt: input.addedAt || new Date().toISOString(),
           };
 
@@ -74,9 +74,7 @@ export const useWishlistStore = create<WishlistStore>()(
           items: state.items.filter(
             (i) =>
               i.id !== id &&
-              i.bookId !== id &&
               i.slug !== id &&
-              i.listingId !== id &&
               (i.title ? i.title.toLowerCase() !== id.toLowerCase() : true),
           ),
         }));
@@ -84,14 +82,13 @@ export const useWishlistStore = create<WishlistStore>()(
 
       toggleItem: (input) => {
         const state = get();
-        const itemId = input.id || input.bookId || input.slug || input.title;
+        const itemId = input.id || input.listingId || input.bookId || input.slug || input.title;
         const existing = state.items.find(
           (i) =>
+            i.id === itemId ||
             (input.id && i.id === input.id) ||
-            (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
-            (input.slug && (i.slug === input.slug || i.id === input.slug)) ||
-            (input.title && i.title.toLowerCase() === input.title.toLowerCase()) ||
-            i.id === itemId,
+            (input.slug && i.slug === input.slug) ||
+            (input.title && i.title.toLowerCase() === input.title.toLowerCase()),
         );
 
         if (existing) {
@@ -147,9 +144,7 @@ export const selectIsInWishlist =
     return state.items.some(
       (i) =>
         i.id === idOrSlug ||
-        i.bookId === idOrSlug ||
         i.slug === idOrSlug ||
-        i.listingId === idOrSlug ||
         (i.title && i.title.toLowerCase() === lower),
     );
   };

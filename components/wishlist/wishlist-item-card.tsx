@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Star, Trash2 } from "lucide-react";
+import { ShoppingBag, Star, Trash2 } from "lucide-react";
 import type { WishlistItem } from "@/features/wishlist";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
+import { resolveCoverUrl } from "@/lib/image-url";
 
 type WishlistItemCardProps = {
   item: WishlistItem;
@@ -18,7 +19,9 @@ export function WishlistItemCard({
   onMoveToCart,
   onRemove,
 }: WishlistItemCardProps) {
-  const [imgSrc, setImgSrc] = useState(item.coverImage || FALLBACK_BOOK_COVER);
+  const [hasError, setHasError] = useState(false);
+  const resolvedCover = resolveCoverUrl(item.coverImage);
+  const imgSrc = hasError ? FALLBACK_BOOK_COVER : resolvedCover;
 
   const discountPercent =
     item.originalPrice && item.originalPrice > item.price
@@ -27,17 +30,19 @@ export function WishlistItemCard({
 
   const isOutOfStock = item.inStock === false;
 
+  const targetBookId = item.id;
+
   return (
     <article className="group relative flex flex-col min-w-0 h-full rounded-2xl border border-border bg-surface p-3 transition-all duration-300 hover:border-border-hover hover:shadow-md">
       {/* Cover Container (2:3 Aspect Ratio) */}
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface-soft shadow-xs border border-border/40">
-        <Link href={`/books/${item.slug}`} className="block h-full w-full">
+        <Link href={`/books/${targetBookId}`} className="block h-full w-full">
           <Image
             src={imgSrc}
             alt={`${item.title} cover`}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
+            onError={() => setHasError(true)}
             unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
             className={`h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 ${
               isOutOfStock ? "grayscale opacity-75" : ""
@@ -90,7 +95,7 @@ export function WishlistItemCard({
       <div className="mt-3 flex flex-1 flex-col justify-between">
         <div>
           <Link
-            href={`/books/${item.slug}`}
+            href={`/books/${targetBookId}`}
             className="line-clamp-2 font-display text-base font-semibold leading-snug text-foreground transition-colors hover:text-accent"
           >
             {item.title}

@@ -35,6 +35,7 @@ export function Textbooks({ onWish, onCart }: TextbooksProps) {
   const { data: apiResponse, isLoading } = useBooks({
     category: TEXTBOOKS_CATEGORY_ID,
     limit: 1,
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -51,6 +52,7 @@ export function Textbooks({ onWish, onCart }: TextbooksProps) {
             slug: catalog.slug,
             title: catalog.title,
             author: catalog.author,
+            seller: catalog.seller,
             cover: catalog.cover,
             price: catalog.price,
             rawPrice: catalog.rawPrice,

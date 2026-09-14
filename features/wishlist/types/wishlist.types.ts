@@ -1,11 +1,99 @@
 // Wishlist domain types and data models
 
-export type WishlistItem = {
-  /** Unique identifier for the wishlist item (listingId or bookId) */
-  id: string;
-  bookId: string;
+export interface WishlistAuthor {
+  _id: string;
+  name: string;
+  nameBn?: string;
+  slug?: string;
+}
+
+export interface WishlistPublisher {
+  _id: string;
+  name: string;
+  nameBn?: string;
+  slug?: string;
+}
+
+export interface WishlistCategory {
+  _id: string;
+  name: string;
+  nameBn?: string;
+  slug?: string;
+}
+
+export interface WishlistSeller {
+  _id: string;
+  name: string;
+  email?: string;
+  mobileNumber?: string;
+  role?: string;
+}
+
+export interface WishlistBookItem {
+  id: string; // Canonical book _id
+  bookId: string; // Canonical book _id
+  listingId?: string; // Lowest price active seller listing ID
+  title: string;
+  titleBn?: string;
+  slug: string; // Guaranteed book _id
+  canonicalSlug?: string; // SEO text slug
+  isbn?: string;
+  coverImage: string;
+  images?: string[];
+  format?: string;
+  priceInPaise?: number;
+  priceInRupees?: number;
+  mrpInPaise?: number;
+  mrpInRupees?: number;
+  inStock?: boolean;
+  totalStock?: number;
+  authors?: WishlistAuthor[];
+  publisher?: WishlistPublisher;
+  seller?: WishlistSeller | string;
+  categories?: WishlistCategory[];
+  quantity?: number;
+  addedAt?: string;
+}
+
+export interface WishlistData {
+  _id: string;
+  user: string;
+  items: WishlistBookItem[];
+  totalItemsCount: number;
+}
+
+export interface WishlistResponse {
+  success: boolean;
+  message: string;
+  data: WishlistData;
+}
+
+// Payloads for mutations
+export type AddWishlistApiInput = {
+  bookId?: string;
+  id?: string;
   listingId?: string;
-  slug: string;
+};
+
+export type SyncWishlistItemInput = {
+  bookId?: string;
+  id?: string;
+  listingId?: string;
+};
+
+export type SyncWishlistInput =
+  | SyncWishlistItemInput[]
+  | {
+      items: SyncWishlistItemInput[];
+    };
+
+// Unified presentation view model
+export type WishlistItem = {
+  /** Unique identifier for the wishlist item */
+  id: string;
+  bookId?: string;
+  listingId?: string;
+  slug?: string;
   title: string;
   author: string;
   coverImage: string;
@@ -16,6 +104,8 @@ export type WishlistItem = {
   rating?: number | string;
   category?: string;
   publisher?: string;
+  seller?: string;
+  quantity?: number;
   addedAt: string; // ISO date string
 };
 

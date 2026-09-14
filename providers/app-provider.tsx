@@ -14,6 +14,7 @@ import {
   useAuthSessionStore,
 } from "@/features/auth";
 import { useCartSync } from "@/features/cart";
+import { useWishlistSync } from "@/features/wishlist";
 
 declare global {
   interface Window {
@@ -23,6 +24,11 @@ declare global {
 
 function CartSyncHandler() {
   useCartSync();
+  return null;
+}
+
+function WishlistSyncHandler() {
+  useWishlistSync();
   return null;
 }
 
@@ -62,6 +68,7 @@ export function AppProvider({
   return (
     <QueryClientProvider client={queryClient}>
       <CartSyncHandler />
+      <WishlistSyncHandler />
       {children}
 
       <LogoutAlertDialog />

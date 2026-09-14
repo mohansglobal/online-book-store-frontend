@@ -287,49 +287,7 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
             </div>
 
             {/* Search Input Form */}
-            <form
-              onSubmit={handleNavSearchSubmit}
-              className={`flex h-11 items-center gap-2.5 overflow-hidden rounded-md transition-all duration-300 ${scrolled
-                ? "border border-border bg-card"
-                : "border border-white/20 bg-black/50"
-                } ${searchOpen
-                  ? "w-[200px] pr-2 pl-3 opacity-100 sm:w-[300px]"
-                  : "pointer-events-none w-0 p-0 opacity-0 border-0"
-                }`}
-            >
-              <Search
-                size={18}
-                className={`shrink-0 ${scrolled ? "text-muted-foreground" : "text-zinc-400"
-                  }`}
-              />
 
-              <input
-                type="search"
-                value={navSearch}
-                onChange={(e) => setNavSearch(e.target.value)}
-                className={`w-full border-0 bg-transparent text-[13px] outline-none [&::-webkit-search-cancel-button]:hidden ${scrolled
-                  ? "text-foreground placeholder:text-muted-foreground"
-                  : "text-white placeholder:text-zinc-400"
-                  }`}
-                aria-label="Search books"
-                placeholder="Search books, authors, publishers…"
-              />
-
-              <button
-                type="button"
-                aria-label="Close search"
-                onClick={() => {
-                  setSearchOpen(false);
-                  setNavSearch("");
-                }}
-                className={`grid cursor-pointer place-items-center border-0 bg-transparent ${scrolled
-                  ? "text-muted-foreground hover:text-foreground"
-                  : "text-zinc-400 hover:text-white"
-                  }`}
-              >
-                <X size={17} />
-              </button>
-            </form>
 
             {!searchOpen && (
               <IconButton

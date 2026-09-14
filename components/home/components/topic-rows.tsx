@@ -75,6 +75,7 @@ function TopicBookCard({ book, index }: { book: Book; index: number }) {
           alt={`${book.title} cover`}
           fill
           sizes="90px"
+          unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -95,8 +96,9 @@ function TopicBookCard({ book, index }: { book: Book; index: number }) {
     </article>
   );
 
-  return book.slug ? (
-    <Link href={`/books/${book.slug}`} className="block">
+  const targetId = book.id || book.slug;
+  return targetId && targetId !== "-" ? (
+    <Link href={`/books/${targetId}`} className="block">
       {content}
     </Link>
   ) : (
@@ -108,6 +110,7 @@ function TopicRowSection({ config }: { config: TopicConfig }) {
   const { data: apiResponse, isLoading } = useBooks({
     category: config.categoryId,
     limit: 3,
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -119,6 +122,7 @@ function TopicRowSection({ config }: { config: TopicConfig }) {
       slug: catalog.slug,
       title: catalog.title,
       author: catalog.author,
+      seller: catalog.seller,
       cover: catalog.cover,
       price: catalog.price,
       rawPrice: catalog.rawPrice,
@@ -181,7 +185,7 @@ function TopicRowSection({ config }: { config: TopicConfig }) {
         ) : (
           booksList.map((book, index) => (
             <TopicBookCard
-              key={`${config.title}-${book.slug || book.title}-${index}`}
+              key={book.id || `${config.title}-${book.title}-${index}`}
               book={book}
               index={index}
             />

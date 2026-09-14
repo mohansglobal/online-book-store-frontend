@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
 import type { CartItemView } from "@/features/cart/types/cart.types";
+import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
+import { resolveCoverUrl } from "@/lib/image-url";
 
 type CartItemCardProps = {
   item: CartItemView;
@@ -16,35 +19,44 @@ export function CartItemCard({
   onUpdateQuantity,
   onRemove,
 }: CartItemCardProps) {
+  const [hasError, setHasError] = useState(false);
+  const resolvedCover = resolveCoverUrl(item.coverImage);
+  const imgSrc = hasError ? FALLBACK_BOOK_COVER : resolvedCover;
+
   const discountPercent =
     item.originalPrice > item.price
       ? Math.round(
-          ((item.originalPrice - item.price) / item.originalPrice) * 100,
-        )
+        ((item.originalPrice - item.price) / item.originalPrice) * 100,
+      )
       : 0;
 
   const isUnavailable = !item.isAvailable || item.isOutOfStock;
+  const targetBookId = item.id
 
   return (
     <article
-      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${
-        isUnavailable ? "opacity-85 border-destructive/30" : ""
-      }`}
+      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${isUnavailable ? "opacity-85 border-destructive/30" : ""
+        }`}
     >
       {/* Cover */}
       <div className="relative w-24 shrink-0 overflow-hidden border-r border-border/50 bg-surface-soft sm:w-32">
-        <Image
-          src={item.coverImage}
-          alt={`${item.title} cover`}
-          fill
-          sizes="(max-width: 640px) 96px, 128px"
-          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
-            isUnavailable ? "grayscale" : ""
-          }`}
-          unoptimized
-        />
+        <Link
+          href={targetBookId ? `/books/${targetBookId}` : "/books"}
+          className="block h-full w-full"
+        >
+          <Image
+            src={imgSrc}
+            alt={`${item.title} cover`}
+            fill
+            sizes="(max-width: 640px) 96px, 128px"
+            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUnavailable ? "grayscale" : ""
+              }`}
+            onError={() => setHasError(true)}
+            unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
+          />
+        </Link>
         {isUnavailable && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center p-1 text-center">
+          <div className="pointer-events-none absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center p-1 text-center">
             <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
               Out of Stock
             </span>
@@ -57,7 +69,7 @@ export function CartItemCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <Link
-              href={item.slug ? `/books/${item.slug}` : "/books"}
+              href={targetBookId ? `/books/${targetBookId}` : "/books"}
               className="line-clamp-2 text-sm leading-tight font-bold text-foreground transition-colors hover:text-accent sm:text-base"
             >
               {item.title}
@@ -67,6 +79,15 @@ export function CartItemCard({
               <span className="max-w-[120px] truncate font-medium text-text-secondary sm:max-w-none">
                 {item.author}
               </span>
+
+              {item.seller && (
+                <>
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
+                  <span className="truncate text-muted-foreground/80">
+                    Seller: <span className="font-medium text-foreground">{item.seller}</span>
+                  </span>
+                </>
+              )}
 
               <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
 

@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { LoginForm, RegisterForm } from "@/features/auth";
+import { LoginForm, OtpVerificationForm, RegisterForm } from "@/features/auth";
+
+type AuthMode = "login" | "register" | "otp";
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [pendingMobileNumber, setPendingMobileNumber] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
@@ -27,6 +30,28 @@ export default function LoginPage() {
       }
     }
   }, [shouldReduceMotion]);
+
+  const getHeadingText = () => {
+    switch (authMode) {
+      case "login":
+        return {
+          title: "Welcome back",
+          description: "Enter your credentials to access your account",
+        };
+      case "register":
+        return {
+          title: "Create an account",
+          description: "Fill in the details below to get started",
+        };
+      case "otp":
+        return {
+          title: "Verify phone number",
+          description: "Enter the 6-digit verification code sent to your device",
+        };
+    }
+  };
+
+  const headingInfo = getHeadingText();
 
   return (
     <main className="flex h-screen w-full overflow-hidden bg-background text-foreground">
@@ -59,7 +84,7 @@ export default function LoginPage() {
         />
       </section>
 
-      {/* Login / Register Form Container */}
+      {/* Login / Register / OTP Form Container */}
       <section className="relative flex flex-1 flex-col justify-center overflow-y-auto bg-background px-8 sm:px-16 md:px-24 lg:px-20 xl:px-28 py-10">
         <motion.div
           initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
@@ -75,19 +100,17 @@ export default function LoginPage() {
           <div className="mb-8 text-center lg:text-left">
             <AnimatePresence mode="wait">
               <motion.div
-                key={isLogin ? "login-heading" : "register-heading"}
+                key={`${authMode}-heading`}
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
                 transition={{ duration: 0.25 }}
               >
                 <h1 className="mb-2 text-3xl font-bold tracking-tight">
-                  {isLogin ? "Welcome back" : "Create an account"}
+                  {headingInfo.title}
                 </h1>
                 <p className="text-sm text-muted-foreground sm:text-base">
-                  {isLogin
-                    ? "Enter your credentials to access your account"
-                    : "Fill in the details below to get started"}
+                  {headingInfo.description}
                 </p>
               </motion.div>
             </AnimatePresence>
@@ -95,7 +118,7 @@ export default function LoginPage() {
 
           {/* Form Content */}
           <AnimatePresence mode="wait">
-            {isLogin ? (
+            {authMode === "login" && (
               <motion.div
                 key="login-content"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
@@ -103,9 +126,11 @@ export default function LoginPage() {
                 exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
                 transition={{ duration: 0.25 }}
               >
-                <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
+                <LoginForm onSwitchToRegister={() => setAuthMode("register")} />
               </motion.div>
-            ) : (
+            )}
+
+            {authMode === "register" && (
               <motion.div
                 key="register-content"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
@@ -113,7 +138,30 @@ export default function LoginPage() {
                 exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
                 transition={{ duration: 0.25 }}
               >
-                <RegisterForm onSwitchToLogin={() => setIsLogin(true)} />
+                <RegisterForm
+                  onSwitchToLogin={() => setAuthMode("login")}
+                  onRequireOtp={(mobileNumber) => {
+                    setPendingMobileNumber(mobileNumber);
+                    setAuthMode("otp");
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {authMode === "otp" && (
+              <motion.div
+                key="otp-content"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
+                transition={{ duration: 0.25 }}
+              >
+                <OtpVerificationForm
+                  mobileNumber={pendingMobileNumber}
+                  onSuccess={() => setAuthMode("login")}
+                  onSwitchToLogin={() => setAuthMode("login")}
+                  onChangeNumber={() => setAuthMode("register")}
+                />
               </motion.div>
             )}
           </AnimatePresence>

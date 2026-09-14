@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryBanner } from "../categories/components/CategoryBanner";
@@ -17,26 +18,14 @@ import { BookDetailsRelated } from "./details/book-details-related";
 import { BookDetailsPreviewModal } from "./details/book-details-preview-modal";
 import { BookDetailsMobileBar } from "./details/book-details-mobile-bar";
 import { BookDetailsSkeleton } from "./details/book-details-skeleton";
+import { resolveCoverUrl } from "@/lib/image-url";
 
 export interface BookDetailsClientProps {
   bookId: string;
 }
 
-function resolveCoverUrl(image?: string | null): string {
-  if (!image || typeof image !== "string" || !image.trim()) {
-    return FALLBACK_BOOK_COVER;
-  }
-  const trimmed = image.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-  if (!trimmed.includes("/")) {
-    return `https://indobanglabooks.in/upload/product/${trimmed}`;
-  }
-  return trimmed;
-}
-
 export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
+  const router = useRouter();
   const { data: bookResponse, isLoading, isError, refetch } = useBook(bookId);
   const book = bookResponse?.data;
   const { withAuth } = useRequireAuth();
@@ -121,6 +110,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     if (!book) return;
     addToCart({
       listingId: book._id,
+      bookListingId: book._id,
       bookId: book._id,
       slug: book.slug || book._id,
       title: book.title || "-",
@@ -129,6 +119,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         book.authors && book.authors.length > 0
           ? book.authors.map((a) => a.name).join(", ")
           : "-",
+      seller: book.seller?.name,
       format: book.format || "Paperback",
       price: rawPrice ?? 0,
       originalPrice:
@@ -137,24 +128,46 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || (rawPrice ?? 0),
       quantity,
     });
-
-    toast.success(`"${book.title || "-"}" added to cart!`, {
-      description: `Qty: ${quantity} • Price: ${priceText}`,
-    });
   };
 
   const handleBuyNow = withAuth(
-    () => {
-      toast.success(`Proceeding to checkout with "${book.title || "-"}"!`, {
-        description: `Qty: ${quantity} • Total: ${rawPrice ? `₹${rawPrice * quantity}` : priceText}`,
-      });
+    async () => {
+      if (!book) return;
+      try {
+        await addToCart({
+          listingId: book._id,
+          bookListingId: book._id,
+          bookId: book._id,
+          slug: book.slug || book._id,
+          title: book.title || "-",
+          coverImage: mainCover,
+          author:
+            book.authors && book.authors.length > 0
+              ? book.authors.map((a) => a.name).join(", ")
+              : "-",
+          seller: book.seller?.name,
+          format: book.format || "Paperback",
+          price: rawPrice ?? 0,
+          originalPrice:
+            typeof book.originalPrice === "number"
+              ? book.originalPrice
+              : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || (rawPrice ?? 0),
+          quantity,
+        });
+
+        router.push("/checkout");
+      } catch (err) {
+        console.error("Failed to proceed to checkout:", err);
+      }
     },
     {
+      returnUrl: "/checkout",
       onUnauthenticated: () => {
         toast.info("Please sign in to proceed to checkout");
       },
     },
   );
+
 
   const handleToggleWishlist = () => {
     if (!book) return;
@@ -170,11 +183,13 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       : undefined;
 
     toggleWishlist({
-      id: book._id || book.slug,
+      id: book._id,
       bookId: book._id,
-      slug: book.slug,
+      listingId: book._id,
+      slug: book.slug || book._id,
       title: book.title,
       author: book.authors?.map((a) => a.name).join(", ") || "-",
+      seller: book.seller?.name,
       coverImage: coverSrc,
       format: book.format || "Paperback",
       price: rawPrice,
@@ -182,6 +197,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       inStock: book.inStock ?? (book.stock ? book.stock > 0 : true),
       rating: book.rating,
       category: book.categories?.[0]?.name,
+      quantity,
     });
   };
 
@@ -227,6 +243,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           <BookDetailsRelated
             categoryId={book.categories?.[0]?._id || book.categories?.[0]?.slug}
             currentBookId={book._id}
+            currentIsbn={book.isbn}
           />
         </div>
       </main>

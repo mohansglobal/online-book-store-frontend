@@ -25,6 +25,7 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
   const { data: apiResponse, isLoading } = useBooks({
     category: POETRY_CATEGORY_ID,
     limit: 2,
+    homesection: true,
   });
 
   const apiBooks = apiResponse?.data || [];
@@ -36,6 +37,7 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
       slug: catalog.slug,
       title: catalog.title,
       author: catalog.author,
+      seller: catalog.seller,
       cover: catalog.cover,
       price: catalog.price,
       rawPrice: catalog.rawPrice,
@@ -139,7 +141,7 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
           ) : (
             poetryBooks.map((book, index) => (
               <div
-                key={book.slug || book.id || book.title}
+                key={book.id || `${book.title}-${index}`}
                 className={index === 0 ? "md:translate-y-12" : ""}
               >
                 <BookCard

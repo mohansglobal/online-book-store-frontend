@@ -1,117 +1,109 @@
 // Cart domain types matching backend /api/v1/cart contracts
 
-export type CartAuthor = {
+export interface CartAuthor {
   _id: string;
   name: string;
+  nameBn?: string;
   slug: string;
   photo?: string;
-};
+}
 
-export type CartPublisher = {
+export interface CartPublisher {
   _id: string;
   name: string;
+  nameBn?: string;
   slug: string;
-};
+}
 
-export type CartBook = {
+export interface CartBook {
   _id: string;
   title: string;
   titleBn?: string;
   slug: string;
   isbn?: string;
-  coverImage?: string | null;
-  format?: string;
-  status?: string;
-  authors?: CartAuthor[];
+  coverImage: string;
+  images?: string[];
   publisher?: CartPublisher;
-};
+  authors?: CartAuthor[];
+  format?: string;
+}
 
-export type CartSeller = {
+export interface CartSeller {
   _id: string;
   name: string;
   email: string;
-  role: string;
-};
+  mobileNumber?: string;
+  role?: string;
+}
 
-export type CartListing = {
-  _id: string;
-  mrpInPaise: number;
-  sellingPriceInPaise: number;
-  stock: number;
-  sku?: string;
-  isActive: boolean;
-  book?: CartBook;
-  seller?: CartSeller;
-};
-
-export type BackendCartItem = {
-  id: string;
-  listing?: CartListing;
+export interface CartItem {
+  bookListingId: string;
   quantity: number;
-  unitPriceInPaise: number;
-  unitMrpInPaise: number;
-  itemSubtotalInPaise: number;
-  itemSavingsInPaise: number;
-  isAvailable: boolean;
-  isOutOfStock: boolean;
-  exceedsStock: boolean;
-  availableStock: number;
-  addedAt: string;
-};
-
-export type BackendCartSummary = {
-  totalItems: number;
+  priceInPaise: number;
+  priceInRupees: number;
+  mrpInPaise: number;
+  mrpInRupees: number;
   subtotalInPaise: number;
-  totalMrpInPaise: number;
-  totalDiscountInPaise: number;
-  hasUnavailableItems: boolean;
-  hasStockIssues: boolean;
-};
+  subtotalInRupees: number;
+  stockAvailable: number;
+  isAvailable: boolean;
+  book: CartBook;
+  seller: CartSeller;
+}
 
-export type BackendCart = {
-  id: string;
+export interface CartData {
+  _id: string;
   user: string;
-  items: BackendCartItem[];
-  summary: BackendCartSummary;
-  updatedAt: string;
-};
+  items: CartItem[];
+  totalItemsCount: number;
+  totalAmountInPaise: number;
+  totalAmountInRupees: number;
+}
 
-export type CartResponse = {
+export interface CartResponse {
   success: boolean;
   message: string;
-  data: BackendCart;
-};
+  data: CartData;
+}
 
 // Input payload contracts
 export type AddToCartInput = {
+  bookListingId?: string;
+  bookListing?: string;
   listingId?: string;
   bookId?: string;
-  quantity: number;
+  quantity?: number;
 };
+
+export type SyncCartItemInput = {
+  bookListingId?: string;
+  bookListing?: string;
+  listingId?: string;
+  quantity?: number;
+};
+
+export type SyncCartInput =
+  | SyncCartItemInput[]
+  | {
+      items: SyncCartItemInput[];
+    };
 
 export type UpdateCartItemInput = {
-  itemId: string;
+  bookListingId: string;
   quantity: number;
-};
-
-export type MergeCartItemInput = {
-  listingId?: string;
-  bookId?: string;
-  quantity: number;
-};
-
-export type MergeCartInput = {
-  items: MergeCartItemInput[];
 };
 
 // Guest Cart Store item contract
 export type GuestCartItem = {
+  id: string;
   listingId: string;
-  bookId: string;
+  bookListingId?: string;
+  bookId?: string;
   slug: string;
   title: string;
   coverImage: string;
   author: string;
+  seller?: string;
   format: string;
   price: number;
   originalPrice: number;
@@ -122,10 +114,12 @@ export type GuestCartItem = {
 export type CartItemView = {
   id: string;
   listingId: string;
+  bookListingId: string;
   bookId: string;
   slug: string;
   title: string;
   author: string;
+  seller?: string;
   coverImage: string;
   format: string;
   price: number;

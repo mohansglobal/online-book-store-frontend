@@ -1,4 +1,4 @@
-// Book domain types and contracts matching backend /api/v1/books
+// Book domain types and contracts matching backend /api/v1/listings & /api/v1/books
 import type { StaticImageData } from "next/image";
 
 export const FALLBACK_BOOK_COVER =
@@ -21,6 +21,7 @@ export type BookPublisher = {
   name: string;
   nameBn?: string;
   slug: string;
+  logo?: string;
 };
 
 export type BookCategory = {
@@ -28,6 +29,14 @@ export type BookCategory = {
   name: string;
   nameBn?: string;
   slug: string;
+};
+
+export type ListingSeller = {
+  _id: string;
+  name: string;
+  email?: string;
+  mobileNumber?: string;
+  role?: string;
 };
 
 export type ApiBook = {
@@ -64,6 +73,32 @@ export type ApiBook = {
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Listing-level properties
+  listingId?: string;
+  bookId?: string;
+  seller?: ListingSeller;
+  mrpInPaise?: number;
+  sellingPriceInPaise?: number;
+  sku?: string;
+  isActive?: boolean;
+  effectiveImages?: string[];
+  listingImages?: string[];
+};
+
+export type ApiListing = {
+  _id: string;
+  seller?: ListingSeller;
+  book?: ApiBook;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive?: boolean;
+  mrpInPaise?: number;
+  sellingPriceInPaise?: number;
+  sku?: string;
+  stock?: number;
+  publisher?: string | BookPublisher;
+  effectiveImages?: string[];
+  listingImages?: string[];
 };
 
 export type BookPaginationMeta = {
@@ -113,6 +148,8 @@ export type GetBooksParams = {
   format?: string;
   sortBy?: BookSortBy | string;
   sortOrder?: BookSortOrder;
+  homesection?: boolean | string;
+  homeSection?: boolean | string;
   [key: string]: string | number | boolean | undefined;
 };
 
@@ -122,6 +159,7 @@ export interface CatalogBook {
   title: string;
   author: string;
   publisher: string;
+  seller?: string;
   category: string;
   price: string;
   rawPrice: number;
@@ -140,85 +178,10 @@ export interface CatalogBook {
   language?: string;
 }
 
-function parsePrice(val?: number | string): { text: string; num: number } {
-  if (val === undefined || val === null || val === "") return { text: "-", num: 0 };
-  const num = typeof val === "number" ? val : parseFloat(String(val).replace(/[^0-9.]/g, ""));
-  if (!isNaN(num)) {
-    return { text: num === 0 ? "Free" : `₹${num}`, num };
-  }
-  return { text: typeof val === "string" && val.trim() ? val.trim() : "-", num: 0 };
-}
-
-export function transformApiBookToCatalogBook(
-  book: ApiBook,
-  fallbackCover: StaticImageData | string = FALLBACK_BOOK_COVER,
-): CatalogBook {
-  const authorsText =
-    book.authors && book.authors.length > 0
-      ? book.authors.map((a) => a?.name?.trim()).filter(Boolean).join(", ")
-      : "-";
-
-  const publisherText = book.publisher?.name?.trim() || "-";
-  const categoryText =
-    book.categories && book.categories.length > 0
-      ? book.categories.map((c) => c?.name?.trim()).filter(Boolean).join(", ")
-      : "-";
-
-  const { text: priceText, num: rawPrice } = parsePrice(book.price);
-  const { text: priceInText, num: rawPriceIn } = parsePrice(book.priceIn);
-  const finalPrice = priceText !== "-" ? priceText : (priceInText !== "-" ? priceInText : "-");
-  const finalRawPrice = rawPrice || rawPriceIn || 0;
-
-  const { text: origPriceText } = parsePrice(book.originalPrice);
-  const { text: origPriceInText } = parsePrice(book.originalPriceIn);
-
-  let coverSrc: StaticImageData | string = fallbackCover;
-  if (book.coverImage && typeof book.coverImage === "string" && book.coverImage.trim()) {
-    const trimmedCover = book.coverImage.trim();
-    if (trimmedCover.startsWith("http://") || trimmedCover.startsWith("https://")) {
-      coverSrc = trimmedCover;
-    } else if (!trimmedCover.includes("/")) {
-      coverSrc = `https://indobanglabooks.in/upload/product/${trimmedCover}`;
-    } else {
-      coverSrc = trimmedCover;
-    }
-  }
-
-  return {
-    id: book._id || book.slug || "-",
-    slug: book.slug || book._id || "-",
-    title: book.title?.trim() || "-",
-    author: authorsText,
-    publisher: publisherText,
-    category: categoryText,
-    price: finalPrice,
-    rawPrice: finalRawPrice,
-    priceIn: priceInText !== "-" ? priceInText : undefined,
-    rawPriceIn: rawPriceIn || undefined,
-    originalPrice: origPriceText !== "-" ? origPriceText : undefined,
-    originalPriceIn: origPriceInText !== "-" ? origPriceInText : undefined,
-    rating: book.rating !== undefined && book.rating !== null && book.rating !== "" ? String(book.rating) : "-",
-    cover: coverSrc,
-    detail: book.description ? book.description.replace(/<[^>]*>?/gm, "").trim() : "-",
-    publishedYear: book.publishedYear ? String(book.publishedYear) : "-",
-    inStock: book.inStock ?? (book.stock ? book.stock > 0 : true),
-    format: book.format || "-",
-    pages: book.pages,
-    isbn: book.isbn || "-",
-    language: book.language || "-",
-  };
-}
-
-export function resolveAuthorPhoto(photo?: string | null): string {
-  if (!photo || typeof photo !== "string" || !photo.trim()) {
-    return DEFAULT_AUTHOR_FALLBACK;
-  }
-  const trimmed = photo.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-  const backendBase =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-    "http://localhost:5000";
-  return `${backendBase}/assets/upload/author/${trimmed}`;
-}
+// Re-export transformation utilities
+export {
+  normalizeListingToApiBook,
+  parsePrice,
+  transformApiBookToCatalogBook,
+  resolveAuthorPhoto,
+} from "../utils/book.transform";

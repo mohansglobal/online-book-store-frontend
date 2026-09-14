@@ -143,7 +143,7 @@ export function CartOrderSummary({
         </button>
 
         {/* Coupon */}
-        <div className="mt-6 border-t border-border pt-5">
+        {/* <div className="mt-6 border-t border-border pt-5">
           <form onSubmit={handleApplyCoupon} className="flex gap-2">
             <input
               type="text"
@@ -168,7 +168,7 @@ export function CartOrderSummary({
               Code {appliedCoupon} applied
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Assurance */}

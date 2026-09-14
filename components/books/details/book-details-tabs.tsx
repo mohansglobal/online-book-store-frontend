@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Star, Tag } from "lucide-react";
 import type { ApiBook } from "@/features/books/types/book.types";
 import { resolveAuthorPhoto } from "@/features/books/types/book.types";
+import { BookReviewsSection } from "@/features/reviews";
 
 export type TabType = "SUMMARY" | "AUTHOR" | "SPECIFICATIONS" | "REVIEWS";
 
@@ -177,31 +178,7 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
         )}
 
         {/* 4. REVIEWS TAB */}
-        {activeTab === "REVIEWS" && (
-          <div className="max-w-3xl space-y-6">
-            <div className="flex flex-col items-center gap-6 rounded-lg border border-border bg-background p-4 sm:flex-row sm:items-start">
-              <div className="text-center sm:border-r sm:border-border sm:pr-6 sm:text-left">
-                <div className="font-display text-4xl font-bold text-foreground">
-                  {book.rating ? String(book.rating) : "-"}
-                </div>
-                {book.rating && (
-                  <div className="my-1 flex justify-center text-amber-500 sm:justify-start">
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <Star key={index} size={14} className="fill-amber-500" />
-                    ))}
-                  </div>
-                )}
-                <div className="text-[10px] tracking-wide text-muted-foreground uppercase">
-                  {book.rating ? "Rating" : "No Reviews (-)"}
-                </div>
-              </div>
-
-              <div className="w-full flex-1 flex items-center justify-center p-4 text-xs text-muted-foreground italic">
-                {book.rating ? `Overall Customer Rating: ${book.rating} / 5` : "No customer reviews yet for this book (-)"}
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "REVIEWS" && <BookReviewsSection book={book} />}
       </div>
     </section>
   );
