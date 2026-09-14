@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
 import { Toaster } from "sonner";
-import { onUnauthorized } from "@/lib/api";
+import { isApiClientError, onUnauthorized } from "@/lib/api";
 import {
   authKeys,
   AuthRedirectHandler,
@@ -43,6 +43,12 @@ export function AppProvider({
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000,
+            retry: (failureCount, error) => {
+              if (isApiClientError(error) && error.code === "API_DISABLED") {
+                return false;
+              }
+              return failureCount < 3;
+            },
           },
         },
       }),

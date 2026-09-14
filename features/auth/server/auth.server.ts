@@ -1,12 +1,16 @@
 // Server-side authentication and role guard utilities for Next.js App Router
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { API_BASE_URL } from "@/config/env";
+import { API_BASE_URL, IS_API_ENABLED } from "@/config/env";
 import { DEFAULT_ROLE_HOME } from "../constants/auth.constants";
 import type { CurrentUserResponse, User, UserRole } from "../types/auth.types";
 
 
 export async function getServerCurrentUser(): Promise<User | null> {
+  if (!IS_API_ENABLED) {
+    return null;
+  }
+
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();

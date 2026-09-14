@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "@/config/env";
-import { createApiErrorFromResponse, normalizeApiError } from "./api-error";
+import { API_BASE_URL, IS_API_ENABLED } from "@/config/env";
+import { ApiClientError, createApiErrorFromResponse, normalizeApiError } from "./api-error";
 import type { HttpMethod, QueryParams, RequestOptions } from "./types";
 
 
@@ -79,6 +79,11 @@ function resolveUrl(endpoint: string, baseUrl?: string, params?: QueryParams): s
 
 // deduplicated 401 logout trigger
 async function triggerGlobalLogout(): Promise<void> {
+  if (!IS_API_ENABLED) {
+    notifyUnauthorized();
+    return;
+  }
+
   if (logoutPromise) {
     return logoutPromise;
   }
@@ -107,6 +112,10 @@ async function triggerGlobalLogout(): Promise<void> {
 
 // deduplicated access token refresh via http-only cookies
 async function refreshAccessToken(): Promise<boolean> {
+  if (!IS_API_ENABLED) {
+    return false;
+  }
+
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -146,6 +155,19 @@ async function request<T>(
   endpoint: string,
   options: RequestOptions & { method?: HttpMethod } = {},
 ): Promise<T> {
+  if (!IS_API_ENABLED) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[API Disabled] Request to "${endpoint}" blocked because API calls are stopped by configuration.`,
+      );
+    }
+    throw new ApiClientError({
+      status: 0,
+      code: "API_DISABLED",
+      message: `api intreghration needed`,
+    });
+  }
+
   const {
     baseUrl,
     params,
