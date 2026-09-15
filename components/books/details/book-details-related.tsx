@@ -81,24 +81,7 @@ export function BookDetailsRelated({
 
   const relatedBooks = Array.from(groupedByIsbn.values())
     .slice(0, 6)
-    .map((b) => {
-      const catalog = transformApiBookToCatalogBook(b, FALLBACK_BOOK_COVER);
-      return {
-        id: catalog.id,
-        slug: catalog.slug,
-        title: catalog.title,
-        author: catalog.author,
-        seller: catalog.seller,
-        cover: catalog.cover,
-        price: catalog.price,
-        rawPrice: catalog.rawPrice,
-        priceIn: catalog.priceIn,
-        originalPrice: catalog.originalPrice,
-        rating: catalog.rating,
-        category: catalog.category,
-        detail: catalog.detail,
-      };
-    });
+    .map((b) => transformApiBookToCatalogBook(b, FALLBACK_BOOK_COVER));
 
   if (!isLoading && relatedBooks.length === 0) return null;
 

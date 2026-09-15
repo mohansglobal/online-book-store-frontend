@@ -44,7 +44,7 @@ export function ProfileCard() {
   };
 
   return (
-    <div className="group relative min-h-[200px] overflow-hidden rounded-[22px] border border-border/40 p-5 text-white shadow-md flex flex-col justify-end">
+    <div className="group relative min-h-[200px] overflow-hidden rounded-lg border border-border/40 p-5 text-white shadow-md flex flex-col justify-end">
       <input
         ref={fileInputRef}
         type="file"

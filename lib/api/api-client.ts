@@ -164,7 +164,7 @@ async function request<T>(
     throw new ApiClientError({
       status: 0,
       code: "API_DISABLED",
-      message: `api intreghration needed`,
+      message: `Request to "${endpoint}"`,
     });
   }
 

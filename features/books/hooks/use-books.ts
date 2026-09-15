@@ -2,7 +2,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getBooks, getBookByIdOrSlug } from "../api/books.api";
+import { getBooks, getBookByIdOrSlug, lookupBookByIsbn } from "../api/books.api";
 import { bookKeys } from "../queries/book.keys";
 import type { GetBooksParams } from "../types/book.types";
 
@@ -24,5 +24,18 @@ export function useBook(identifier: string) {
     queryKey: bookKeys.detail(identifier),
     queryFn: ({ signal }) => getBookByIdOrSlug(identifier, { signal }),
     enabled: Boolean(identifier),
+  });
+}
+
+/**
+ * Hook to lookup canonical book by ISBN
+ */
+export function useIsbnLookup(isbn: string, enabled = true) {
+  const cleanIsbn = isbn.trim();
+  return useQuery({
+    queryKey: bookKeys.isbnLookup(cleanIsbn),
+    queryFn: ({ signal }) => lookupBookByIsbn(cleanIsbn, { signal }),
+    enabled: enabled && cleanIsbn.length >= 3,
+    staleTime: 5 * 60 * 1000,
   });
 }

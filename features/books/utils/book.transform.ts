@@ -65,6 +65,66 @@ export function normalizeListingToApiBook(
     const inStock =
       stock !== undefined ? stock > 0 : (bookData.inStock ?? true);
 
+    const averageRating =
+      typeof record.averageRating === "number"
+        ? record.averageRating
+        : typeof bookData.averageRating === "number"
+          ? bookData.averageRating
+          : undefined;
+
+    const rating =
+      record.rating !== undefined
+        ? (record.rating as number | string)
+        : bookData.rating !== undefined
+          ? (bookData.rating as number | string)
+          : averageRating;
+
+    const ratingCount =
+      typeof record.ratingCount === "number"
+        ? record.ratingCount
+        : typeof bookData.ratingCount === "number"
+          ? bookData.ratingCount
+          : undefined;
+
+    const totalRatings =
+      typeof record.totalRatings === "number"
+        ? record.totalRatings
+        : typeof bookData.totalRatings === "number"
+          ? bookData.totalRatings
+          : ratingCount;
+
+    const totalReviews =
+      typeof record.totalReviews === "number"
+        ? record.totalReviews
+        : typeof bookData.totalReviews === "number"
+          ? bookData.totalReviews
+          : typeof record.reviewCount === "number"
+            ? record.reviewCount
+            : typeof bookData.reviewCount === "number"
+              ? bookData.reviewCount
+              : undefined;
+
+    const reviewCount =
+      typeof record.reviewCount === "number"
+        ? record.reviewCount
+        : typeof bookData.reviewCount === "number"
+          ? bookData.reviewCount
+          : totalReviews;
+
+    const ratingBreakdown =
+      record.ratingBreakdown && typeof record.ratingBreakdown === "object"
+        ? (record.ratingBreakdown as ApiBook["ratingBreakdown"])
+        : bookData.ratingBreakdown && typeof bookData.ratingBreakdown === "object"
+          ? (bookData.ratingBreakdown as ApiBook["ratingBreakdown"])
+          : undefined;
+
+    const ratingPercentages =
+      record.ratingPercentages && typeof record.ratingPercentages === "object"
+        ? (record.ratingPercentages as ApiBook["ratingPercentages"])
+        : bookData.ratingPercentages && typeof bookData.ratingPercentages === "object"
+          ? (bookData.ratingPercentages as ApiBook["ratingPercentages"])
+          : undefined;
+
     return {
       _id: (record._id as string) || (bookData._id as string) || "",
       title: (bookData.title as string) || "",
@@ -99,6 +159,14 @@ export function normalizeListingToApiBook(
       priceIn: calculatedMrp,
       originalPrice: calculatedMrp,
       originalPriceIn: calculatedMrp,
+      rating: rating,
+      averageRating: averageRating,
+      ratingCount: ratingCount,
+      totalRatings: totalRatings,
+      totalReviews: totalReviews,
+      reviewCount: reviewCount,
+      ratingBreakdown: ratingBreakdown,
+      ratingPercentages: ratingPercentages,
       stock: stock,
       inStock: inStock,
       publishedYear: bookData.publishedYear as string | number | undefined,
@@ -178,6 +246,16 @@ export function transformApiBookToCatalogBook(
   const uniqueId = book._id || book.listingId || book.slug || "-";
   const sellerText = book.seller?.name?.trim() || undefined;
 
+  const effectiveRating =
+    book.averageRating !== undefined && book.averageRating !== null && book.averageRating > 0
+      ? Number(book.averageRating).toFixed(1)
+      : book.rating !== undefined && book.rating !== null && book.rating !== "" && Number(book.rating) > 0
+        ? Number(book.rating).toFixed(1)
+        : "-";
+
+  const totalRatings =
+    book.totalRatings ?? book.ratingCount ?? book.totalReviews ?? book.reviewCount ?? 0;
+
   return {
     id: uniqueId,
     slug: uniqueId,
@@ -192,11 +270,14 @@ export function transformApiBookToCatalogBook(
     rawPriceIn: rawPriceIn || undefined,
     originalPrice: origPriceText !== "-" ? origPriceText : undefined,
     originalPriceIn: origPriceInText !== "-" ? origPriceInText : undefined,
-    rating: book.rating !== undefined && book.rating !== null && book.rating !== "" ? String(book.rating) : "-",
+    rating: effectiveRating,
+    totalRatings: totalRatings,
+    ratingCount: totalRatings,
     cover: coverSrc,
     detail: book.description ? book.description.replace(/<[^>]*>?/gm, "").trim() : "-",
     publishedYear: book.publishedYear ? String(book.publishedYear) : "-",
-    inStock: book.inStock ?? (book.stock ? book.stock > 0 : true),
+    inStock: book.inStock ?? (book.stock !== undefined ? book.stock > 0 : true),
+    stock: book.stock,
     format: book.format || "-",
     pages: book.pages,
     isbn: book.isbn || "-",

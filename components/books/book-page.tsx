@@ -19,6 +19,10 @@ import { toast } from "sonner";
 
 import AdminTopNav from "./components/AdminTopNav";
 import { CategoryBanner } from "@/components/categories/components/CategoryBanner";
+import {
+    Footer,
+    Navbar,
+} from "@/components/home/components";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -314,7 +318,7 @@ export default function ProductListPage() {
 
     return (
         <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-accent selection:text-white">
-
+            <Navbar wish={0} />
 
             <CategoryBanner
                 categoryName=""
@@ -765,7 +769,7 @@ export default function ProductListPage() {
                 </div>
             </main>
 
-
+            <Footer />
         </div>
     );
 }

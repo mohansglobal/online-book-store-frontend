@@ -8,6 +8,7 @@ export interface BookDetailsPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  canPurchase?: boolean;
   onAddToCart: () => void;
 }
 
@@ -15,6 +16,7 @@ export function BookDetailsPreviewModal({
   isOpen,
   onClose,
   title,
+  canPurchase = true,
   onAddToCart,
 }: BookDetailsPreviewModalProps) {
   useEffect(() => {
@@ -101,13 +103,15 @@ export function BookDetailsPreviewModal({
               <button
                 type="button"
                 onClick={() => {
+                  if (!canPurchase) return;
                   onAddToCart();
                   onClose();
                 }}
-                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow active:scale-95"
+                disabled={!canPurchase}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-muted"
               >
                 <ShoppingBag size={14} />
-                Add to Bag
+                {canPurchase ? "Add to Bag" : "Out of Stock"}
               </button>
             </div>
           </motion.div>

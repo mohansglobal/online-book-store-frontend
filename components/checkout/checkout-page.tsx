@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CategoryBanner } from "../categories/components/CategoryBanner";
 import { useCurrentUser } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import { useAddresses } from "@/features/addresses";
-import { useCheckoutSummaryQuery } from "@/features/checkout";
+import { useCheckoutSummaryQuery, type CheckoutSummaryQueryParams } from "@/features/checkout";
 import { useCreateOrderMutation } from "@/features/orders";
 import { CheckoutProgressBar } from "./checkout-progress-bar";
 import { CheckoutBillingForm } from "./checkout-billing-form";
@@ -15,6 +15,7 @@ import { CheckoutOrderSummary } from "./checkout-order-summary";
 import { CheckoutOrderConfirmed } from "./checkout-order-confirmed";
 import { CheckoutLoadingState } from "./checkout-loading-state";
 import { CheckoutEmptyState } from "./checkout-empty-state";
+import { CheckoutInvalidBuyNowState } from "./checkout-invalid-buy-now";
 import { AddressModalForm } from "./address-modal-form";
 import { useCheckoutPromo } from "./use-checkout-promo";
 import { useCheckoutAddressSelection } from "./use-checkout-address-selection";
@@ -70,14 +71,37 @@ export default function CheckoutPage() {
     handleRemovePromo,
   } = useCheckoutPromo();
 
-  const { data: summaryResponse } = useCheckoutSummaryQuery(
-    {
-      shippingAddressId: selectedShippingId || undefined,
-      billingAddressId: selectedBillingId || undefined,
-      billingSameAsShipping: sameAsBilling ? "true" : "false",
-      couponCode: appliedCouponCode || undefined,
-    },
-    { enabled: items.length > 0 },
+  const searchParams = useSearchParams();
+
+  const checkoutMode = searchParams.get("mode");
+  const listingId = searchParams.get("listingId");
+  const quantityParam = searchParams.get("quantity");
+
+  const isBuyNow = checkoutMode === "buy-now";
+  const parsedQuantity = Number(quantityParam);
+  const buyNowQuantity =
+    Number.isInteger(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
+
+  const isInvalidBuyNow = isBuyNow && !listingId;
+
+  const summaryParams: CheckoutSummaryQueryParams = {
+    shippingAddressId: selectedShippingId || undefined,
+    billingAddressId: selectedBillingId || undefined,
+    billingSameAsShipping: sameAsBilling ? "true" : "false",
+    couponCode: appliedCouponCode || undefined,
+    ...(isBuyNow && listingId
+      ? {
+          bookListingId: listingId,
+          quantity: buyNowQuantity,
+        }
+      : {}),
+  };
+
+  const isSummaryEnabled = isBuyNow ? Boolean(listingId) : items.length > 0;
+
+  const { data: summaryResponse, isLoading: isSummaryLoading } = useCheckoutSummaryQuery(
+    summaryParams,
+    { enabled: isSummaryEnabled },
   );
 
   const checkoutSummary = summaryResponse?.data;
@@ -125,10 +149,13 @@ export default function CheckoutPage() {
     handleOpenAddModal,
     createOrder: createOrderMutation.mutateAsync,
     isCreatingOrder: createOrderMutation.isPending,
+    isBuyNow,
+    buyNowListingId: listingId,
+    buyNowQuantity,
   });
 
   const isInitialLoading =
-    (isCartLoading || isUserLoading || isAddressesLoading) &&
+    (isCartLoading || isUserLoading || isAddressesLoading || (isSummaryEnabled && isSummaryLoading)) &&
     !isPlacingOrder &&
     !isOrderComplete &&
     activeItems.length === 0;
@@ -137,11 +164,18 @@ export default function CheckoutPage() {
     return <CheckoutLoadingState />;
   }
 
+  if (isInvalidBuyNow) {
+    return <CheckoutInvalidBuyNowState />;
+  }
+
+  const hasNoItems = isBuyNow
+    ? activeItems.length === 0
+    : items.length === 0 && activeItems.length === 0;
+
   if (
-    items.length === 0 &&
+    hasNoItems &&
     !isOrderComplete &&
-    !isPlacingOrder &&
-    activeItems.length === 0
+    !isPlacingOrder
   ) {
     return <CheckoutEmptyState />;
   }

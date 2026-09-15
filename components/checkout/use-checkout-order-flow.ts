@@ -28,6 +28,9 @@ export interface UseCheckoutOrderFlowProps {
   handleOpenAddModal: (type: "BILLING" | "SHIPPING") => void;
   createOrder: (payload: CreateOrderInput) => Promise<CreateOrderResponse>;
   isCreatingOrder?: boolean;
+  isBuyNow?: boolean;
+  buyNowListingId?: string | null;
+  buyNowQuantity?: number;
 }
 
 export function useCheckoutOrderFlow({
@@ -45,6 +48,9 @@ export function useCheckoutOrderFlow({
   handleOpenAddModal,
   createOrder,
   isCreatingOrder = false,
+  isBuyNow = false,
+  buyNowListingId = null,
+  buyNowQuantity = 1,
 }: UseCheckoutOrderFlowProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -79,6 +85,17 @@ export function useCheckoutOrderFlow({
       return;
     }
 
+    const directItems =
+      isBuyNow && buyNowListingId
+        ? [
+            {
+              bookListing: buyNowListingId,
+              bookListingId: buyNowListingId,
+              quantity: buyNowQuantity,
+            },
+          ]
+        : undefined;
+
     const basePayload: CreateOrderInput = {
       shippingAddressId:
         (sameAsBilling ? selectedBillingId : selectedShippingId) ||
@@ -88,6 +105,7 @@ export function useCheckoutOrderFlow({
       paymentMethod:
         paymentMethod === "cod" ? "CASH_ON_DELIVERY" : "ONLINE_PAY",
       ...(appliedCouponCode ? { couponCode: appliedCouponCode } : {}),
+      ...(directItems ? { items: directItems } : {}),
     };
 
     captureSnapshot();
@@ -95,12 +113,16 @@ export function useCheckoutOrderFlow({
 
     try {
       if (paymentMethod === "online") {
+        const razorpayItems = directItems
+          ? directItems
+          : activeItems.map((item) => ({
+              bookListing: item.bookListingId || item.id || "",
+              quantity: item.quantity,
+            }));
+
         // 1. Initiate Razorpay gateway order on the server to obtain authoritative order_id
         const gatewayRes = await initiateRazorpayOrder({
-          items: activeItems.map((item) => ({
-            bookListing: item.bookListingId || item.id || "",
-            quantity: item.quantity,
-          })),
+          items: razorpayItems,
           couponCode: appliedCouponCode || undefined,
           shippingAddressId:
             (sameAsBilling ? selectedBillingId : selectedShippingId) ||

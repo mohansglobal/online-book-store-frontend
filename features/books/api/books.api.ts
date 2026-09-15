@@ -46,3 +46,18 @@ export async function getBookByIdOrSlug(
     data: response?.data ? normalizeListingToApiBook(response.data) : response?.data,
   };
 }
+
+/**
+ * Looks up a canonical book by ISBN from /api/v1/books/isbn/:isbn
+ */
+export async function lookupBookByIsbn(
+  isbn: string,
+  options?: { signal?: AbortSignal },
+) {
+  return apiClient.get<import("../types/book.types").IsbnLookupResponse>(
+    `/books/isbn/${encodeURIComponent(isbn)}`,
+    {
+      signal: options?.signal,
+    },
+  );
+}

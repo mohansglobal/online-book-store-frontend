@@ -39,6 +39,24 @@ export type ListingSeller = {
   role?: string;
 };
 
+export type RatingBreakdown = {
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+  [key: string]: number;
+};
+
+export type RatingPercentages = {
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+  [key: string]: number;
+};
+
 export type ApiBook = {
   _id: string;
   title: string;
@@ -61,6 +79,13 @@ export type ApiBook = {
   originalPrice?: number | string;
   originalPriceIn?: number | string;
   rating?: number | string;
+  averageRating?: number;
+  ratingCount?: number;
+  totalRatings?: number;
+  totalReviews?: number;
+  reviewCount?: number;
+  ratingBreakdown?: RatingBreakdown;
+  ratingPercentages?: RatingPercentages;
   stock?: number;
   inStock?: boolean;
   publishedYear?: string | number;
@@ -99,6 +124,14 @@ export type ApiListing = {
   publisher?: string | BookPublisher;
   effectiveImages?: string[];
   listingImages?: string[];
+  rating?: number | string;
+  averageRating?: number;
+  ratingCount?: number;
+  totalRatings?: number;
+  totalReviews?: number;
+  reviewCount?: number;
+  ratingBreakdown?: RatingBreakdown;
+  ratingPercentages?: RatingPercentages;
 };
 
 export type BookPaginationMeta = {
@@ -168,20 +201,80 @@ export interface CatalogBook {
   originalPrice?: string;
   originalPriceIn?: string;
   rating: string;
+  totalRatings?: number;
+  ratingCount?: number;
   cover: StaticImageData | string;
   detail?: string;
   publishedYear?: string;
   inStock?: boolean;
+  stock?: number;
   format?: string;
   pages?: number;
   isbn?: string;
   language?: string;
 }
 
-// Re-export transformation utilities
+export type CanonicalBook = {
+  _id: string;
+  title: string;
+  titleBn?: string;
+  isbn: string;
+  publisher?: {
+    _id: string;
+    name: string;
+    nameBn?: string;
+    slug?: string;
+    logo?: string;
+  };
+  authors?: Array<{
+    _id: string;
+    name: string;
+    nameBn?: string;
+    slug?: string;
+  }>;
+  categories?: Array<{
+    _id: string;
+    name: string;
+    nameBn?: string;
+    slug?: string;
+  }>;
+  country?: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  language?: string;
+  description?: string;
+  coverImage?: string;
+  images?: string[];
+  searchTags?: string[];
+  edition?: string;
+  pages?: number;
+};
+
+export type IsbnLookupResponse = {
+  success: boolean;
+  exists: boolean;
+  alreadyListedBySeller: boolean;
+  existingListingId: string | null;
+  message: string;
+  data: CanonicalBook | null;
+};
+
+// Re-export transformation and stock utilities
 export {
   normalizeListingToApiBook,
   parsePrice,
   transformApiBookToCatalogBook,
   resolveAuthorPhoto,
 } from "../utils/book.transform";
+
+export {
+  getStockInfo,
+  getBookStockInfo,
+  getStockLabel,
+  canPurchaseBook,
+  type StockInfo,
+  type StockLevel,
+} from "../utils/stock.utils";
+

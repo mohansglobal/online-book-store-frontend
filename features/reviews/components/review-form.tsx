@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { ReviewRatingStars } from "./review-rating-stars";
 import { ReviewImageUploader } from "./review-image-uploader";
 import { useCreateReviewMutation } from "../hooks/use-reviews";
@@ -84,55 +83,45 @@ export function ReviewForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-xl border border-border/80 bg-surface/50 p-4 sm:p-5 shadow-xs animate-in fade-in-50 duration-200"
+      className="flex flex-col h-full justify-between space-y-2.5 animate-in p-0.5 fade-in-50 duration-200 overflow-hidden"
     >
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
-        <div>
-          <h4 className="text-sm font-semibold text-foreground">
-            {initialReview ? "Edit Your Review" : "Write a Customer Review"}
+      {/* Header: Title + Stars + Close Button */}
+      <div className="flex items-center justify-between border-b border-border/60 pb-2.5 shrink-0">
+        <div className="flex flex-col">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            {initialReview ? "Edit Your Review" : "Write Review"}
           </h4>
           {sellerName && (
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Purchased from <strong className="text-foreground font-medium">{sellerName}</strong>
+            <p className="text-[11px] text-muted-foreground truncate max-w-[140px]">
+              {sellerName}
             </p>
           )}
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          disabled={createReviewMutation.isPending}
-          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-        >
-          Cancel
-        </Button>
-      </div>
 
-      {/* Rating selector */}
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-foreground">
-          Your Rating <span className="text-destructive">*</span>
-        </Label>
-        <div>
+        <div className="flex items-center gap-2 shrink-0">
           <ReviewRatingStars
             value={rating}
             onChange={setRating}
             interactive
-            showLabel
-            size={22}
+            size={18}
           />
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={createReviewMutation.isPending}
+            className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X size={14} />
+          </button>
         </div>
       </div>
 
-      {/* Headline Title */}
-      <div className="space-y-1.5">
-        <Label htmlFor="review-title" className="text-xs font-medium text-foreground">
-          Review Title <span className="text-xs font-normal text-muted-foreground">(optional)</span>
-        </Label>
+      {/* Review Title (Normal Input Height) */}
+      <div className="shrink-0 ">
         <Input
           id="review-title"
-          placeholder="e.g. Crisp condition and fast delivery"
+          placeholder="Title (e.g. Crisp condition, fast delivery)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={createReviewMutation.isPending}
@@ -140,73 +129,66 @@ export function ReviewForm({
         />
       </div>
 
-      {/* Review Comments */}
-      <div className="space-y-1.5">
-        <Label htmlFor="review-body" className="text-xs font-medium text-foreground">
-          Your Review <span className="text-destructive">*</span>
-        </Label>
+      {/* Review Comments (Normal Textarea Height) */}
+      <div className="flex-1 min-h-0">
         <Textarea
           id="review-body"
-          placeholder="What did you like or dislike about this book? How was the print and binding quality?"
-          rows={3}
+          placeholder="Share your experience (print, paper quality, binding)..."
+          rows={2}
           value={review}
           onChange={(e) => {
             setReview(e.target.value);
             if (error) setError(null);
           }}
           disabled={createReviewMutation.isPending}
-          className="resize-y text-xs min-h-[75px]"
-        />
-      </div>
-
-      {/* Photos upload */}
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-foreground">
-          Attach Photos <span className="text-xs font-normal text-muted-foreground">(optional, max 5)</span>
-        </Label>
-        <ReviewImageUploader
-          files={images}
-          onChange={setImages}
-          disabled={createReviewMutation.isPending}
+          className="h-full min-h-[68px] text-xs resize-none"
         />
       </div>
 
       {error && (
-        <p className="text-xs font-medium text-destructive" role="alert">
+        <p className="text-[11px] font-medium text-destructive leading-tight shrink-0" role="alert">
           {error}
         </p>
       )}
 
-      {/* Footer Actions */}
-      <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/40">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          disabled={createReviewMutation.isPending}
-          className="h-8 text-xs font-medium"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={createReviewMutation.isPending || !review.trim()}
-          className="h-8 bg-accent font-semibold text-white hover:bg-accent-hover"
-        >
-          {createReviewMutation.isPending ? (
-            <>
-              <Loader2 size={13} className="mr-1.5 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            <>
-              <Send size={13} className="mr-1.5" />
-              Submit Review
-            </>
-          )}
-        </Button>
+      {/* Inline Bottom Row: Photo Uploader (Left) + Actions (Right) */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 shrink-0">
+        <div className="flex-1 overflow-hidden min-w-0">
+          <ReviewImageUploader
+            files={images}
+            onChange={setImages}
+            disabled={createReviewMutation.isPending}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            disabled={createReviewMutation.isPending}
+            className="h-8 px-2.5 text-xs text-muted-foreground "
+          >
+            Cancel
+          </Button>
+
+          <Button
+            type="submit"
+            size="sm"
+            disabled={createReviewMutation.isPending || !review.trim()}
+            className="h-8 bg-accent font-semibold text-white hover:bg-accent-hover px-3.5 text-xs shadow-xs"
+          >
+            {createReviewMutation.isPending ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Send size={12} />
+                <span>Submit</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );

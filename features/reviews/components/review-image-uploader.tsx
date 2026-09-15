@@ -58,50 +58,48 @@ export function ReviewImageUploader({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        {files.map((file, index) => {
-          const previewUrl = URL.createObjectURL(file);
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+      {files.map((file, index) => {
+        const previewUrl = URL.createObjectURL(file);
 
-          return (
-            <div
-              key={`${file.name}-${index}`}
-              className="group relative size-14 overflow-hidden rounded-lg border border-border bg-muted/30"
-            >
-              <Image
-                src={previewUrl}
-                alt={`Preview ${index + 1}`}
-                fill
-                unoptimized
-                className="object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => removeFile(index)}
-                disabled={disabled}
-                aria-label={`Remove photo ${index + 1}`}
-                className="absolute top-0.5 right-0.5 rounded-full bg-black/70 p-0.5 text-white opacity-90 transition-opacity hover:bg-destructive hover:opacity-100"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          );
-        })}
-
-        {files.length < MAX_IMAGES && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled}
-            className="h-14 w-20 flex-col gap-1 rounded-lg border-dashed border-border/80 text-[11px] font-medium text-muted-foreground hover:border-accent hover:text-accent"
+        return (
+          <div
+            key={`${file.name}-${index}`}
+            className="group relative size-9 shrink-0 overflow-hidden rounded-md border border-border bg-muted/30"
           >
-            <ImagePlus size={15} />
-            <span>Add Photo</span>
-          </Button>
-        )}
-      </div>
+            <Image
+              src={previewUrl}
+              alt={`Preview ${index + 1}`}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => removeFile(index)}
+              disabled={disabled}
+              aria-label={`Remove photo ${index + 1}`}
+              className="absolute inset-0 bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X size={11} />
+            </button>
+          </div>
+        );
+      })}
+
+      {files.length < MAX_IMAGES && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled}
+          className="h-8 px-2.5 gap-1.5 rounded-md border-dashed border-border/80 text-xs font-medium text-muted-foreground  shrink-0"
+        >
+          <ImagePlus size={14} />
+          <span>{files.length === 0 ? "Add Photo" : "+"}</span>
+        </Button>
+      )}
 
       <input
         ref={fileInputRef}

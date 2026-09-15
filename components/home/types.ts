@@ -13,6 +13,8 @@ export type Book = {
   priceIn?: string;
   originalPrice?: string;
   rating: string;
+  totalRatings?: number;
+  ratingCount?: number;
   category: string;
   detail?: string;
 };

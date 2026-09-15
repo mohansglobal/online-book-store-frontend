@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUpRight, Heart, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { FALLBACK_BOOK_COVER, type CatalogBook } from "@/features/books/types/book.types";
+import { canPurchaseBook } from "@/features/books/utils/stock.utils";
 import { useWishlist } from "@/features/wishlist";
 import { useCart } from "@/features/cart";
 
@@ -56,9 +57,17 @@ export function BookCard({ book, priority = false }: BookCardProps) {
     });
   };
 
+  const isPurchasable = canPurchaseBook(book.stock, book.inStock);
+
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isPurchasable) {
+      toast.error("This book is currently out of stock.");
+      return;
+    }
+
     void addToCart({
       listingId: bookId,
       bookId: bookId,
@@ -93,14 +102,6 @@ export function BookCard({ book, priority = false }: BookCardProps) {
             className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           />
 
-          {/* Top-Left Rating or Category Badge */}
-          {book.rating && book.rating !== "-" && (
-            <div className="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[11px] font-semibold text-foreground backdrop-blur-md shadow-xs border border-border/40">
-              <Star size={10} className="fill-amber-400 text-amber-400" />
-              <span>{book.rating}</span>
-            </div>
-          )}
-
           {/* Bottom Blackish Gradient Overlay on Hover */}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-black/90 via-black/55 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -115,11 +116,10 @@ export function BookCard({ book, priority = false }: BookCardProps) {
               onClick={handleWishlistClick}
               aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
               title={isSaved ? "In wishlist" : "Add to wishlist"}
-              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 ${
-                isSaved
-                  ? "bg-accent text-white border border-accent"
-                  : "bg-white/95 text-neutral-800 hover:bg-accent hover:text-white border border-white/20"
-              }`}
+              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 ${isSaved
+                ? "bg-accent text-white border border-accent"
+                : "bg-white/95 text-neutral-800 hover:bg-accent hover:text-white border border-white/20"
+                }`}
             >
               <Heart size={15} className={isSaved ? "fill-current" : ""} />
             </button>
@@ -128,9 +128,13 @@ export function BookCard({ book, priority = false }: BookCardProps) {
             <button
               type="button"
               onClick={handleCartClick}
-              aria-label="Add to cart"
-              title="Add to cart"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white/95 text-neutral-800 border border-white/20 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-primary hover:text-primary-foreground active:scale-95"
+              aria-label={isPurchasable ? "Add to cart" : "Out of stock"}
+              title={isPurchasable ? "Add to cart" : "Out of stock"}
+              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 shadow-md backdrop-blur-md transition-all duration-200 active:scale-95 ${
+                isPurchasable
+                  ? "bg-white/95 text-neutral-800 hover:scale-110 hover:bg-primary hover:text-primary-foreground"
+                  : "bg-white/70 text-neutral-400 cursor-not-allowed"
+              }`}
             >
               <ShoppingBag size={15} />
             </button>
@@ -147,19 +151,28 @@ export function BookCard({ book, priority = false }: BookCardProps) {
       </Link>
 
       {/* Book Metadata */}
-      <div className="pt-3.5 flex flex-col flex-1 justify-between min-h-[96px]">
+      <div className="pt-3 flex flex-col flex-1 justify-between min-h-[84px]">
         <div>
-          {/* Fixed 2-line Title container */}
-          <div className="h-11 overflow-hidden">
-            <Link href={`/books/${bookId}`} className="block">
-              <h3
-                title={book.title || "-"}
-                className="line-clamp-2 font-display text-[15px] sm:text-[16px] font-semibold leading-[1.35] tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary"
-              >
-                {book.title || "-"}
-              </h3>
-            </Link>
-          </div>
+          {/* 1-line Title with ellipsis if longer than first line */}
+          <Link href={`/books/${bookId}`} className="block">
+            <h3
+              title={book.title || "-"}
+              className="truncate font-display text-[15px] sm:text-[16px] font-semibold leading-snug tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary"
+            >
+              {book.title || "-"}
+            </h3>
+          </Link>
+
+          {/* Rating between Title and Author */}
+          {book.rating && book.rating !== "-" && (
+            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-foreground">
+              <Star size={11} className="fill-amber-400 text-amber-400 shrink-0" />
+              <span className="font-semibold text-foreground">{book.rating}</span>
+              <span className="text-[10px] text-muted-foreground">
+                ({book.totalRatings ?? book.ratingCount ?? 0})
+              </span>
+            </div>
+          )}
 
           {/* Fixed 1-line Author container */}
           <p className="mt-1 h-5 truncate text-[13px] leading-5 text-muted-foreground">

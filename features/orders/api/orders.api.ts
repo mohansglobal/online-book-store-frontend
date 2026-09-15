@@ -95,9 +95,10 @@ export async function verifyOrderPayment(
 }
 
 export interface InitiateRazorpayOrderInput {
-  items?: { bookListing: string; quantity: number }[];
+  items?: { bookListing?: string; bookListingId?: string; quantity: number }[];
   couponCode?: string;
   shippingAddressId?: string;
+  billingAddressId?: string;
   billingSameAsShipping?: boolean;
 }
 

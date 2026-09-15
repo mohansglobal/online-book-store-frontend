@@ -58,21 +58,7 @@ export function WishlistRecommendations() {
               transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.4) }}
               className="h-full"
             >
-              <BookCard
-                book={{
-                  id: book.id,
-                  slug: book.slug,
-                  title: book.title,
-                  author: book.author,
-                  cover: book.cover,
-                  price: book.price,
-                  rawPrice: book.rawPrice,
-                  priceIn: book.priceIn,
-                  originalPrice: book.originalPrice,
-                  rating: book.rating,
-                  category: book.category,
-                }}
-              />
+              <BookCard book={book} />
             </motion.div>
           ))}
         </div>

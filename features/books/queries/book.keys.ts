@@ -10,4 +10,5 @@ export const bookKeys = {
       : ([...bookKeys.lists()] as const),
   details: () => [...bookKeys.all, "detail"] as const,
   detail: (identifier: string) => [...bookKeys.details(), identifier] as const,
+  isbnLookup: (isbn: string) => [...bookKeys.all, "isbn-lookup", isbn] as const,
 };

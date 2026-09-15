@@ -44,6 +44,8 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
       priceIn: catalog.priceIn,
       originalPrice: catalog.originalPrice,
       rating: catalog.rating,
+      totalRatings: catalog.totalRatings,
+      ratingCount: catalog.ratingCount,
       category: catalog.category,
       detail: catalog.detail,
     };

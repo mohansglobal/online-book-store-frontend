@@ -152,11 +152,10 @@ export function CheckoutOrderSummary({
 
         {appliedCoupon && (
           <div
-            className={`mt-2 flex items-center justify-between rounded-md border px-2.5 py-1.5 text-xs ${
-              isCouponValid
+            className={`mt-2 flex items-center justify-between rounded-md border px-2.5 py-1.5 text-xs ${isCouponValid
                 ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
                 : "border-destructive/30 bg-destructive/5 text-destructive"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-1.5 truncate">
               <Tag size={13} className="shrink-0" />
@@ -207,7 +206,7 @@ export function CheckoutOrderSummary({
             type="checkbox"
             checked={acceptedTerms}
             onChange={(e) => onAcceptedTermsChange(e.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 rounded accent-accent cursor-pointer"
+            className="mt-0.5 h-3.5 w-3.5 rounded-full accent-accent cursor-pointer"
           />
           <span className="text-[10px] font-bold text-foreground uppercase">
             I Accept the{" "}
@@ -234,8 +233,8 @@ export function CheckoutOrderSummary({
                 {!canCheckout
                   ? "Resolve Issues to Continue"
                   : paymentMethod === "cod"
-                  ? "Confirm Cash On Delivery"
-                  : "Pay Securely Now"}
+                    ? "Confirm Cash On Delivery"
+                    : "Pay Securely Now"}
               </span>
             </>
           )}

@@ -13,7 +13,6 @@ import {
   LogOut,
   Menu,
   PhoneCall,
-  Search,
   ShoppingBag,
   User,
   X,
@@ -41,7 +40,7 @@ interface NavbarProps {
 const MOBILE_LINKS = [
   { label: "Home", href: "/#top" },
   { label: "Books", href: "/books" },
-  { label: "Authors", href: "/#authors" },
+  { label: "Authors", href: "/authors" },
   { label: "Publishers", href: "/publishers" },
   { label: "Categories", href: "/categories" },
   { label: "Wishlist", href: "/wishlist" },
@@ -76,8 +75,6 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
 
   const userAvatar = user?.profilePicture || user?.avatar;
 
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [navSearch, setNavSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -99,15 +96,6 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  const handleNavSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (navSearch.trim()) {
-      router.push(`/books?search=${encodeURIComponent(navSearch.trim())}`);
-      setSearchOpen(false);
-      setNavSearch("");
-    }
-  };
 
   const iconButtonClassName = scrolled
     ? "text-foreground hover:bg-surface-hover hover:border-border"
@@ -167,7 +155,7 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
             </Link>
 
             <Link
-              href="/#authors"
+              href="/authors"
               className={navLinkClassName}
             >
               Authors
@@ -286,19 +274,6 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
               </div>
             </div>
 
-            {/* Search Input Form */}
-
-
-            {!searchOpen && (
-              <IconButton
-                label="Search"
-                onClick={() => setSearchOpen(true)}
-                className={iconButtonClassName}
-              >
-                <Search size={19} />
-              </IconButton>
-            )}
-
             <IconButton
               label="Wishlist"
               count={resolvedWishCount}
@@ -386,34 +361,34 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                     {user.role === "SELLER" && (
                       <DropdownMenuItem
                         onClick={() => router.push("/dashboard")}
-                        className="cursor-pointer py-2 text-xs font-medium"
+                        className="group cursor-pointer py-2 text-xs font-medium"
                       >
-                        <LayoutDashboard className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                        <LayoutDashboard className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
                         Seller Dashboard
                       </DropdownMenuItem>
                     )}
 
                     <DropdownMenuItem
                       onClick={() => router.push("/orders")}
-                      className="cursor-pointer py-2 text-xs font-medium"
+                      className="group cursor-pointer py-2 text-xs font-medium"
                     >
-                      <BookOpen className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      <BookOpen className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
                       My Orders
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
                       onClick={() => router.push("/wishlist")}
-                      className="cursor-pointer py-2 text-xs font-medium"
+                      className="group cursor-pointer py-2 text-xs font-medium"
                     >
-                      <Heart className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      <Heart className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
                       My Wishlist
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
                       onClick={() => router.push("/profile")}
-                      className="cursor-pointer py-2 text-xs font-medium"
+                      className="group cursor-pointer py-2 text-xs font-medium"
                     >
-                      <User className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                      <User className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
                       Profile Settings
                     </DropdownMenuItem>
 

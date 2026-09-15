@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ApiBook } from "@/features/books/types/book.types";
+import { getBookStockInfo } from "@/features/books/utils/stock.utils";
 
 export interface BookDetailsHeaderInfoProps {
   book: ApiBook;
@@ -37,6 +38,7 @@ export function BookDetailsHeaderInfo({
   onBuyNow,
 }: BookDetailsHeaderInfoProps) {
   const [copiedLink, setCopiedLink] = useState(false);
+  const stockInfo = getBookStockInfo(book);
 
   const authorName =
     book.authors && book.authors.length > 0
@@ -55,8 +57,8 @@ export function BookDetailsHeaderInfo({
 
   const rawOriginalPrice =
     book.originalPrice !== undefined &&
-      book.originalPrice !== null &&
-      book.originalPrice !== ""
+    book.originalPrice !== null &&
+    book.originalPrice !== ""
       ? typeof book.originalPrice === "number"
         ? book.originalPrice
         : parseFloat(String(book.originalPrice).replace(/[^0-9.]/g, ""))
@@ -70,7 +72,9 @@ export function BookDetailsHeaderInfo({
       : "-";
 
   const originalPriceText =
-    rawOriginalPrice !== undefined && !isNaN(rawOriginalPrice) && rawOriginalPrice > (rawPrice ?? 0)
+    rawOriginalPrice !== undefined &&
+    !isNaN(rawOriginalPrice) &&
+    rawOriginalPrice > (rawPrice ?? 0)
       ? `₹${rawOriginalPrice}`
       : null;
 
@@ -84,13 +88,30 @@ export function BookDetailsHeaderInfo({
       ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100)
       : null;
 
-  const ratingValue = book.rating ? String(book.rating) : "-";
+  const numericAverageRating =
+    book.averageRating !== undefined && book.averageRating !== null
+      ? Number(book.averageRating)
+      : book.rating !== undefined && book.rating !== null && book.rating !== ""
+        ? Number(book.rating)
+        : undefined;
+
+  const ratingValue =
+    numericAverageRating !== undefined &&
+    !isNaN(numericAverageRating) &&
+    numericAverageRating > 0
+      ? numericAverageRating.toFixed(1)
+      : "-";
+
+  const totalRatingsCount =
+    book.totalRatings ??
+    book.ratingCount ??
+    book.totalReviews ??
+    book.reviewCount;
 
   const quickSpecs = [
     { label: "Author", value: authorName },
     { label: "Publisher", value: publisherName },
     { label: "Edition", value: book.edition || "-" },
-
     { label: "Pages", value: book.pages ? `${book.pages} Pages` : "-" },
     { label: "Language", value: book.language || "-" },
     { label: "ISBN Code", value: book.isbn || "-" },
@@ -101,11 +122,8 @@ export function BookDetailsHeaderInfo({
           ? book.categories.map((c) => c.name).join(", ")
           : "-",
     },
-
-    {
-      label: "Seller",
-      value: book.seller?.name || "-",
-    },
+    { label: "Seller", value: book.seller?.name || "-" },
+    { label: "Availability", value: stockInfo.label },
   ];
 
   const handleCopyLink = async () => {
@@ -140,7 +158,11 @@ export function BookDetailsHeaderInfo({
           className="mx-2 flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-muted-foreground transition-all hover:bg-surface hover:text-foreground active:scale-95 sm:mx-4"
           title="Share this book"
         >
-          {copiedLink ? <CheckCheck size={14} className="text-emerald-500" /> : <Share2 size={14} />}
+          {copiedLink ? (
+            <CheckCheck size={14} className="text-emerald-500" />
+          ) : (
+            <Share2 size={14} />
+          )}
           {copiedLink ? "Copied" : "Share"}
         </button>
       </div>
@@ -176,7 +198,9 @@ export function BookDetailsHeaderInfo({
         <div className="flex items-center gap-1 text-amber-500">
           <Star size={14} className="fill-current" />
           <span className="font-medium text-foreground">{ratingValue}</span>
-          <span className="text-xs text-muted-foreground">(-)</span>
+          <span className="text-xs text-muted-foreground">
+            {totalRatingsCount !== undefined ? `(${totalRatingsCount})` : "(-)"}
+          </span>
         </div>
       </div>
 
@@ -200,20 +224,36 @@ export function BookDetailsHeaderInfo({
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-              {book.status === "ACTIVE" ? "In Stock" : book.status || "In Stock"}
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-semibold ${stockInfo.badgeClassName}`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  stockInfo.canPurchase ? "animate-pulse" : ""
+                } ${stockInfo.dotClassName}`}
+              />
+              {stockInfo.label}
             </span>
-            <span className="font-medium text-muted-foreground">• {book.format || "-"}</span>
+            <span className="font-medium text-muted-foreground">
+              • {book.format || "-"}
+            </span>
           </div>
         </div>
 
         {/* Trust Badges */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-[11px] text-muted-foreground sm:text-xs">
-          <div className="flex items-center gap-1.5"><Truck size={14} className="text-accent" /> Free Express Delivery</div>
-          <div className="flex items-center gap-1.5"><Banknote size={14} className="text-accent" /> COD Available</div>
-          <div className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-accent" /> 100% Genuine</div>
-          <div className="flex items-center gap-1.5"><RotateCcw size={14} className="text-accent" /> 7 Days Replacement</div>
+          <div className="flex items-center gap-1.5">
+            <Truck size={14} className="text-accent" /> Free Express Delivery
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Banknote size={14} className="text-accent" /> COD Available
+          </div>
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-accent" /> 100% Genuine
+          </div>
+          <div className="flex items-center gap-1.5">
+            <RotateCcw size={14} className="text-accent" /> 7 Days Replacement
+          </div>
         </div>
       </div>
 
@@ -223,17 +263,30 @@ export function BookDetailsHeaderInfo({
           <button
             type="button"
             onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
+            disabled={!stockInfo.canPurchase || quantity <= 1}
             aria-label="Decrease quantity"
-            className="flex h-full w-8 cursor-pointer items-center justify-center text-lg text-muted-foreground hover:text-foreground"
+            className="flex h-full w-8 cursor-pointer items-center justify-center text-lg text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
           >
             −
           </button>
-          <span className="text-sm font-semibold">{quantity}</span>
+          <span className="text-sm font-semibold">
+            {stockInfo.canPurchase ? quantity : 0}
+          </span>
           <button
             type="button"
-            onClick={() => onQuantityChange(quantity + 1)}
+            onClick={() =>
+              onQuantityChange(
+                stockInfo.maxPurchasableQuantity
+                  ? Math.min(stockInfo.maxPurchasableQuantity, quantity + 1)
+                  : quantity + 1,
+              )
+            }
+            disabled={
+              !stockInfo.canPurchase ||
+              quantity >= stockInfo.maxPurchasableQuantity
+            }
             aria-label="Increase quantity"
-            className="flex h-full w-8 cursor-pointer items-center justify-center text-lg text-muted-foreground hover:text-foreground"
+            className="flex h-full w-8 cursor-pointer items-center justify-center text-lg text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
           >
             +
           </button>
@@ -242,19 +295,21 @@ export function BookDetailsHeaderInfo({
         <button
           type="button"
           onClick={onAddToCart}
-          className="flex h-11 min-w-[130px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary text-xs font-semibold text-primary shadow-sm transition-all hover:bg-primary/5 sm:text-sm"
+          disabled={!stockInfo.canPurchase}
+          className="flex h-11 min-w-[130px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-primary text-xs font-semibold text-primary shadow-sm transition-all hover:bg-primary/5 disabled:border-border disabled:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:text-sm"
         >
           <ShoppingBag size={16} />
-          ADD TO CART
+          {stockInfo.canPurchase ? "ADD TO CART" : "OUT OF STOCK"}
         </button>
 
         <button
           type="button"
           onClick={onBuyNow}
-          className="flex h-11 min-w-[130px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow sm:text-sm"
+          disabled={!stockInfo.canPurchase}
+          className="flex h-11 min-w-[130px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-muted sm:text-sm"
         >
           <Zap size={16} className="fill-current" />
-          BUY NOW
+          {stockInfo.canPurchase ? "BUY NOW" : "UNAVAILABLE"}
         </button>
 
         <button
@@ -262,8 +317,11 @@ export function BookDetailsHeaderInfo({
           onClick={onToggleWishlist}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           title="Wishlist"
-          className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${isWishlisted ? "border-accent bg-accent text-white" : "border-border text-foreground hover:bg-background"
-            }`}
+          className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${
+            isWishlisted
+              ? "border-accent bg-accent text-white"
+              : "border-border text-foreground hover:bg-background"
+          }`}
         >
           <Heart size={18} className={isWishlisted ? "fill-white" : ""} />
         </button>
@@ -271,12 +329,20 @@ export function BookDetailsHeaderInfo({
 
       {/* Quick Details List */}
       <div className="border-t border-border pt-5">
-        <h2 className="mb-3 text-sm font-semibold text-foreground">Quick Details</h2>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
+          Quick Details
+        </h2>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs">
           {quickSpecs.map((spec) => (
-            <div key={spec.label} className="flex items-center justify-between border-b border-border/40 pb-1.5">
+            <div
+              key={spec.label}
+              className="flex items-center justify-between border-b border-border/40 pb-1.5"
+            >
               <span className="text-muted-foreground">{spec.label}</span>
-              <span className="text-right font-medium text-foreground truncate max-w-[140px]" title={spec.value}>
+              <span
+                className="text-right font-medium text-foreground truncate max-w-[140px]"
+                title={spec.value}
+              >
                 {spec.value}
               </span>
             </div>

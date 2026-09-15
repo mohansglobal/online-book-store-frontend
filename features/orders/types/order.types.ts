@@ -14,6 +14,12 @@ export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 
 export type RefundStatus = "NONE" | "PENDING" | "PROCESSED" | "FAILED";
 
+export interface CreateOrderDirectItem {
+  bookListing?: string;
+  bookListingId?: string;
+  quantity: number;
+}
+
 export interface CreateOrderInput {
   shippingAddressId: string;
   billingSameAsShipping: boolean;
@@ -24,6 +30,7 @@ export interface CreateOrderInput {
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
   razorpaySignature?: string;
+  items?: CreateOrderDirectItem[];
 }
 
 export interface OrderItem {

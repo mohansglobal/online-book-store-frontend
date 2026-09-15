@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Heart, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, Heart, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import type { BookCardProps } from "../types";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
@@ -43,9 +43,10 @@ export function BookCard({
       : parseFloat(String(book.price || 0).replace(/[^0-9.]/g, "")) || 0);
 
   const origPrice =
-    typeof book.originalPrice === "number"
+    book.rawPrice ??
+    (typeof book.originalPrice === "number"
       ? book.originalPrice
-      : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || rawPrice;
+      : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || rawPrice);
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,10 +59,10 @@ export function BookCard({
 
     toggleWishlist({
       id: bookId,
-      bookId: book.id || bookId,
-      slug: book.slug || "",
-      title: book.title,
-      author: book.author,
+      bookId: bookId,
+      slug: book.slug || bookId,
+      title: book.title || "-",
+      author: book.author || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
       format: "Paperback",
       price: rawPrice,
@@ -82,9 +83,9 @@ export function BookCard({
 
     void addToCart({
       listingId: bookId,
-      bookId: book.id || bookId,
-      slug: book.slug || "",
-      title: book.title,
+      bookId: bookId,
+      slug: book.slug || bookId,
+      title: book.title || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
       author: book.author || "-",
       format: "Paperback",
@@ -94,31 +95,23 @@ export function BookCard({
     });
   };
 
-  const titleSizeClassName = isSmall
-    ? "text-[13px] font-medium sm:text-[14px]"
-    : compact
-      ? "text-[16px] sm:text-[17px]"
-      : "text-[18px] sm:text-[19px]";
-
-  const circleButtonSize = isSmall ? "h-7.5 w-7.5" : "h-8.5 w-8.5";
+  const circleButtonSize = isSmall ? "h-7 w-7" : "h-9 w-9";
   const iconSize = isSmall ? 13 : 15;
+  const titleSizeClassName = isSmall
+    ? "text-[12px] sm:text-[13px]"
+    : "text-[14px] sm:text-[15px]";
 
   const cardContent = (
     <article
-      className={`group min-w-0 cursor-pointer [scroll-snap-align:start] flex flex-col justify-between ${isSmall ? "mx-auto w-full max-w-[190px]" : ""
-        } ${className}`}
+      className={`group relative flex flex-col cursor-pointer transition-all duration-300 ${className}`}
     >
-      {/* Book Cover Container */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] bg-muted/40 shadow-xs border border-border/60 transition-all duration-500 ease-out group-hover:border-primary/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
+      {/* Book Cover */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[12px] sm:rounded-[14px] bg-muted/40 shadow-xs border border-border/60 transition-all duration-500 ease-out group-hover:border-primary/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
         <Image
           src={imgSrc}
           alt={`${book.title} book cover`}
           fill
-          sizes={
-            isSmall
-              ? "(max-width: 640px) 190px, 190px"
-              : "(max-width: 768px) 50vw, 25vw"
-          }
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
           unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
@@ -152,8 +145,8 @@ export function BookCard({
             aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
             title={isSaved ? "In wishlist" : "Add to wishlist"}
             className={`flex ${circleButtonSize} cursor-pointer items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 ${isSaved
-                ? "bg-accent text-white border border-accent"
-                : "bg-white/95 text-neutral-800 hover:bg-accent hover:text-white border border-white/20"
+              ? "bg-accent text-white border border-accent"
+              : "bg-white/95 text-neutral-800 hover:bg-accent hover:text-white border border-white/20"
               }`}
           >
             <Heart size={iconSize} className={isSaved ? "fill-current" : ""} />
@@ -189,6 +182,17 @@ export function BookCard({
           {book.title}
         </h3>
 
+        {/* Rating between Title and Author */}
+        {book.rating && book.rating !== "-" && (
+          <div className="flex items-center gap-1 text-[11px] font-medium text-foreground my-0.5">
+            <Star size={11} className="fill-amber-400 text-amber-400 shrink-0" />
+            <span className="font-semibold text-foreground">{book.rating}</span>
+            <span className="text-[10px] text-muted-foreground">
+              ({book.totalRatings ?? book.ratingCount ?? 0})
+            </span>
+          </div>
+        )}
+
         <p
           className={`m-0 line-clamp-1 text-muted-foreground ${isSmall ? "text-[11px]" : "text-[13px]"
             }`}
@@ -210,8 +214,6 @@ export function BookCard({
           className={`flex items-center justify-between font-medium text-foreground ${isSmall ? "mt-1.5 text-[11px]" : "mt-2.5 text-[13px]"
             }`}
         >
-          <Rating value={book.rating} />
-
           <div className="flex items-center gap-1.5">
             <span className="font-bold text-[14px]">
               {book.price}

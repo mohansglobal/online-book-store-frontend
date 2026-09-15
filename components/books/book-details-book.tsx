@@ -9,6 +9,7 @@ import { CategoryBanner } from "../categories/components/CategoryBanner";
 import { useBook } from "@/features/books/hooks/use-books";
 import { useRequireAuth } from "@/features/auth";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
+import { getBookStockInfo } from "@/features/books/utils/stock.utils";
 import { useCart } from "@/features/cart";
 import { useWishlist } from "@/features/wishlist";
 import { BookDetailsGallery } from "./details/book-details-gallery";
@@ -28,7 +29,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const router = useRouter();
   const { data: bookResponse, isLoading, isError, refetch } = useBook(bookId);
   const book = bookResponse?.data;
-  const { withAuth } = useRequireAuth();
+  const { isAuthenticated, redirectToLogin } = useRequireAuth();
   const { addItem: addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
@@ -36,6 +37,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const isWishlisted = book ? isInWishlist(book._id || book.slug) : false;
+  const stockInfo = getBookStockInfo(book);
 
   if (isLoading) {
     return <BookDetailsSkeleton />;
@@ -86,12 +88,6 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     ...additionalImages.filter((img) => img && img !== mainCover),
   ];
 
-  // Resolved metadata
-  const categoryTitle =
-    book.categories && book.categories.length > 0
-      ? book.categories.map((c) => c.name).join(", ")
-      : "Book Details";
-
   const rawPrice =
     book.price !== undefined && book.price !== null && book.price !== ""
       ? typeof book.price === "number"
@@ -108,6 +104,12 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
   const handleAddToCart = () => {
     if (!book) return;
+
+    if (!stockInfo.canPurchase) {
+      toast.error("This book is currently out of stock.");
+      return;
+    }
+
     addToCart({
       listingId: book._id,
       bookListingId: book._id,
@@ -130,49 +132,37 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     });
   };
 
-  const handleBuyNow = withAuth(
-    async () => {
-      if (!book) return;
-      try {
-        await addToCart({
-          listingId: book._id,
-          bookListingId: book._id,
-          bookId: book._id,
-          slug: book.slug || book._id,
-          title: book.title || "-",
-          coverImage: mainCover,
-          author:
-            book.authors && book.authors.length > 0
-              ? book.authors.map((a) => a.name).join(", ")
-              : "-",
-          seller: book.seller?.name,
-          format: book.format || "Paperback",
-          price: rawPrice ?? 0,
-          originalPrice:
-            typeof book.originalPrice === "number"
-              ? book.originalPrice
-              : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || (rawPrice ?? 0),
-          quantity,
-        });
+  const handleBuyNow = () => {
+    if (!book) return;
 
-        router.push("/checkout");
-      } catch (err) {
-        console.error("Failed to proceed to checkout:", err);
-      }
-    },
-    {
-      returnUrl: "/checkout",
-      onUnauthenticated: () => {
-        toast.info("Please sign in to proceed to checkout");
-      },
-    },
-  );
+    if (!stockInfo.canPurchase) {
+      toast.error("This book is currently out of stock.");
+      return;
+    }
 
+    const bookListingId = book.listingId || book._id;
+    if (!bookListingId) {
+      toast.error("Unable to purchase this book at this moment.");
+      return;
+    }
+
+    const checkoutUrl =
+      `/checkout?mode=buy-now` +
+      `&listingId=${encodeURIComponent(bookListingId)}` +
+      `&quantity=${quantity}`;
+
+    if (!isAuthenticated) {
+      redirectToLogin(checkoutUrl);
+      return;
+    }
+
+    router.push(checkoutUrl);
+  };
 
   const handleToggleWishlist = () => {
     if (!book) return;
     const coverSrc = resolveCoverUrl(book.coverImage);
-    const rawPrice =
+    const itemPrice =
       typeof book.price === "number"
         ? book.price
         : parseFloat(String(book.price || 0).replace(/[^0-9.]/g, "")) || 0;
@@ -192,9 +182,9 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       seller: book.seller?.name,
       coverImage: coverSrc,
       format: book.format || "Paperback",
-      price: rawPrice,
+      price: itemPrice,
       originalPrice: origPrice,
-      inStock: book.inStock ?? (book.stock ? book.stock > 0 : true),
+      inStock: stockInfo.inStock,
       rating: book.rating,
       category: book.categories?.[0]?.name,
       quantity,
@@ -204,7 +194,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       {/* Hero Category Banner */}
-      <CategoryBanner categoryName='' compact />
+      <CategoryBanner categoryName="" compact />
 
       <main
         data-book-id={book._id}
@@ -253,6 +243,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}
         title={book.title || "-"}
+        canPurchase={stockInfo.canPurchase}
         onAddToCart={handleAddToCart}
       />
 
@@ -261,6 +252,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         priceText={priceText}
         formatLabel={book.format || "-"}
         isWishlisted={isWishlisted}
+        canPurchase={stockInfo.canPurchase}
         onToggleWishlist={handleToggleWishlist}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}

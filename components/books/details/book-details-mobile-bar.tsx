@@ -7,6 +7,7 @@ export interface BookDetailsMobileBarProps {
   priceText: string;
   formatLabel: string;
   isWishlisted: boolean;
+  canPurchase?: boolean;
   onToggleWishlist: () => void;
   onAddToCart: () => void;
   onBuyNow: () => void;
@@ -16,6 +17,7 @@ export function BookDetailsMobileBar({
   priceText,
   formatLabel,
   isWishlisted,
+  canPurchase = true,
   onToggleWishlist,
   onAddToCart,
   onBuyNow,
@@ -47,19 +49,21 @@ export function BookDetailsMobileBar({
         <button
           type="button"
           onClick={onAddToCart}
-          className="flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-primary px-3.5 text-xs font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95"
+          disabled={!canPurchase}
+          className="flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-primary px-3.5 text-xs font-semibold text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:border-border disabled:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
           <ShoppingBag size={14} />
-          Cart
+          {canPurchase ? "Cart" : "Out of Stock"}
         </button>
 
         <button
           type="button"
           onClick={onBuyNow}
-          className="flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow active:scale-95"
+          disabled={!canPurchase}
+          className="flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow active:scale-95 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-muted"
         >
           <Zap size={14} className="fill-current" />
-          Buy Now
+          {canPurchase ? "Buy Now" : "Unavailable"}
         </button>
       </div>
     </div>

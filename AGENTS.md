@@ -26,6 +26,150 @@ Backend remains authoritative for:
 - database operations
 
 
+
+Default coding style: Prefer 2–5 simple readable statements over one complex statement. Give intermediate business values meaningful names. A reader should not need to mentally execute an expression to understand what it does.
+
+For example, prefer:
+
+const unitPrice = listing.sellingPriceInPaise;
+const quantity = item.quantity;
+
+const subtotal = unitPrice * quantity;
+const discount = calculateDiscount(subtotal);
+const total = subtotal - discount;
+
+instead of:
+
+const total =
+  listing.sellingPriceInPaise * item.quantity -
+  calculateDiscount(listing.sellingPriceInPaise * item.quantity);
+
+
+
+# No Property Guessing
+
+Do not guess which property contains the real value by chaining several possible fields.
+
+Avoid:
+
+```ts
+const name =
+  order.name ||
+  order.customerName ||
+  order.userName ||
+  order.fullName ||
+  "-";
+```
+
+Avoid:
+
+```ts
+const id =
+  order._id ||
+  order.orderId ||
+  order.id ||
+  order.slug ||
+  "";
+```
+
+This hides an unclear data contract.
+
+Know which property the API returns and use that property directly.
+
+Prefer:
+
+```ts
+const customerName = order.customerName;
+```
+
+If the value is only needed for display, a simple display fallback is allowed:
+
+```ts
+const customerName = order.customerName || "-";
+```
+
+Or:
+
+```tsx
+<p>{order.customerName || "-"}</p>
+```
+
+For nullable values where `0`, `false`, or an empty string may be valid, prefer `??`:
+
+```ts
+const stock = order.stock ?? 0;
+```
+
+Do not write:
+
+```ts
+const stock = order.stock || 0;
+```
+
+when `0` is a meaningful value.
+
+## API Shape Differences
+
+If different API responses genuinely have different property names, normalize them once at the boundary.
+
+Example:
+
+```ts
+const customerName = apiOrder.customerName;
+
+return {
+  customerName,
+};
+```
+
+Then the rest of the application uses only:
+
+```ts
+order.customerName
+```
+
+Do not repeat compatibility fallbacks throughout components:
+
+```ts
+order.customerName ||
+order.name ||
+order.user?.name ||
+order.customer?.name ||
+"-"
+```
+
+If legacy compatibility is required, keep it inside one clearly named normalization function and document the precedence.
+
+## Rule
+
+Use:
+
+```text
+one known property
++
+one simple display fallback when needed
+```
+
+Prefer:
+
+```ts
+order.name || "-"
+```
+
+over:
+
+```ts
+order.name ||
+order.fullName ||
+order.customerName ||
+order.user?.name ||
+order.profile?.name ||
+"-"
+```
+
+Multiple property fallbacks usually mean the data contract needs to be fixed or normalized.
+
+
 ## Core Engineering Rules
 
 Prefer:

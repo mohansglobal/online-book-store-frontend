@@ -14,7 +14,7 @@ export async function getCheckoutSummary(
   options?: { signal?: AbortSignal },
 ): Promise<CheckoutSummaryResponse> {
   return apiClient.get<CheckoutSummaryResponse>("/checkout/summary", {
-    params: params as Record<string, string | undefined>,
+    params: params as Record<string, string | number | undefined>,
     signal: options?.signal,
   });
 }

@@ -105,5 +105,8 @@ export type CheckoutSummaryQueryParams = {
   billingAddressId?: string;
   billingSameAsShipping?: "true" | "false";
   couponCode?: string;
-  [key: string]: string | undefined;
+  bookListingId?: string;
+  quantity?: number;
+  [key: string]: string | number | undefined;
 };
+

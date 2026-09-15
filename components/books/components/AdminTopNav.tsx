@@ -166,7 +166,7 @@ export function AdminTopNav({
 
                 <div className="hidden h-6 w-px bg-border sm:block" />
 
-                <DropdownMenu>
+                {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
                             type="button"
@@ -236,7 +236,7 @@ export function AdminTopNav({
                             <span>Log out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu> */}
             </div>
         </div>
     );
