@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 import type { ApiBook } from "@/features/books/types/book.types";
 import { resolveAuthorPhoto } from "@/features/books/types/book.types";
 import { getBookStockInfo } from "@/features/books/utils/stock.utils";
@@ -25,16 +25,26 @@ export interface BookDetailsTabsProps {
 export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("SUMMARY");
 
-  const author = book.authors?.[0];
+  const firstAuthor = book.authors?.[0];
+
   const authorName =
     book.authors && book.authors.length > 0
       ? book.authors.map((a) => a.name?.trim()).filter(Boolean).join(", ")
       : "-";
+
   const publisherName = book.publisher?.name?.trim() || "-";
+
   const categoryName =
     book.categories && book.categories.length > 0
       ? book.categories.map((c) => c.name?.trim()).filter(Boolean).join(", ")
       : "-";
+
+  const countryName =
+    typeof book.country === "object" && book.country !== null
+      ? book.country.name?.trim() || "-"
+      : typeof book.country === "string"
+        ? book.country.trim() || "-"
+        : "-";
 
   const fullSpecifications = [
     { label: "Book Name", value: book.title || "-" },
@@ -49,7 +59,7 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
     { label: "ISBN", value: book.isbn || "-" },
     { label: "Legacy Book ID", value: book.legacyBookId || book.legacyId || "-" },
     { label: "Published Year", value: book.publishedYear ? String(book.publishedYear) : "-" },
-    { label: "Country", value: book.country || "-" },
+    { label: "Country", value: countryName },
     { label: "Weight", value: book.weight ? String(book.weight) : "-" },
     { label: "Availability", value: getBookStockInfo(book).label },
     { label: "Status", value: book.status || "-" },
@@ -57,10 +67,10 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
 
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-      {/* Tab Headers */}
       <div className="no-scrollbar flex overflow-x-auto border-b border-border bg-background">
         {TAB_OPTIONS.map((tab) => {
           const isActive = activeTab === tab.key;
+
           return (
             <button
               key={tab.key}
@@ -82,9 +92,7 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
         })}
       </div>
 
-      {/* Tab Content Body - Unified compact height across all tabs with smooth internal scrolling */}
       <div className="min-h-[320px] lg:h-[370px] p-4 sm:p-5 overflow-hidden w-full">
-        {/* 1. SUMMARY TAB */}
         {activeTab === "SUMMARY" && (
           <div className="h-full overflow-y-auto pr-2 w-full space-y-5 text-sm leading-relaxed text-muted-foreground">
             {book.description ? (
@@ -96,7 +104,6 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
               <p className="text-muted-foreground">-</p>
             )}
 
-            {/* Search Tags */}
             {book.searchTags && book.searchTags.length > 0 && (
               <div className="pt-4 border-t border-border/60 w-full">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-2">
@@ -118,12 +125,11 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
           </div>
         )}
 
-        {/* 2. AUTHOR TAB */}
         {activeTab === "AUTHOR" && (
           <div className="h-full overflow-y-auto pr-2 w-full flex items-start gap-5">
             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
               <Image
-                src={resolveAuthorPhoto(author?.photo)}
+                src={resolveAuthorPhoto(firstAuthor?.photo)}
                 alt={authorName}
                 fill
                 sizes="80px"
@@ -137,20 +143,20 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
                 <h3 className="font-display text-xl text-foreground">
                   {authorName}
                 </h3>
-                {author?.nameBn && (
+                {firstAuthor?.nameBn && (
                   <span className="text-xs text-muted-foreground">
-                    ({author.nameBn})
+                    ({firstAuthor.nameBn})
                   </span>
                 )}
               </div>
 
               <p className="mb-3 w-full text-sm text-muted-foreground leading-relaxed">
-                {author?.bio || "-"}
+                {firstAuthor?.bio || "-"}
               </p>
 
-              {author?.slug ? (
+              {firstAuthor?.slug ? (
                 <Link
-                  href={`/authors?author=${author.slug}`}
+                  href={`/authors?author=${firstAuthor.slug}`}
                   className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-accent transition-transform hover:translate-x-0.5 hover:underline"
                 >
                   View author profile →
@@ -162,7 +168,6 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
           </div>
         )}
 
-        {/* 3. SPECIFICATIONS TAB */}
         {activeTab === "SPECIFICATIONS" && (
           <div className="h-full overflow-y-auto pr-2 grid w-full grid-cols-1 gap-x-10 gap-y-3 sm:grid-cols-2 content-start">
             {fullSpecifications.map((spec) => (
@@ -179,7 +184,6 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
           </div>
         )}
 
-        {/* 4. REVIEWS TAB */}
         {activeTab === "REVIEWS" && (
           <div className="h-full w-full overflow-hidden">
             <BookReviewsSection book={book} />

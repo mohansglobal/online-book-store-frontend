@@ -78,15 +78,28 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     );
   }
 
-  // Resolve Images
+  // Resolve Images: cover image is first, followed by all listing and gallery images
   const mainCover = resolveCoverUrl(book.coverImage);
-  const additionalImages = Array.isArray(book.images)
-    ? book.images.map(resolveCoverUrl).filter(Boolean)
-    : [];
-  const allImages = [
-    mainCover || FALLBACK_BOOK_COVER,
-    ...additionalImages.filter((img) => img && img !== mainCover),
+  const rawListImages = [
+    ...(Array.isArray(book.listingImages) ? book.listingImages : []),
+    ...(Array.isArray(book.effectiveImages) ? book.effectiveImages : []),
+    ...(Array.isArray(book.images) ? book.images : []),
   ];
+
+  const additionalImages = rawListImages
+    .map((img) => resolveCoverUrl(img))
+    .filter((img): img is string => Boolean(img) && img !== mainCover);
+
+  const allImages: string[] = Array.from(
+    new Set([
+      ...(mainCover ? [mainCover] : []),
+      ...additionalImages,
+    ]),
+  );
+
+  if (allImages.length === 0) {
+    allImages.push(FALLBACK_BOOK_COVER);
+  }
 
   const rawPrice =
     book.price !== undefined && book.price !== null && book.price !== ""

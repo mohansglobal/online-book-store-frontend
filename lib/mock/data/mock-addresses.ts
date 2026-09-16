@@ -1,0 +1,38 @@
+import type { Address } from "@/features/addresses/types/address.types";
+
+export const MOCK_ADDRESSES: Address[] = [
+  {
+    _id: "addr_mock_01",
+    user: "user_mock_01",
+    addressType: "SHIPPING",
+    fullName: "Mohan Das",
+    email: "mohan@example.com",
+    mobileNumber: "+91 98765 12345",
+    country: "India",
+    state: "West Bengal",
+    city: "Kolkata",
+    postalCode: "700029",
+    streetAddress: "142 Rashbehari Avenue, Gariahat",
+    apartment: "Flat 3B, Sunshine Apartments",
+    isDefault: true,
+    createdAt: "2024-01-20T10:00:00.000Z",
+    updatedAt: "2024-01-20T10:00:00.000Z",
+  },
+  {
+    _id: "addr_mock_02",
+    user: "user_mock_01",
+    addressType: "BILLING",
+    fullName: "Mohan Das",
+    email: "mohan@example.com",
+    mobileNumber: "+91 98765 12345",
+    country: "India",
+    state: "West Bengal",
+    city: "Kolkata",
+    postalCode: "700091",
+    streetAddress: "Sector V, Salt Lake City",
+    apartment: "Tower 2, Floor 8",
+    isDefault: false,
+    createdAt: "2024-02-15T11:00:00.000Z",
+    updatedAt: "2024-02-15T11:00:00.000Z",
+  },
+];

@@ -88,7 +88,6 @@ export function BookCanonicalFields({
 }: BookCanonicalFieldsProps) {
   return (
     <>
-      {/* English Title */}
       <div className="space-y-2">
         <Label htmlFor="titleEn" className={LABEL_CLASS}>
           <span>Title (EN)</span>
@@ -106,7 +105,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Bengali Title */}
       <div className="space-y-2">
         <Label htmlFor="titleBn" className={LABEL_CLASS}>
           <span>Title (BN)</span>
@@ -124,7 +122,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Publisher (Searchable Dropdown) */}
       <div className="space-y-2">
         <Label htmlFor="publisher" className={LABEL_CLASS}>
           <span>Publisher</span>
@@ -141,7 +138,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Language */}
       <div className="space-y-2">
         <Label htmlFor="language" className={LABEL_CLASS}>
           <span>Language</span>
@@ -171,7 +167,6 @@ export function BookCanonicalFields({
         </Select>
       </div>
 
-      {/* Category (Searchable Dropdown) */}
       <div className="space-y-2">
         <Label htmlFor="category" className={LABEL_CLASS}>
           <span>Select Category</span>
@@ -188,7 +183,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Author (Searchable Dropdown) */}
       <div className="space-y-2">
         <Label htmlFor="author" className={LABEL_CLASS}>
           <span>Author</span>
@@ -205,7 +199,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Country (Searchable Dropdown) */}
       <div className="space-y-2">
         <Label htmlFor="country" className={LABEL_CLASS}>
           <span>Check Country</span>
@@ -222,7 +215,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Edition */}
       <div className="space-y-2">
         <Label htmlFor="edition" className={LABEL_CLASS}>
           <span>Edition</span>
@@ -238,7 +230,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Pages */}
       <div className="space-y-2">
         <Label htmlFor="pages" className={LABEL_CLASS}>
           <span>No of Page</span>
@@ -256,7 +247,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Search Tag */}
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="searchTag" className={LABEL_CLASS}>
           <span>Search Tag</span>
@@ -274,7 +264,6 @@ export function BookCanonicalFields({
         />
       </div>
 
-      {/* Description */}
       <div className="space-y-2 md:col-span-2">
         <Label htmlFor="description" className={LABEL_CLASS}>
           <span>Description</span>

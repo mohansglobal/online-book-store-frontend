@@ -56,6 +56,7 @@ export function BookDetailsGallery({
               fill
               priority={selectedThumbnail === 0}
               sizes="280px"
+              unoptimized={typeof activeImage === "string" && !activeImage.startsWith("/")}
               onError={() => setActiveImage(FALLBACK_BOOK_COVER)}
               className="object-cover transition-transform duration-300 hover:scale-[1.02]"
             />
@@ -97,17 +98,17 @@ export function BookDetailsGallery({
         </div>
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails under cover image */}
       {images.length > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           {images.map((imgSrc, index) => (
             <button
               key={`${imgSrc}-${index}`}
               type="button"
               onClick={() => handleThumbnailChange(index)}
-              aria-label={`View cover ${index + 1}`}
+              aria-label={`View image ${index + 1}`}
               aria-pressed={selectedThumbnail === index}
-              className={`relative h-16 w-12 cursor-pointer overflow-hidden rounded-sm border transition-all duration-200 ${
+              className={`relative h-16 w-12 cursor-pointer overflow-hidden rounded-md border transition-all duration-200 ${
                 selectedThumbnail === index
                   ? "scale-105 border-accent shadow-sm ring-2 ring-accent/30"
                   : "border-border opacity-60 hover:opacity-100"
@@ -115,10 +116,11 @@ export function BookDetailsGallery({
             >
               <Image
                 src={imgSrc}
-                alt=""
+                alt={`${title} thumbnail ${index + 1}`}
                 fill
                 sizes="48px"
                 className="object-cover"
+                unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
               />
             </button>
           ))}
@@ -126,14 +128,14 @@ export function BookDetailsGallery({
       )}
 
       {/* Look Inside Modal Trigger */}
-      <button
+      {/* <button
         type="button"
         onClick={onOpenPreview}
         className="mt-4 flex h-9 w-full max-w-[280px] cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-background text-xs font-medium transition-colors hover:border-primary"
       >
         <BookOpen size={14} className="text-accent" />
         Look Inside
-      </button>
+      </button> */}
     </div>
   );
 }

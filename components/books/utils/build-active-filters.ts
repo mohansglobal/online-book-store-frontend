@@ -15,6 +15,8 @@ export interface BuildActiveFiltersParams {
   onToggleCategory: (id: string) => void;
 }
 
+
+
 export function buildActiveFiltersList({
   urlSearch,
   minPrice,

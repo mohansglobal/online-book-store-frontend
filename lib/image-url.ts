@@ -5,8 +5,14 @@ export function resolveCoverUrl(image?: string | null): string {
     return FALLBACK_BOOK_COVER;
   }
   const trimmed = image.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     return trimmed;
+  }
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("upload/")) {
+    return `https://indobanglabooks.in/${trimmed}`;
   }
   if (!trimmed.includes("/")) {
     return `https://indobanglabooks.in/upload/product/${trimmed}`;

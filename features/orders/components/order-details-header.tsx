@@ -14,6 +14,31 @@ import {
 } from "../utils/order-helpers";
 import { OrderItemsDialog } from "./order-items-dialog";
 
+function OrderItemThumbnail({
+  coverImage,
+  title,
+}: {
+  coverImage?: string;
+  title?: string;
+}) {
+  const resolved = resolveCoverUrl(coverImage);
+  const [src, setSrc] = useState(resolved);
+
+  return (
+    <div className="relative h-11 w-8 shrink-0 overflow-hidden rounded-md border-2 border-surface bg-surface-soft shadow-xs">
+      <Image
+        src={src}
+        alt={title || "Book cover"}
+        fill
+        sizes="32px"
+        className="object-cover"
+        unoptimized={typeof src === "string" && !src.startsWith("/")}
+        onError={() => setSrc(FALLBACK_BOOK_COVER)}
+      />
+    </div>
+  );
+}
+
 interface OrderDetailsHeaderProps {
   order: Order;
 }
@@ -72,27 +97,13 @@ export function OrderDetailsHeader({ order }: OrderDetailsHeaderProps) {
             {/* Book cover thumbnails */}
             {items.length > 0 ? (
               <div className="flex -space-x-2 overflow-hidden shrink-0">
-                {items.slice(0, 3).map((item, idx) => {
-                  const cover =
-                    resolveCoverUrl(item.coverImage) || FALLBACK_BOOK_COVER;
-                  return (
-                    <div
-                      key={item.bookListing || idx}
-                      className="relative h-11 w-8 shrink-0 overflow-hidden rounded-md border-2 border-surface bg-surface-soft shadow-xs"
-                    >
-                      <Image
-                        src={cover}
-                        alt={item.title || "Book cover"}
-                        fill
-                        sizes="32px"
-                        className="object-cover"
-                        unoptimized={
-                          typeof cover === "string" && !cover.startsWith("/")
-                        }
-                      />
-                    </div>
-                  );
-                })}
+                {items.slice(0, 3).map((item, idx) => (
+                  <OrderItemThumbnail
+                    key={item.bookListing || idx}
+                    coverImage={item.coverImage}
+                    title={item.title}
+                  />
+                ))}
               </div>
             ) : (
               <div className="flex h-11 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground">

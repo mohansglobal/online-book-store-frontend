@@ -1,5 +1,6 @@
 // Book domain types and contracts matching backend /api/v1/listings & /api/v1/books
 import type { StaticImageData } from "next/image";
+import type { ApiListing, ListingSeller } from "./listing.types";
 
 export const FALLBACK_BOOK_COVER =
   "https://i.pinimg.com/736x/57/69/7a/57697aeaa7fa70578f344fb6ee4aa1d9.jpg";
@@ -31,14 +32,6 @@ export type BookCategory = {
   slug: string;
 };
 
-export type ListingSeller = {
-  _id: string;
-  name: string;
-  email?: string;
-  mobileNumber?: string;
-  role?: string;
-};
-
 export type RatingBreakdown = {
   1: number;
   2: number;
@@ -48,13 +41,13 @@ export type RatingBreakdown = {
   [key: string]: number;
 };
 
-export type RatingPercentages = {
-  1: number;
-  2: number;
-  3: number;
-  4: number;
-  5: number;
-  [key: string]: number;
+export type RatingPercentages = RatingBreakdown;
+
+export type BookCountry = {
+  _id: string;
+  name: string;
+  code?: string;
+  phoneCode?: string;
 };
 
 export type ApiBook = {
@@ -93,7 +86,7 @@ export type ApiBook = {
   legacyId?: string;
   edition?: string;
   translation?: string;
-  country?: string;
+  country?: string | BookCountry;
   weight?: string | number;
   createdBy?: string;
   createdAt?: string;
@@ -108,30 +101,6 @@ export type ApiBook = {
   isActive?: boolean;
   effectiveImages?: string[];
   listingImages?: string[];
-};
-
-export type ApiListing = {
-  _id: string;
-  seller?: ListingSeller;
-  book?: ApiBook;
-  createdAt?: string;
-  updatedAt?: string;
-  isActive?: boolean;
-  mrpInPaise?: number;
-  sellingPriceInPaise?: number;
-  sku?: string;
-  stock?: number;
-  publisher?: string | BookPublisher;
-  effectiveImages?: string[];
-  listingImages?: string[];
-  rating?: number | string;
-  averageRating?: number;
-  ratingCount?: number;
-  totalRatings?: number;
-  totalReviews?: number;
-  reviewCount?: number;
-  ratingBreakdown?: RatingBreakdown;
-  ratingPercentages?: RatingPercentages;
 };
 
 export type BookPaginationMeta = {
@@ -250,6 +219,13 @@ export type CanonicalBook = {
   searchTags?: string[];
   edition?: string;
   pages?: number;
+  price?: number | string;
+  priceIn?: number | string;
+  originalPrice?: number | string;
+  originalPriceIn?: number | string;
+  mrp?: number | string;
+  mrpInPaise?: number;
+  sellingPriceInPaise?: number;
 };
 
 export type IsbnLookupResponse = {
@@ -260,6 +236,9 @@ export type IsbnLookupResponse = {
   message: string;
   data: CanonicalBook | null;
 };
+
+// Re-export listing contracts
+export * from "./listing.types";
 
 // Re-export transformation and stock utilities
 export {
@@ -277,4 +256,3 @@ export {
   type StockInfo,
   type StockLevel,
 } from "../utils/stock.utils";
-

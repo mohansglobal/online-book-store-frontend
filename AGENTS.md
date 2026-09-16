@@ -27,6 +27,21 @@ Backend remains authoritative for:
 
 
 
+# dont use multiloine comment use simple // for single line comments and make suire visually spacing for each item like 
+
+const userID = req.user
+const items = req.user
+
+
+const paymentId = req.payment
+const signature  = req.signature
+
+
+const fn = (req, res) => {
+    
+}
+
+ 
 Default coding style: Prefer 2–5 simple readable statements over one complex statement. Give intermediate business values meaningful names. A reader should not need to mentally execute an expression to understand what it does.
 
 For example, prefer:

@@ -1,12 +1,37 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Package } from "lucide-react";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
 import { resolveCoverUrl } from "@/lib/image-url";
 import type { OrderItem } from "../types/order.types";
 import { formatOrderPrice } from "../utils/order-helpers";
+
+function ListItemThumbnail({
+  coverImage,
+  title,
+}: {
+  coverImage?: string;
+  title?: string;
+}) {
+  const resolved = resolveCoverUrl(coverImage);
+  const [src, setSrc] = useState(resolved);
+
+  return (
+    <div className="relative h-15 w-10.5 shrink-0 overflow-hidden rounded-md border border-border/70 bg-surface-soft shadow-2xs">
+      <Image
+        src={src}
+        alt={title || "Book cover"}
+        fill
+        sizes="42px"
+        className="object-cover"
+        unoptimized={typeof src === "string" && !src.startsWith("/")}
+        onError={() => setSrc(FALLBACK_BOOK_COVER)}
+      />
+    </div>
+  );
+}
 
 interface OrderItemsListProps {
   items?: OrderItem[];
@@ -24,26 +49,16 @@ export function OrderItemsList({ items = [] }: OrderItemsListProps) {
 
       <div className="divide-y divide-border/50 rounded-2xl border border-border/70 bg-surface/90 p-4 sm:p-5 shadow-xs">
         {items.map((item, idx) => {
-          const cover =
-            resolveCoverUrl(item.coverImage) || FALLBACK_BOOK_COVER;
           return (
             <div
               key={item.bookListing || idx}
               className="flex items-center gap-3.5 py-3 first:pt-0 last:pb-0"
             >
               {/* Book Cover */}
-              <div className="relative h-15 w-10.5 shrink-0 overflow-hidden rounded-md border border-border/70 bg-surface-soft shadow-2xs">
-                <Image
-                  src={cover}
-                  alt={item.title}
-                  fill
-                  sizes="42px"
-                  className="object-cover"
-                  unoptimized={
-                    typeof cover === "string" && !cover.startsWith("/")
-                  }
-                />
-              </div>
+              <ListItemThumbnail
+                coverImage={item.coverImage}
+                title={item.title}
+              />
 
               {/* Title & Quantity */}
               <div className="min-w-0 flex-1">

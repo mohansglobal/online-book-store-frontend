@@ -1,6 +1,8 @@
-import { API_BASE_URL, IS_API_ENABLED } from "@/config/env";
+import { API_BASE_URL, IS_API_ENABLED, IS_MOCK_MODE } from "@/config/env";
+import { handleMockRequest } from "@/lib/mock";
 import { ApiClientError, createApiErrorFromResponse, normalizeApiError } from "./api-error";
 import type { HttpMethod, QueryParams, RequestOptions } from "./types";
+
 
 
 // mutex state for 401 logout deduplication
@@ -155,19 +157,27 @@ async function request<T>(
   endpoint: string,
   options: RequestOptions & { method?: HttpMethod } = {},
 ): Promise<T> {
+  // 1. In Mock Mode: route immediately to local mock handler without network access
+  if (IS_MOCK_MODE) {
+    return handleMockRequest<T>(endpoint, options);
+  }
+
+  // 2. If API calls are completely disabled
   if (!IS_API_ENABLED) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(
-        `[API Disabled] Request to "${endpoint}" blocked because API calls are stopped by configuration.`,
+        `[API Disabled] Request to "${endpoint}" blocked because API is disabled.`,
       );
     }
     throw new ApiClientError({
       status: 0,
       code: "API_DISABLED",
-      message: `Request to "${endpoint}"`,
+      message: `Request to "${endpoint}" blocked because API is disabled`,
     });
   }
 
+  // 3. In API Connected Mode: execute real HTTP fetch to Express backend
+  // STRICT RULE: If the request fails, throw ApiClientError. NEVER fallback to mock data!
   const {
     baseUrl,
     params,

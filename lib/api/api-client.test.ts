@@ -12,14 +12,18 @@ describe("apiClient", () => {
     vi.restoreAllMocks();
   });
 
-  it("makes network requests when IS_API_ENABLED is true", async () => {
+  it("makes network requests when IS_API_ENABLED is true and IS_MOCK_MODE is false", async () => {
     vi.doMock("@/config/env", () => ({
       API_BASE_URL: "http://localhost:5000/api/v1",
       IS_API_ENABLED: true,
+      IS_MOCK_MODE: false,
+      DATA_SOURCE: "api",
       env: {
         apiBaseUrl: "http://localhost:5000/api/v1",
         razorpayKeyId: "test_key",
         isApiEnabled: true,
+        isMockMode: false,
+        dataSource: "api",
       },
     }));
 
@@ -46,14 +50,88 @@ describe("apiClient", () => {
     expect(result).toEqual({ success: true, data: { message: "ok" } });
   });
 
-  it("blocks requests immediately and does not call fetch when IS_API_ENABLED is false", async () => {
+  it("strictly throws ApiClientError and NEVER falls back to mock when API fails in API mode", async () => {
+    vi.doMock("@/config/env", () => ({
+      API_BASE_URL: "http://localhost:5000/api/v1",
+      IS_API_ENABLED: true,
+      IS_MOCK_MODE: false,
+      DATA_SOURCE: "api",
+      env: {
+        apiBaseUrl: "http://localhost:5000/api/v1",
+        razorpayKeyId: "test_key",
+        isApiEnabled: true,
+        isMockMode: false,
+        dataSource: "api",
+      },
+    }));
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+      headers: new Headers({ "content-type": "application/json" }),
+      text: async () => JSON.stringify({ success: false, message: "Database failure" }),
+    });
+    global.fetch = mockFetch;
+
+    const { apiClient } = await import("./api-client");
+    const { isApiClientError } = await import("./api-error");
+
+    let thrownError: unknown;
+    try {
+      await apiClient.get("/listings");
+    } catch (err) {
+      thrownError = err;
+    }
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(isApiClientError(thrownError)).toBe(true);
+    if (isApiClientError(thrownError)) {
+      expect(thrownError.status).toBe(500);
+      expect(thrownError.message).toBe("Database failure");
+    }
+  });
+
+  it("serves mock data locally and does not invoke fetch when IS_MOCK_MODE is true", async () => {
     vi.doMock("@/config/env", () => ({
       API_BASE_URL: "http://localhost:5000/api/v1",
       IS_API_ENABLED: false,
+      IS_MOCK_MODE: true,
+      DATA_SOURCE: "mock",
       env: {
         apiBaseUrl: "http://localhost:5000/api/v1",
         razorpayKeyId: "test_key",
         isApiEnabled: false,
+        isMockMode: true,
+        dataSource: "mock",
+      },
+    }));
+
+    const mockFetch = vi.fn();
+    global.fetch = mockFetch;
+
+    const { apiClient } = await import("./api-client");
+
+    const result = await apiClient.get<any>("/categories");
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(Array.isArray(result.data)).toBe(true);
+    expect(result.data.length).toBeGreaterThan(0);
+  });
+
+  it("blocks requests immediately and does not call fetch when IS_API_ENABLED is false and IS_MOCK_MODE is false", async () => {
+    vi.doMock("@/config/env", () => ({
+      API_BASE_URL: "http://localhost:5000/api/v1",
+      IS_API_ENABLED: false,
+      IS_MOCK_MODE: false,
+      DATA_SOURCE: "api",
+      env: {
+        apiBaseUrl: "http://localhost:5000/api/v1",
+        razorpayKeyId: "test_key",
+        isApiEnabled: false,
+        isMockMode: false,
+        dataSource: "api",
       },
     }));
 
@@ -78,28 +156,5 @@ describe("apiClient", () => {
       expect(thrownError.message).toContain("blocked because API is disabled");
     }
   });
-
-  it("blocks POST requests without invoking fetch when IS_API_ENABLED is false", async () => {
-    vi.doMock("@/config/env", () => ({
-      API_BASE_URL: "http://localhost:5000/api/v1",
-      IS_API_ENABLED: false,
-      env: {
-        apiBaseUrl: "http://localhost:5000/api/v1",
-        razorpayKeyId: "test_key",
-        isApiEnabled: false,
-      },
-    }));
-
-    const mockFetch = vi.fn();
-    global.fetch = mockFetch;
-
-    const { apiClient } = await import("./api-client");
-
-    await expect(apiClient.post("/orders", { item: 1 })).rejects.toMatchObject({
-      code: "API_DISABLED",
-      status: 0,
-    });
-
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
 });
+

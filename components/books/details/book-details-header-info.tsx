@@ -119,10 +119,10 @@ export function BookDetailsHeaderInfo({
       label: "Genre",
       value:
         book.categories && book.categories.length > 0
-          ? book.categories.map((c) => c.name).join(", ")
+          ? book.categories.map((c) => c.name?.trim()).filter(Boolean).join(", ")
           : "-",
     },
-    { label: "Seller", value: book.seller?.name || "-" },
+    { label: "Seller", value: book.seller?.name?.trim() || "-" },
     { label: "Availability", value: stockInfo.label },
   ];
 

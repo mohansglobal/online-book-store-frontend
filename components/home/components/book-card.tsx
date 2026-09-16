@@ -42,11 +42,17 @@ export function BookCard({
       ? book.price
       : parseFloat(String(book.price || 0).replace(/[^0-9.]/g, "")) || 0);
 
-  const origPrice =
-    book.rawPrice ??
-    (typeof book.originalPrice === "number"
+  const rawOriginalPrice =
+    typeof book.originalPrice === "number"
       ? book.originalPrice
-      : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || rawPrice);
+      : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || 0;
+
+  const origPrice = rawOriginalPrice > 0 ? rawOriginalPrice : rawPrice;
+
+  const hasDiscount = origPrice > rawPrice && rawPrice > 0;
+  const discountPercent = hasDiscount
+    ? Math.round(((origPrice - rawPrice) / origPrice) * 100)
+    : 0;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -117,15 +123,16 @@ export function BookCard({
           className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
         />
 
-        {/* Top-Left Category Badge */}
-        {book.category && book.category !== "-" && (
+        {/* Top-Left Discount Badge */}
+        {/* {hasDiscount && discountPercent > 0 && (
           <span
-            className={`absolute top-2 left-2 z-10 rounded-md border border-border/60 bg-background/85 font-semibold tracking-wider text-foreground uppercase backdrop-blur-md shadow-xs ${isSmall ? "px-1.5 py-0.5 text-[8px]" : "px-2 py-0.5 text-[9px]"
-              }`}
+            className={`absolute top-2 left-2 z-10 rounded-md bg-accent font-bold uppercase tracking-wider text-white shadow-xs backdrop-blur-xs ${
+              isSmall ? "px-1.5 py-0.5 text-[8px]" : "px-2 py-0.5 text-[9px]"
+            }`}
           >
-            {book.category}
+            {discountPercent}% OFF
           </span>
-        )}
+        )} */}
 
         {/* Bottom Blackish Gradient Overlay on Hover */}
         <div
@@ -210,22 +217,38 @@ export function BookCard({
           </p>
         )}
 
+        {/* Price & Discount Highlights */}
         <div
-          className={`flex items-center justify-between font-medium text-foreground ${isSmall ? "mt-1.5 text-[11px]" : "mt-2.5 text-[13px]"
-            }`}
+          className={`flex items-baseline justify-between font-medium text-foreground ${
+            isSmall ? "mt-1.5" : "mt-2.5"
+          }`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[14px]">
+          <div className="flex items-baseline gap-1.5 flex-nowrap">
+            <span
+              className={`font-bold tracking-tight text-foreground shrink-0 ${
+                isSmall ? "text-[13px] sm:text-[14px]" : "text-[15px] sm:text-[16px]"
+              }`}
+            >
               {book.price}
             </span>
-            {book.originalPrice && (
-              <span className="text-[11px] text-muted-foreground/70 line-through">
+
+            {hasDiscount && book.originalPrice && (
+              <span
+                className={`text-muted-foreground/70 line-through shrink-0 ${
+                  isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
+                }`}
+              >
                 {book.originalPrice}
               </span>
             )}
-            {book.priceIn && book.priceIn !== book.price && (
-              <span className="text-[10px] text-muted-foreground/80 font-normal">
-                ({book.priceIn})
+
+            {hasDiscount && discountPercent > 0 && (
+              <span
+                className={`font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 ${
+                  isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
+                }`}
+              >
+                {discountPercent}% off
               </span>
             )}
           </div>

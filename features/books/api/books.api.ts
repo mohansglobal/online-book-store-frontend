@@ -3,13 +3,23 @@ import { apiClient } from "@/lib/api";
 import {
   normalizeListingToApiBook,
   type BooksResponse,
+  type CreateBookListingInput,
+  type CreateBookListingResponse,
   type GetBooksParams,
+  type IsbnLookupResponse,
   type SingleBookResponse,
 } from "../types/book.types";
 
-/**
- * Fetches listings/books from /api/v1/listings
- */
+import type {
+  GetSellerListingsParams,
+  SellerListingsResponse,
+  ToggleListingStatusInput,
+  ToggleListingStatusResponse,
+  UpdateStockInput,
+  UpdateStockResponse,
+} from "../types/listing.types";
+
+// Fetches listings/books from /api/v1/listings
 export async function getBooks(
   params?: GetBooksParams,
   options?: { signal?: AbortSignal },
@@ -27,9 +37,7 @@ export async function getBooks(
   };
 }
 
-/**
- * Fetches a single listing/book by id from /api/v1/listings/:identifier
- */
+// Fetches a single listing/book by id from /api/v1/listings/:identifier
 export async function getBookByIdOrSlug(
   identifier: string,
   options?: { signal?: AbortSignal },
@@ -47,17 +55,72 @@ export async function getBookByIdOrSlug(
   };
 }
 
-/**
- * Looks up a canonical book by ISBN from /api/v1/books/isbn/:isbn
- */
+// Looks up a canonical book by ISBN from /api/v1/books/isbn/:isbn
 export async function lookupBookByIsbn(
   isbn: string,
   options?: { signal?: AbortSignal },
-) {
-  return apiClient.get<import("../types/book.types").IsbnLookupResponse>(
+): Promise<IsbnLookupResponse> {
+  return apiClient.get<IsbnLookupResponse>(
     `/books/isbn/${encodeURIComponent(isbn)}`,
     {
       signal: options?.signal,
     },
   );
 }
+
+// Creates a new seller book listing via POST /api/v1/listings
+export async function createBookListing(
+  input: CreateBookListingInput,
+  options?: { signal?: AbortSignal },
+): Promise<CreateBookListingResponse> {
+  return apiClient.post<CreateBookListingResponse>("/listings", input, {
+    signal: options?.signal,
+  });
+}
+
+// Fetches current seller's own listings from /api/v1/book-listings/my-listings
+export async function getMyBookListings(
+  params?: GetSellerListingsParams,
+  options?: { signal?: AbortSignal },
+): Promise<SellerListingsResponse> {
+  return apiClient.get<SellerListingsResponse>("/book-listings/my-listings", {
+    params: params as Record<string, string | number | boolean | undefined>,
+    signal: options?.signal,
+  });
+}
+
+// Atomically updates listing stock (increase, decrease, set) via PATCH /api/v1/book-listings/:id/stock
+export async function updateListingStock(
+  input: UpdateStockInput,
+  options?: { signal?: AbortSignal },
+): Promise<UpdateStockResponse> {
+  return apiClient.patch<UpdateStockResponse>(
+    `/book-listings/${encodeURIComponent(input.listingId)}/stock`,
+    {
+      operation: input.operation,
+      quantity: input.quantity,
+    },
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
+// Toggles or sets listing active status via PATCH /api/v1/book-listings/:id/toggle-status
+export async function toggleListingStatus(
+  input: ToggleListingStatusInput,
+  options?: { signal?: AbortSignal },
+): Promise<ToggleListingStatusResponse> {
+  const body =
+    input.isActive !== undefined ? { isActive: input.isActive } : {};
+
+  return apiClient.patch<ToggleListingStatusResponse>(
+    `/book-listings/${encodeURIComponent(input.listingId)}/toggle-status`,
+    body,
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
+

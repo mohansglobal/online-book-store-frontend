@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Package } from "lucide-react";
 import {
@@ -20,6 +20,31 @@ interface OrderItemsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   orderNumber?: string;
+}
+
+function DialogItemThumbnail({
+  coverImage,
+  title,
+}: {
+  coverImage?: string;
+  title?: string;
+}) {
+  const resolved = resolveCoverUrl(coverImage);
+  const [src, setSrc] = useState(resolved);
+
+  return (
+    <div className="relative h-15 w-10.5 shrink-0 overflow-hidden rounded-md border border-border/70 bg-surface-soft shadow-2xs">
+      <Image
+        src={src}
+        alt={title || "Book cover"}
+        fill
+        sizes="42px"
+        className="object-cover"
+        unoptimized={typeof src === "string" && !src.startsWith("/")}
+        onError={() => setSrc(FALLBACK_BOOK_COVER)}
+      />
+    </div>
+  );
 }
 
 export function OrderItemsDialog({
@@ -45,26 +70,16 @@ export function OrderItemsDialog({
 
         <div className="max-h-[60vh] divide-y divide-border/50 overflow-y-auto pr-1">
           {items.map((item, idx) => {
-            const cover =
-              resolveCoverUrl(item.coverImage) || FALLBACK_BOOK_COVER;
             return (
               <div
                 key={item.bookListing || idx}
                 className="flex items-center gap-3.5 py-3 first:pt-1 last:pb-1"
               >
                 {/* Book Cover */}
-                <div className="relative h-15 w-10.5 shrink-0 overflow-hidden rounded-md border border-border/70 bg-surface-soft shadow-2xs">
-                  <Image
-                    src={cover}
-                    alt={item.title || "Book cover"}
-                    fill
-                    sizes="42px"
-                    className="object-cover"
-                    unoptimized={
-                      typeof cover === "string" && !cover.startsWith("/")
-                    }
-                  />
-                </div>
+                <DialogItemThumbnail
+                  coverImage={item.coverImage}
+                  title={item.title}
+                />
 
                 {/* Title & Quantity */}
                 <div className="min-w-0 flex-1">

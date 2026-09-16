@@ -1,0 +1,81 @@
+import type { Order } from "@/features/orders/types/order.types";
+import { MOCK_ADDRESSES } from "./mock-addresses";
+
+const shippingSnapshot = {
+  fullName: MOCK_ADDRESSES[0].fullName,
+  mobileNumber: MOCK_ADDRESSES[0].mobileNumber,
+  streetAddress: MOCK_ADDRESSES[0].streetAddress,
+  city: MOCK_ADDRESSES[0].city,
+  state: MOCK_ADDRESSES[0].state,
+  postalCode: MOCK_ADDRESSES[0].postalCode,
+  country: MOCK_ADDRESSES[0].country,
+};
+
+export const MOCK_ORDERS: Order[] = [
+  {
+    _id: "order_mock_01",
+    orderNumber: "ORD-2024-94812",
+    buyer: "user_mock_01",
+    items: [
+      {
+        bookListing: "listing_curated_01",
+        book: "book_curated_01",
+        title: "Pather Panchali (Song of the Little Road)",
+        coverImage: "/assets/patherpanchali.jpeg",
+        priceInPaise: 38000,
+        quantity: 1,
+        subtotalInPaise: 38000,
+      },
+      {
+        bookListing: "listing_novel_01",
+        book: "book_novel_01",
+        title: "Chokher Bali (A Grain of Sand)",
+        coverImage: "/assets/novels.jpeg",
+        priceInPaise: 29000,
+        quantity: 1,
+        subtotalInPaise: 29000,
+      },
+    ],
+    subtotalInPaise: 67000,
+    deliveryChargeInPaise: 4000,
+    couponDiscountInPaise: 5000,
+    couponCode: "READMORE",
+    totalAmountInPaise: 66000,
+    paymentMethod: "ONLINE_PAY",
+    orderStatus: "DELIVERED",
+    paymentStatus: "PAID",
+    shippingAddress: shippingSnapshot,
+    billingAddress: shippingSnapshot,
+    billingSameAsShipping: true,
+    createdAt: "2024-05-10T14:20:00.000Z",
+    updatedAt: "2024-05-14T18:00:00.000Z",
+  },
+  {
+    _id: "order_mock_02",
+    orderNumber: "ORD-2024-95104",
+    buyer: "user_mock_01",
+    items: [
+      {
+        bookListing: "listing_poetry_01",
+        book: "book_poetry_01",
+        title: "Chharpatra (The Passport)",
+        coverImage: "/assets/poetry.jpeg",
+        priceInPaise: 16000,
+        quantity: 2,
+        subtotalInPaise: 32000,
+      },
+    ],
+    subtotalInPaise: 32000,
+    deliveryChargeInPaise: 4000,
+    couponDiscountInPaise: 0,
+    totalAmountInPaise: 36000,
+    paymentMethod: "CASH_ON_DELIVERY",
+    orderStatus: "SHIPPED",
+    paymentStatus: "PENDING",
+    shippingAddress: shippingSnapshot,
+    billingAddress: shippingSnapshot,
+    billingSameAsShipping: true,
+    createdAt: "2024-06-01T09:15:00.000Z",
+    updatedAt: "2024-06-02T11:30:00.000Z",
+  },
+];
