@@ -112,12 +112,44 @@ describe("apiClient", () => {
 
     const { apiClient } = await import("./api-client");
 
-    const result = await apiClient.get<any>("/categories");
+    const result = await apiClient.get<{ success: boolean; data: unknown[] }>("/books");
 
     expect(mockFetch).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(Array.isArray(result.data)).toBe(true);
     expect(result.data.length).toBeGreaterThan(0);
+  });
+
+  it("routes to real API when a page integration flag is true even in mock mode", async () => {
+    vi.doMock("@/config/env", () => ({
+      API_BASE_URL: "http://localhost:5000/api/v1",
+      IS_API_ENABLED: false,
+      IS_MOCK_MODE: true,
+      DATA_SOURCE: "mock",
+      env: {
+        apiBaseUrl: "http://localhost:5000/api/v1",
+        razorpayKeyId: "test_key",
+        isApiEnabled: false,
+        isMockMode: true,
+        dataSource: "mock",
+      },
+    }));
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      text: async () => JSON.stringify({ success: true, data: [] }),
+    });
+    global.fetch = mockFetch;
+
+    const { apiClient } = await import("./api-client");
+
+    // /authors is configured with authors: true in PAGE_INTEGRATION_FLAGS
+    const result = await apiClient.get<{ success: boolean; data: unknown[] }>("/authors");
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ success: true, data: [] });
   });
 
   it("blocks requests immediately and does not call fetch when IS_API_ENABLED is false and IS_MOCK_MODE is false", async () => {

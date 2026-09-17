@@ -32,4 +32,14 @@ export const IS_MOCK_MODE = env.isMockMode;
 export const IS_API_ENABLED = env.isApiEnabled;
 export const DATA_SOURCE = env.dataSource;
 
+// Page-wise API integration flags and helpers
+export {
+  PAGE_INTEGRATION_FLAGS,
+  isPageApiEnabled,
+  getEndpointPageKey,
+  shouldEndpointUseApi,
+  type PageIntegrationKey,
+  type PageIntegrationConfig,
+} from "./page-integration";
+
 

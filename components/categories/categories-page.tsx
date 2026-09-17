@@ -205,7 +205,7 @@ export default function CategoriesPage() {
 
                   {/* Top Metadata Badges */}
                   <div className="absolute top-5 inset-x-5 z-10 flex items-center justify-between">
-                    {category.nameBn ? (
+                    {/* {category.nameBn ? (
                       <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-md">
                         {category.nameBn}
                       </span>
@@ -213,14 +213,14 @@ export default function CategoriesPage() {
                       <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-md">
                         Category
                       </span>
-                    )}
+                    )} */}
 
-                    {isFeatured && (
+                    {/* {isFeatured && (
                       <span className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-200 backdrop-blur-md">
                         <Sparkles className="h-3 w-3" />
                         Featured
                       </span>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Bottom Content */}

@@ -167,7 +167,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       </Button>
 
       {/* Divider */}
-      <div className="relative my-6">
+      {/* <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border" />
         </div>
@@ -176,11 +176,11 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             Or continue with
           </span>
         </div>
-      </div>
+      </div> */}
 
       {/* Social Login */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Google */}
+      {/* <div className="grid grid-cols-2 gap-4">
+        
         <Button
           type="button"
           variant="outline"
@@ -207,7 +207,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           Google
         </Button>
 
-        {/* Facebook */}
+      
         <Button
           type="button"
           variant="outline"
@@ -218,7 +218,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
           </svg>
           Facebook
         </Button>
-      </div>
+      </div> */}
 
       {/* Switch to Register */}
       <div className="mt-8 text-center text-sm text-muted-foreground">

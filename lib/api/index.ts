@@ -1,4 +1,12 @@
-export { IS_API_ENABLED, IS_MOCK_MODE, DATA_SOURCE } from "@/config/env";
+export {
+  IS_API_ENABLED,
+  IS_MOCK_MODE,
+  DATA_SOURCE,
+  PAGE_INTEGRATION_FLAGS,
+  isPageApiEnabled,
+  type PageIntegrationKey,
+  type PageIntegrationConfig,
+} from "@/config/env";
 export {
   apiClient,
   onUnauthorized,

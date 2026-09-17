@@ -20,6 +20,8 @@ export type RequestOptions = Omit<RequestInit, "body"> & {
   json?: unknown;
   body?: BodyInit | null;
   skipAuthRefresh?: boolean;
+  pageKey?: string;
+  useApi?: boolean;
 };
 
 export type HttpMethod =

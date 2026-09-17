@@ -1,4 +1,5 @@
 import { API_BASE_URL, IS_API_ENABLED, IS_MOCK_MODE } from "@/config/env";
+import { shouldEndpointUseApi } from "@/config/page-integration";
 import { handleMockRequest } from "@/lib/mock";
 import { ApiClientError, createApiErrorFromResponse, normalizeApiError } from "./api-error";
 import type { HttpMethod, QueryParams, RequestOptions } from "./types";
@@ -157,13 +158,20 @@ async function request<T>(
   endpoint: string,
   options: RequestOptions & { method?: HttpMethod } = {},
 ): Promise<T> {
-  // 1. In Mock Mode: route immediately to local mock handler without network access
-  if (IS_MOCK_MODE) {
+  const shouldUseApi = shouldEndpointUseApi(
+    endpoint,
+    options.pageKey,
+    options.useApi,
+    options.params,
+  );
+
+  // 1. In Mock Mode: route immediately to local mock handler unless this page/endpoint is set to use real API
+  if (IS_MOCK_MODE && !shouldUseApi) {
     return handleMockRequest<T>(endpoint, options);
   }
 
-  // 2. If API calls are completely disabled
-  if (!IS_API_ENABLED) {
+  // 2. If API calls are completely disabled and not enabled for this page
+  if (!IS_API_ENABLED && !shouldUseApi) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(
         `[API Disabled] Request to "${endpoint}" blocked because API is disabled.`,
