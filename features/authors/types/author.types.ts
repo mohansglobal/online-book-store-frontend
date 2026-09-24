@@ -7,9 +7,22 @@ export type Author = {
   slug: string;
   bio?: string;
   photo?: string;
+  birthDate?: string;
+  deathDate?: string;
   isActive?: boolean;
+  isDel?: boolean;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type CreateAuthorInput = {
+  name: string;
+  nameBn?: string;
+  bio?: string;
+  photo?: string;
+  birthDate?: string;
+  deathDate?: string;
+  isActive?: boolean;
 };
 
 export type AuthorPaginationMeta = {
@@ -30,6 +43,37 @@ export type SingleAuthorResponse = {
   success: boolean;
   message: string;
   data: Author;
+};
+
+export type CreateAuthorResponse = {
+  success: boolean;
+  message: string;
+  data: Author;
+};
+
+// Partial author update payload matching PATCH /api/v1/authors/:id
+export type UpdateAuthorInput = {
+  name?: string;
+  nameBn?: string;
+  bio?: string;
+  photo?: string;
+  birthDate?: string;
+  deathDate?: string;
+  isActive?: boolean;
+};
+
+// Author update response matching backend standard API envelope
+export type UpdateAuthorResponse = {
+  success: boolean;
+  message: string;
+  data: Author;
+};
+
+// Author soft delete response matching DELETE /api/v1/authors/:id
+export type DeleteAuthorResponse = {
+  success: boolean;
+  message: string;
+  data?: Author;
 };
 
 export type GetAuthorsParams = {

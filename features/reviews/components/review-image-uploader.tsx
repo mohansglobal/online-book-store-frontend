@@ -21,7 +21,6 @@ export function ReviewImageUploader({
   disabled = false,
 }: ReviewImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;

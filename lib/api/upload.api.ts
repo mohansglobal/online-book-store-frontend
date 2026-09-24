@@ -31,10 +31,14 @@ export async function uploadSingleImage(
 ): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("coverImage", file);
+  formData.append("image", file);
+  formData.append("photo", file);
+  formData.append("file", file);
   formData.append("folder", folder);
 
   return apiClient.post<UploadResponse>("/upload", undefined, {
     body: formData,
+    useApi: true,
     signal: options?.signal,
   });
 }
@@ -49,12 +53,14 @@ export async function uploadMultipleImages(
 
   files.forEach((file) => {
     formData.append("images", file);
+    formData.append("files", file);
   });
 
   formData.append("folder", folder);
 
   return apiClient.post<UploadResponse>("/upload", undefined, {
     body: formData,
+    useApi: true,
     signal: options?.signal,
   });
 }
@@ -67,6 +73,7 @@ export async function deleteUploadedImage(
   return apiClient.delete<{ success: boolean; message: string }>(
     `/upload/${encodeURIComponent(publicId)}`,
     {
+      useApi: true,
       signal: options?.signal,
     },
   );

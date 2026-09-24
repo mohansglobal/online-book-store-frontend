@@ -7,8 +7,9 @@ export default async function SellerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireRole("SELLER", "/dashboard");
+  await requireRole(["SELLER", "ADMIN"], "/dashboard");
 
   return <>{children}</>;
 }
+
 

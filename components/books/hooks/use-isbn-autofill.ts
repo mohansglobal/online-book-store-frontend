@@ -19,7 +19,6 @@ export interface AutofillCallbacks {
   setSearchTag: (v: string) => void;
   setLanguage: (v: string) => void;
   setCoverPreview: (v: string | null) => void;
-  setExtraPreviews: (v: string[]) => void;
   setMrp?: (v: string) => void;
 }
 
@@ -102,12 +101,6 @@ export function useIsbnAutofill(isbn: string, callbacks: AutofillCallbacks) {
 
       if (canonicalBook.coverImage) {
         callbacks.setCoverPreview(resolveCoverUrl(canonicalBook.coverImage));
-      }
-
-      if (canonicalBook.images && canonicalBook.images.length > 0) {
-        callbacks.setExtraPreviews(
-          canonicalBook.images.map((img) => resolveCoverUrl(img)).slice(0, 3),
-        );
       }
 
       // Prefill canonical MRP / price

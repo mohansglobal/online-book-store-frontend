@@ -75,12 +75,10 @@ export async function getBookReviews(
   bookId: string,
   options?: { signal?: AbortSignal },
 ): Promise<BookReviewsResponse> {
-  return apiClient.get<BookReviewsResponse>(
-    `/reviews?bookId=${encodeURIComponent(bookId)}`,
-    {
-      signal: options?.signal,
-    },
-  );
+  return apiClient.get<BookReviewsResponse>("/reviews", {
+    params: { bookId },
+    signal: options?.signal,
+  });
 }
 
 /**

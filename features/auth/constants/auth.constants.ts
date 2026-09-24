@@ -5,23 +5,24 @@ import type { UserRole } from "../types/auth.types";
 export const USER_ROLES = {
   BUYER: "BUYER",
   SELLER: "SELLER",
+  ADMIN: "ADMIN",
 } as const satisfies Record<string, UserRole>;
 
 export const SELLER_ROUTES = [
   "/dashboard",
   "/inventory",
   "/add-book",
+  "/add-author",
   "/manage-discounts",
 ] as const;
 
-export const BUYER_ONLY_ROUTES = [
-  "/checkout",
-  "/orders",
-] as const;
+export const BUYER_ONLY_ROUTES = [] as const;
 
 export const AUTHENTICATED_ROUTES = [
   "/profile",
   "/account",
+  "/checkout",
+  "/orders",
 ] as const;
 
 export const GUEST_ONLY_ROUTES = [
@@ -49,4 +50,6 @@ export const AUTH_COOKIE_NAMES = [
 export const DEFAULT_ROLE_HOME: Record<UserRole, string> = {
   [USER_ROLES.BUYER]: "/",
   [USER_ROLES.SELLER]: "/dashboard",
+  [USER_ROLES.ADMIN]: "/dashboard",
 };
+

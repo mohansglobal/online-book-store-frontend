@@ -107,12 +107,19 @@ describe("apiClient", () => {
       },
     }));
 
+    vi.doMock("@/config/page-integration", () => ({
+      PAGE_INTEGRATION_FLAGS: {},
+      isPageApiEnabled: () => false,
+      getEndpointPageKey: () => null,
+      shouldEndpointUseApi: () => false,
+    }));
+
     const mockFetch = vi.fn();
     global.fetch = mockFetch;
 
     const { apiClient } = await import("./api-client");
 
-    const result = await apiClient.get<{ success: boolean; data: unknown[] }>("/books");
+    const result = await apiClient.get<{ success: boolean; data: unknown[] }>("/addresses");
 
     expect(mockFetch).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
@@ -133,6 +140,13 @@ describe("apiClient", () => {
         isMockMode: true,
         dataSource: "mock",
       },
+    }));
+
+    vi.doMock("@/config/page-integration", () => ({
+      PAGE_INTEGRATION_FLAGS: { authors: true },
+      isPageApiEnabled: (key: string) => key === "authors",
+      getEndpointPageKey: (ep: string) => (ep.includes("authors") ? "authors" : null),
+      shouldEndpointUseApi: () => true,
     }));
 
     const mockFetch = vi.fn().mockResolvedValue({
@@ -167,6 +181,13 @@ describe("apiClient", () => {
       },
     }));
 
+    vi.doMock("@/config/page-integration", () => ({
+      PAGE_INTEGRATION_FLAGS: {},
+      isPageApiEnabled: () => false,
+      getEndpointPageKey: () => null,
+      shouldEndpointUseApi: () => false,
+    }));
+
     const mockFetch = vi.fn();
     global.fetch = mockFetch;
 
@@ -175,7 +196,7 @@ describe("apiClient", () => {
 
     let thrownError: unknown;
     try {
-      await apiClient.get("/books");
+      await apiClient.get("/addresses");
     } catch (err) {
       thrownError = err;
     }

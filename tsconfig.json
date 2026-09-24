@@ -20,15 +20,29 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "test-setup.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "features/**/*.ts",
+    "features/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "config/**/*.ts",
+    "types/**/*.ts",
+    "providers/**/*.ts",
+    "providers/**/*.tsx",
+    "hooks/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".next", "dist"]
 }

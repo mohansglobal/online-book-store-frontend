@@ -1,25 +1,12 @@
 // Server-side authentication and role guard utilities for Next.js App Router
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { API_BASE_URL, IS_API_ENABLED, IS_MOCK_MODE, isPageApiEnabled } from "@/config/env";
-import { MOCK_USER } from "@/lib/mock";
+import { API_BASE_URL } from "@/config/env";
 import { DEFAULT_ROLE_HOME } from "../constants/auth.constants";
 import type { CurrentUserResponse, User, UserRole } from "../types/auth.types";
 
 
 export async function getServerCurrentUser(): Promise<User | null> {
-  const isAuthRealApi = isPageApiEnabled("auth");
-
-  // In mock mode (only when auth API integration is not enabled)
-  if (!isAuthRealApi && IS_MOCK_MODE) {
-    return MOCK_USER;
-  }
-
-  if (!isAuthRealApi && !IS_API_ENABLED) {
-    return null;
-  }
-
-
   try {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
@@ -28,13 +15,47 @@ export async function getServerCurrentUser(): Promise<User | null> {
       return null;
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    
+
+
+    let response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
         Cookie: cookieHeader,
         Accept: "application/json",
       },
       cache: "no-store",
     });
+
+    // If access token is expired on server request, attempt refresh with refreshToken cookie
+    if (response.status === 401 && cookieHeader.includes("refreshToken")) {
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+          method: "POST",
+          headers: {
+            Cookie: cookieHeader,
+            Accept: "application/json",
+          },
+          cache: "no-store",
+        });
+
+        if (refreshResponse.ok) {
+          const setCookieHeaders = refreshResponse.headers.getSetCookie?.() || [];
+          const refreshedCookie = setCookieHeaders.length > 0
+            ? setCookieHeaders.map((c) => c.split(";")[0]).join("; ")
+            : cookieHeader;
+
+          response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              Cookie: refreshedCookie,
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          });
+        }
+      } catch {
+        // Refresh failed, continue to fallback
+      }
+    }
 
     if (!response.ok) {
       return null;

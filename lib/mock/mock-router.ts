@@ -37,7 +37,65 @@ export async function handleMockRequest<T>(
   const json = options.json as any;
 
   // 1. Listings & Books
-  if (pathParts[0] === "listings" || pathParts[0] === "books") {
+  if (pathParts[0] === "listings" || pathParts[0] === "books" || pathParts[0] === "book-listings") {
+    // PATCH /listings/:id/discount or /book-listings/:id/discount
+    if (method === "PATCH" && pathParts[2] === "discount") {
+      const identifier = decodeURIComponent(pathParts[1]);
+      const book = mockStore.books.find(
+        (b) =>
+          b._id === identifier ||
+          b.slug === identifier ||
+          b.listingId === identifier ||
+          b.bookId === identifier,
+      );
+
+      const existingMrpInPaise = book?.mrpInPaise ?? 100000;
+      const mrp = (typeof json?.mrp === "number" ? json.mrp : undefined) ?? Math.round(existingMrpInPaise / 100);
+      const mrpInPaise = (typeof json?.mrpInPaise === "number" ? json.mrpInPaise : undefined) ?? mrp * 100;
+      let calculatedSellingPriceInPaise = mrpInPaise;
+      let discountPercentage = 0;
+
+      const discountTypeStr = typeof json?.discountType === "string" ? json.discountType.toUpperCase() : "";
+      const discountValNum = typeof json?.discountValue === "number" ? json.discountValue : Number(json?.discountValue) || 0;
+
+      if (discountTypeStr === "PERCENTAGE") {
+        discountPercentage = discountValNum;
+        const discountPaise = Math.round((mrpInPaise * discountPercentage) / 100);
+        calculatedSellingPriceInPaise = Math.max(0, mrpInPaise - discountPaise);
+      } else if (discountTypeStr === "FLAT") {
+        const flatPaise = discountValNum * 100;
+        calculatedSellingPriceInPaise = Math.max(0, mrpInPaise - flatPaise);
+        discountPercentage = mrpInPaise > 0 ? Math.round((flatPaise / mrpInPaise) * 100) : 0;
+      }
+
+      if (book) {
+        book.mrpInPaise = mrpInPaise;
+        book.sellingPriceInPaise = calculatedSellingPriceInPaise;
+      }
+
+      return {
+        success: true,
+        message: "Listing discount applied and selling price updated successfully",
+        data: {
+          _id: identifier,
+          id: identifier,
+          book: book?._id || identifier,
+          seller: "seller_01",
+          stock: book?.stock ?? 10,
+          isActive: true,
+          listingImages: [],
+          mrpInPaise,
+          sellingPriceInPaise: calculatedSellingPriceInPaise,
+          priceInPaise: calculatedSellingPriceInPaise,
+          mrp,
+          price: Math.round(calculatedSellingPriceInPaise / 100),
+          discountPercentage,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      } as unknown as T;
+    }
+
     // GET /listings/:id or /books/:id
     if (pathParts.length > 1 && pathParts[1] !== "isbn") {
       const identifier = decodeURIComponent(pathParts[1]);
@@ -406,6 +464,164 @@ export async function handleMockRequest<T>(
     };
 
     return { success: true, message: "Summary generated", data: summaryData } as unknown as T;
+  }
+
+  // 11. Image Upload
+  if (pathParts[0] === "upload") {
+    const mockCloudinaryUrl =
+      "https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80";
+    return {
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: mockCloudinaryUrl,
+        urls: [mockCloudinaryUrl],
+        files: [
+          {
+            url: mockCloudinaryUrl,
+            secureUrl: mockCloudinaryUrl,
+            publicId: "mock_author_portrait_123",
+            format: "jpg",
+            width: 800,
+            height: 800,
+            bytes: 54321,
+            originalName: "author-portrait.jpg",
+          },
+        ],
+        count: 1,
+      },
+    } as unknown as T;
+  }
+
+  // 12. Dashboard Daily Orders & 7-Day Growth Analytics
+  if (
+    cleanEndpoint.includes("daily-orders") ||
+    cleanEndpoint.includes("average-daily-orders")
+  ) {
+    return {
+      success: true,
+      statusCode: 200,
+      message: "Average daily orders analytics retrieved successfully",
+      data: {
+        title: "Orders This Week",
+        subtitle: "Average daily orders",
+        periodLabel: "Last 7 Days",
+        main: {
+          averageDailyOrders: 46.5,
+          growthPercentage: 14.5,
+          formattedGrowth: "+14.5%",
+          isGrowthPositive: true,
+          growthBadge: "151%",
+          totalOrders: 326,
+          totalShipments: 412,
+          totalRevenueInRupees: 142500,
+          totalRevenueInPaise: 14250000,
+        },
+        peak: {
+          day: "Sat",
+          date: "2026-09-21",
+          orders: 85,
+          badge: "Peak: Sat (85)",
+        },
+        currentPeriod: {
+          startDate: "2026-09-16",
+          endDate: "2026-09-22",
+          totalOrders: 326,
+          averageDailyOrders: 46.5,
+          totalShipments: 412,
+          totalRevenueInRupees: 142500,
+          totalRevenueInPaise: 14250000,
+          days: [
+            {
+              day: "Mon",
+              dayFull: "Monday",
+              date: "2026-09-16",
+              orders: 32,
+              shipments: 40,
+              revenueInRupees: 12800,
+              revenueInPaise: 1280000,
+              isPeak: false,
+            },
+            {
+              day: "Tue",
+              dayFull: "Tuesday",
+              date: "2026-09-17",
+              orders: 45,
+              shipments: 55,
+              revenueInRupees: 18000,
+              revenueInPaise: 1800000,
+              isPeak: false,
+            },
+            {
+              day: "Wed",
+              dayFull: "Wednesday",
+              date: "2026-09-18",
+              orders: 28,
+              shipments: 34,
+              revenueInRupees: 11200,
+              revenueInPaise: 1120000,
+              isPeak: false,
+            },
+            {
+              day: "Thu",
+              dayFull: "Thursday",
+              date: "2026-09-19",
+              orders: 62,
+              shipments: 78,
+              revenueInRupees: 24800,
+              revenueInPaise: 2480000,
+              isPeak: false,
+            },
+            {
+              day: "Fri",
+              dayFull: "Friday",
+              date: "2026-09-20",
+              orders: 55,
+              shipments: 70,
+              revenueInRupees: 22000,
+              revenueInPaise: 2200000,
+              isPeak: false,
+            },
+            {
+              day: "Sat",
+              dayFull: "Saturday",
+              date: "2026-09-21",
+              orders: 85,
+              shipments: 110,
+              revenueInRupees: 34000,
+              revenueInPaise: 3400000,
+              isPeak: true,
+            },
+            {
+              day: "Sun",
+              dayFull: "Sunday",
+              date: "2026-09-22",
+              orders: 19,
+              shipments: 25,
+              revenueInRupees: 19700,
+              revenueInPaise: 1970000,
+              isPeak: false,
+            },
+          ],
+        },
+        previousPeriod: {
+          startDate: "2026-09-09",
+          endDate: "2026-09-15",
+          totalOrders: 285,
+          averageDailyOrders: 40.7,
+          totalShipments: 360,
+          totalRevenueInRupees: 124000,
+          totalRevenueInPaise: 12400000,
+        },
+        comparison: {
+          differenceInOrders: 41,
+          differenceInDailyAverage: 5.8,
+          growthPercentage: 14.5,
+          isGrowthPositive: true,
+          comparisonText: "14.5% more than previous 7 days",
+        },
+      },
+    } as unknown as T;
   }
 
   // Fallback generic response

@@ -135,7 +135,7 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
               <BookOpen size={18} />
             </span>
 
-            <span>Indo Bangla Books</span>
+            <span>Books</span>
           </Link>
 
           {/* Desktop Navigation */}

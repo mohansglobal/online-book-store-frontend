@@ -13,6 +13,7 @@ import {
     LogOut,
     Package,
     Tag,
+    UserPlus,
     type LucideIcon,
 } from "lucide-react";
 import { useCurrentUser, useLogoutModalStore } from "@/features/auth";
@@ -29,6 +30,7 @@ export type AdminTab =
     | "dashboard"
     | "inventory"
     | "add-book"
+    | "add-author"
     | "discounts";
 
 interface AdminTopNavProps {
@@ -60,6 +62,12 @@ const NAV_ITEMS: readonly AdminNavItem[] = [
         label: "Add Book",
         href: "/add-book",
         icon: BookPlus,
+    },
+    {
+        id: "add-author",
+        label: "Add Author",
+        href: "/add-author",
+        icon: UserPlus,
     },
     {
         id: "discounts",

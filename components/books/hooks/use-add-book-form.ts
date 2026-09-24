@@ -79,7 +79,6 @@ export function useAddBookForm() {
     setSearchTag,
     setLanguage,
     setCoverPreview,
-    setExtraPreviews,
     setMrp,
   });
 

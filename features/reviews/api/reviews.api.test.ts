@@ -98,8 +98,10 @@ describe("Reviews API", () => {
 
     const result = await getBookReviews("book123");
     expect(apiClient.get).toHaveBeenCalledWith(
-      "/reviews?bookId=book123",
-      expect.any(Object),
+       "/reviews",
+       expect.objectContaining({
+         params: { bookId: "book123" },
+       }),
     );
     expect(result).toEqual(mockResponse);
   });

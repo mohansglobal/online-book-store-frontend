@@ -7,5 +7,5 @@ export const authorKeys = {
   list: (params?: GetAuthorsParams) =>
     [...authorKeys.lists(), params ?? {}] as const,
   details: () => [...authorKeys.all, "detail"] as const,
-  detail: (slug: string) => [...authorKeys.details(), slug] as const,
+  detail: (idOrSlug: string) => [...authorKeys.details(), idOrSlug] as const,
 };

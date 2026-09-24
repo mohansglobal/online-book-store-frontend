@@ -170,4 +170,37 @@ export type ToggleListingStatusResponse = {
   };
 };
 
+export type ListingDiscountType = "PERCENTAGE" | "FLAT";
+
+export type ApplyListingDiscountInput = {
+  listingId: string;
+  discountType: ListingDiscountType;
+  discountValue: number;
+  mrp?: number;
+  mrpInPaise?: number;
+};
+
+export type ApplyListingDiscountResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    id?: string;
+    book?: string | ApiBook;
+    seller?: string | ListingSeller;
+    stock?: number;
+    isActive?: boolean;
+    listingImages?: string[];
+    mrpInPaise?: number;
+    sellingPriceInPaise?: number;
+    priceInPaise?: number;
+    mrp?: number;
+    price?: number;
+    discountPercentage?: number;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+};
+
+
 

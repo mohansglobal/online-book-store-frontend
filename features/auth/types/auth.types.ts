@@ -1,6 +1,7 @@
 // auth domain types and role contracts
 
-export type UserRole = "BUYER" | "SELLER";
+export type UserRole = "BUYER" | "SELLER" | "ADMIN";
+
 
 export type User = {
   id: string;
@@ -119,4 +120,44 @@ export type VerifyPhoneOtpResponse = {
   success: boolean;
   message: string;
   data: VerifyPhoneOtpData;
+};
+
+export type ForgotPasswordInput = {
+  identifier: string;
+};
+
+export type ForgotPasswordResponseData = {
+  identifier: string;
+  expiresInSeconds?: number;
+};
+
+export type ForgotPasswordResponse = {
+  success: boolean;
+  message: string;
+  data?: ForgotPasswordResponseData;
+};
+
+export type VerifyResetOtpInput = {
+  identifier: string;
+  otp: string;
+};
+
+export type VerifyResetOtpResponseData = {
+  resetToken: string;
+};
+
+export type VerifyResetOtpResponse = {
+  success: boolean;
+  message: string;
+  data: VerifyResetOtpResponseData;
+};
+
+export type ResetPasswordInput = {
+  resetToken: string;
+  newPassword: string;
+};
+
+export type ResetPasswordResponse = {
+  success: boolean;
+  message: string;
 };

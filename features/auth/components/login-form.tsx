@@ -21,23 +21,31 @@ import { getSafePostLoginRedirect } from "../utils/auth-redirect";
 import { isApiClientError } from "@/lib/api";
 
 type LoginFormProps = {
+  initialMobileNumber?: string;
   onSwitchToRegister: () => void;
+  onForgotPassword?: (mobileNumber?: string) => void;
 };
 
-export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({
+  initialMobileNumber = "",
+  onSwitchToRegister,
+  onForgotPassword,
+}: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const cleanInitialPhone = initialMobileNumber.replace(/^\+91/, "");
 
   const {
     register,
     handleSubmit,
     setError,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      mobileNumber: "",
+      mobileNumber: cleanInitialPhone,
       password: "",
     },
   });
@@ -114,7 +122,8 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             type="button"
             variant="link"
             size="sm"
-            className="h-auto p-0 text-xs font-medium text-accent hover:text-accent-hover hover:underline"
+            onClick={() => onForgotPassword?.(getValues("mobileNumber"))}
+            className="h-auto p-0 text-xs font-medium text-accent hover:text-accent-hover hover:underline cursor-pointer"
           >
             Forgot password?
           </Button>

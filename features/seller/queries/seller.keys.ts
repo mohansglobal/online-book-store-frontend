@@ -1,0 +1,31 @@
+// TanStack Query cache key factory for seller features
+import type {
+  CategoryBreakdownAnalyticsParams,
+  DailyOrdersAnalyticsParams,
+  SellerRecentOrdersParams,
+  SellerRevenueAnalyticsParams,
+  TopAuthorsAnalyticsParams,
+} from "../types/seller.types";
+
+export const sellerKeys = {
+  all: ["seller"] as const,
+
+  dashboard: () => [...sellerKeys.all, "dashboard"] as const,
+
+  recentOrders: (params?: SellerRecentOrdersParams) =>
+    [...sellerKeys.dashboard(), "recent-orders", params ?? {}] as const,
+
+  revenueAnalytics: (params?: SellerRevenueAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "revenue-analytics", params ?? {}] as const,
+
+  dailyOrders: (params?: DailyOrdersAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "daily-orders", params ?? {}] as const,
+
+  categoryBreakdown: (params?: CategoryBreakdownAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "category-breakdown", params ?? {}] as const,
+
+  topAuthors: (params?: TopAuthorsAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "top-authors", params ?? {}] as const,
+};
+
+

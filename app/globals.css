@@ -143,11 +143,16 @@ body {
 
 @utility custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklab, var(--color-border) 90%, black 10%) transparent;
+  scrollbar-color: color-mix(
+      in oklab,
+      var(--color-border) 75%,
+      transparent
+    )
+    transparent;
 
   &::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
   }
 
   &::-webkit-scrollbar-track {
@@ -155,16 +160,34 @@ body {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: color-mix(in oklab, var(--color-border) 90%, black 10%);
+    background: color-mix(
+      in oklab,
+      var(--color-border) 75%,
+      transparent
+    );
     border-radius: 9999px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: var(--color-accent);
+    background: color-mix(
+      in oklab,
+      var(--color-accent) 70%,
+      var(--color-border)
+    );
   }
 }
 
-/* Global sleek custom scrollbar */
+/* Global scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(
+      in oklab,
+      var(--color-border) 65%,
+      transparent
+    )
+    transparent;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -175,14 +198,23 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--border-default) 70%, transparent);
+  background: color-mix(
+    in oklab,
+    var(--color-border) 65%,
+    transparent
+  );
   border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
+  background: color-mix(
+    in oklab,
+    var(--color-accent) 65%,
+    var(--color-border)
+  );
 }
-
 
 @keyframes marquee {
   to {

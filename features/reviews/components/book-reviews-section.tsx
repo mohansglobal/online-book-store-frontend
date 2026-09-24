@@ -27,19 +27,31 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
   const fallbackSellerId = book.seller?._id || book.createdBy;
 
   const { data: reviewsResponse, isLoading } = useBookReviews(bookId);
+    console.log('')
+  console.log('reviewsResponse' ,reviewsResponse )
+
+
   const reviews = extractReviewsList(reviewsResponse?.data);
+  
+  console.log('please check===>' , reviews)
 
-  const isBuyer = currentUser?.role === "BUYER";
 
-  // Review eligibility query - only for logged-in buyers
+
+  const isLoggedInUser = Boolean(currentUser);
+
+  // Review eligibility query - for logged-in customers
   const { data: eligibilityResponse } = useReviewEligibility(bookId, {
-    enabled: Boolean(currentUser && isBuyer),
+    enabled: isLoggedInUser,
   });
+
+  console.log('worker====>' ,eligibilityResponse)
+
+
   const eligibility = eligibilityResponse?.data;
 
-  const canReview = Boolean(isBuyer && eligibility?.canReview);
-  const hasPurchased = Boolean(isBuyer && eligibility?.hasPurchased);
-  const hasDelivered = Boolean(isBuyer && eligibility?.hasDelivered);
+  const canReview = Boolean(isLoggedInUser && eligibility?.canReview);
+  const hasPurchased = Boolean(isLoggedInUser && eligibility?.hasPurchased);
+  const hasDelivered = Boolean(isLoggedInUser && eligibility?.hasDelivered);
   const existingReview = eligibility?.existingReview;
   const primaryEligibleSeller = eligibility?.eligibleSellers?.[0];
 
@@ -73,7 +85,7 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
       redirectToLogin();
       return;
     }
-    if (!isBuyer || !canReview) {
+    if (!isLoggedInUser || !canReview) {
       return;
     }
     if (initialRating) {
@@ -124,7 +136,7 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
                     Have you read or purchased this book? Share your thoughts and help other readers make a choice!
                   </p>
                 </div>
-                {!isWritingReview && isBuyer && canReview && (
+                {!isWritingReview && isLoggedInUser && canReview && (
                   <Button
                     type="button"
                     variant="outline"
@@ -160,7 +172,7 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
             existingReview={existingReview}
             primaryEligibleSeller={primaryEligibleSeller}
             isLoggedIn={Boolean(currentUser)}
-            isBuyer={Boolean(isBuyer)}
+            isBuyer={isLoggedInUser}
             onOpenReviewForm={handleOpenReviewForm}
             onCloseReviewForm={() => setIsWritingReview(false)}
           />

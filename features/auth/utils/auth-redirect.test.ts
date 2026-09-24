@@ -37,7 +37,7 @@ describe("auth-redirect utils", () => {
     it("should validate buyer vs seller allowed routes", () => {
       expect(isRouteAllowedForRole("/dashboard", USER_ROLES.BUYER)).toBe(false);
       expect(isRouteAllowedForRole("/checkout", USER_ROLES.BUYER)).toBe(true);
-      expect(isRouteAllowedForRole("/checkout", USER_ROLES.SELLER)).toBe(false);
+      expect(isRouteAllowedForRole("/checkout", USER_ROLES.SELLER)).toBe(true);
       expect(isRouteAllowedForRole("/dashboard", USER_ROLES.SELLER)).toBe(true);
     });
   });
@@ -49,6 +49,9 @@ describe("auth-redirect utils", () => {
       ).toBe("/");
       expect(
         getSafePostLoginRedirect({ redirect: "/checkout?coupon=SAVE10", role: USER_ROLES.BUYER }),
+      ).toBe("/checkout?coupon=SAVE10");
+      expect(
+        getSafePostLoginRedirect({ redirect: "/checkout?coupon=SAVE10", role: USER_ROLES.SELLER }),
       ).toBe("/checkout?coupon=SAVE10");
       expect(
         getSafePostLoginRedirect({ redirect: "/dashboard", role: USER_ROLES.SELLER }),

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ReviewRatingStars } from "./review-rating-stars";
 import { ReviewForm } from "./review-form";
 import ratingIllustration from "@/assets/rating.png";
-import type { EligibleSeller, Review } from "../types/review.types";
+import type { EligibleSeller, Review } from "../types/review.types"; 
 import type {
   RatingBreakdown,
   RatingPercentages,

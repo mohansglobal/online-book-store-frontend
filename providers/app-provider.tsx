@@ -61,9 +61,14 @@ export function AppProvider({
 
     // clear auth query cache and signal session expiration on global 401 unauthorized
     const unsubscribe = onUnauthorized(() => {
+      const existingUser = queryClient.getQueryData(authKeys.me());
+
       queryClient.setQueryData(authKeys.me(), null);
       queryClient.removeQueries({ queryKey: authKeys.all });
-      useAuthSessionStore.getState().setSessionExpired(true);
+
+      if (existingUser) {
+        useAuthSessionStore.getState().setSessionExpired(true);
+      }
     });
 
     return () => {

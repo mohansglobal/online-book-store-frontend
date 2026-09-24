@@ -1,6 +1,6 @@
 // Book domain types and contracts matching backend /api/v1/listings & /api/v1/books
 import type { StaticImageData } from "next/image";
-import type { ApiListing, ListingSeller } from "./listing.types";
+import type { ListingSeller } from "./listing.types";
 
 export const FALLBACK_BOOK_COVER =
   "https://i.pinimg.com/736x/57/69/7a/57697aeaa7fa70578f344fb6ee4aa1d9.jpg";

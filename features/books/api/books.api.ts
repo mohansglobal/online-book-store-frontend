@@ -11,6 +11,8 @@ import {
 } from "../types/book.types";
 
 import type {
+  ApplyListingDiscountInput,
+  ApplyListingDiscountResponse,
   GetSellerListingsParams,
   SellerListingsResponse,
   ToggleListingStatusInput,
@@ -122,5 +124,29 @@ export async function toggleListingStatus(
     },
   );
 }
+
+// Applies discount and updates selling price via PATCH /api/v1/listings/:id/discount
+export async function applyListingDiscount(
+  input: ApplyListingDiscountInput,
+  options?: { signal?: AbortSignal },
+): Promise<ApplyListingDiscountResponse> {
+  const listingId = input.listingId;
+
+  const payload = {
+    discountType: input.discountType,
+    discountValue: input.discountValue,
+    ...(input.mrp !== undefined ? { mrp: input.mrp } : {}),
+    ...(input.mrpInPaise !== undefined ? { mrpInPaise: input.mrpInPaise } : {}),
+  };
+
+  return apiClient.patch<ApplyListingDiscountResponse>(
+    `/listings/${encodeURIComponent(listingId)}/discount`,
+    payload,
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
 
 

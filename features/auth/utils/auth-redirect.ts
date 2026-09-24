@@ -123,6 +123,11 @@ export function isRouteAllowedForRole(
     return true;
   }
 
+  // Admin user
+  if (role === USER_ROLES.ADMIN) {
+    return true;
+  }
+
   return isPublicRoute;
 }
 

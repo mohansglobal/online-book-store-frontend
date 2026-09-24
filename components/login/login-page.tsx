@@ -2,9 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { LoginForm, OtpVerificationForm, RegisterForm } from "@/features/auth";
+import {
+  ForgotPasswordFlow,
+  LoginForm,
+  OtpVerificationForm,
+  RegisterForm,
+} from "@/features/auth";
 
-type AuthMode = "login" | "register" | "otp";
+type AuthMode = "login" | "register" | "otp" | "forgot-password";
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -47,6 +52,11 @@ export default function LoginPage() {
         return {
           title: "Verify phone number",
           description: "Enter the 6-digit verification code sent to your device",
+        };
+      case "forgot-password":
+        return {
+          title: "Reset password",
+          description: "Recover and update your account password with SMS verification",
         };
     }
   };
@@ -126,7 +136,35 @@ export default function LoginPage() {
                 exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
                 transition={{ duration: 0.25 }}
               >
-                <LoginForm onSwitchToRegister={() => setAuthMode("register")} />
+                <LoginForm
+                  initialMobileNumber={pendingMobileNumber}
+                  onSwitchToRegister={() => setAuthMode("register")}
+                  onForgotPassword={(mobileNumber) => {
+                    if (mobileNumber) {
+                      setPendingMobileNumber(mobileNumber);
+                    }
+                    setAuthMode("forgot-password");
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {authMode === "forgot-password" && (
+              <motion.div
+                key="forgot-password-content"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
+                transition={{ duration: 0.25 }}
+              >
+                <ForgotPasswordFlow
+                  initialIdentifier={pendingMobileNumber}
+                  onSuccess={(verifiedPhone) => {
+                    setPendingMobileNumber(verifiedPhone);
+                    setAuthMode("login");
+                  }}
+                  onCancel={() => setAuthMode("login")}
+                />
               </motion.div>
             )}
 

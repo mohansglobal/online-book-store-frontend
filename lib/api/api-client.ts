@@ -67,7 +67,7 @@ function buildQueryString(params?: QueryParams): string {
 // resolve full request url from endpoint and base url
 function resolveUrl(endpoint: string, baseUrl?: string, params?: QueryParams): string {
   const queryString = buildQueryString(params);
-
+  
   // if endpoint is already an absolute url
   if (/^https?:\/\//i.test(endpoint)) {
     return `${endpoint}${queryString}`;
@@ -82,11 +82,6 @@ function resolveUrl(endpoint: string, baseUrl?: string, params?: QueryParams): s
 
 // deduplicated 401 logout trigger
 async function triggerGlobalLogout(): Promise<void> {
-  if (!IS_API_ENABLED) {
-    notifyUnauthorized();
-    return;
-  }
-
   if (logoutPromise) {
     return logoutPromise;
   }
@@ -115,10 +110,6 @@ async function triggerGlobalLogout(): Promise<void> {
 
 // deduplicated access token refresh via http-only cookies
 async function refreshAccessToken(): Promise<boolean> {
-  if (!IS_API_ENABLED) {
-    return false;
-  }
-
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -158,30 +149,39 @@ async function request<T>(
   endpoint: string,
   options: RequestOptions & { method?: HttpMethod } = {},
 ): Promise<T> {
-  const shouldUseApi = shouldEndpointUseApi(
-    endpoint,
-    options.pageKey,
-    options.useApi,
-    options.params,
-  );
+  const cleanEndpoint = endpoint.replace(/^\/+/, "").toLowerCase();
+  const isAuthLevelApi =
+    cleanEndpoint.startsWith("auth/") ||
+    cleanEndpoint === "auth" ||
+    endpoint.includes("/auth/");
 
-  // 1. In Mock Mode: route immediately to local mock handler unless this page/endpoint is set to use real API
-  if (IS_MOCK_MODE && !shouldUseApi) {
-    return handleMockRequest<T>(endpoint, options);
-  }
+  // Auth level APIs MUST NEVER be impacted by IS_MOCK_MODE or IS_API_ENABLED
+  if (!isAuthLevelApi) {
+    const shouldUseApi = shouldEndpointUseApi(
+      endpoint,
+      options.pageKey,
+      options.useApi,
+      options.params,
+    );
 
-  // 2. If API calls are completely disabled and not enabled for this page
-  if (!IS_API_ENABLED && !shouldUseApi) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        `[API Disabled] Request to "${endpoint}" blocked because API is disabled.`,
-      );
+    // 1. In Mock Mode: route immediately to local mock handler unless this page/endpoint is set to use real API
+    if (IS_MOCK_MODE && !shouldUseApi) {
+      return handleMockRequest<T>(endpoint, options);
     }
-    throw new ApiClientError({
-      status: 0,
-      code: "API_DISABLED",
-      message: `Request to "${endpoint}" blocked because API is disabled`,
-    });
+
+    // 2. If API calls are completely disabled and not enabled for this page
+    if (!IS_API_ENABLED && !shouldUseApi) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          `[API Disabled] Request to "${endpoint}" blocked because API is disabled.`,
+        );
+      }
+      throw new ApiClientError({
+        status: 0,
+        code: "API_DISABLED",
+        message: `Request to "${endpoint}" blocked because API is disabled`,
+      });
+    }
   }
 
   // 3. In API Connected Mode: execute real HTTP fetch to Express backend

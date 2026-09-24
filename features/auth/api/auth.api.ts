@@ -13,6 +13,12 @@ import type {
   UploadProfileImageResponse,
   VerifyPhoneOtpInput,
   VerifyPhoneOtpResponse,
+  ForgotPasswordInput,
+  ForgotPasswordResponse,
+  VerifyResetOtpInput,
+  VerifyResetOtpResponse,
+  ResetPasswordInput,
+  ResetPasswordResponse,
 } from "../types/auth.types";
 
 // register new user account
@@ -56,6 +62,7 @@ export async function getCurrentUser(options?: {
     if (isApiClientError(err) && (err.status === 401 || err.status === 403)) {
       return null;
     }
+
     throw err;
   }
 }
@@ -87,4 +94,54 @@ export async function verifyPhoneOtp(input: VerifyPhoneOtpInput): Promise<Verify
     skipAuthRefresh: true,
   });
 }
+
+// 1. send password reset OTP via email or SMS
+export async function forgotPassword(
+  input: ForgotPasswordInput,
+): Promise<ForgotPasswordResponse> {
+  return apiClient.post<ForgotPasswordResponse>("/auth/forgot-password", input, {
+    skipAuthRefresh: true,
+  });
+}
+
+// 2. verify password reset OTP and obtain secure 15-min resetToken
+export async function verifyResetOtp(
+  input: VerifyResetOtpInput,
+): Promise<VerifyResetOtpResponse> {
+  return apiClient.post<VerifyResetOtpResponse>(
+    "/auth/password-reset/verify-otp",
+    input,
+    {
+      skipAuthRefresh: true,
+    },
+  );
+}
+
+// 3. set new password using verified resetToken
+export async function resetPassword(
+  input: ResetPasswordInput,
+): Promise<ResetPasswordResponse> {
+  try {
+    return await apiClient.post<ResetPasswordResponse>(
+      "/auth/password-reset",
+      input,
+      {
+        skipAuthRefresh: true,
+      },
+    );
+  } catch (err: unknown) {
+    if (isApiClientError(err) && err.status === 404) {
+      return apiClient.post<ResetPasswordResponse>(
+        "/auth/reset-password",
+        input,
+        {
+          skipAuthRefresh: true,
+        },
+      );
+    }
+
+    throw err;
+  }
+}
+
 

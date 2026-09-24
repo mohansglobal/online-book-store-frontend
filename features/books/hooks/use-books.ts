@@ -11,10 +11,7 @@ import {
   createBookListing,
   getBookByIdOrSlug,
   getBooks,
-  getMyBookListings,
   lookupBookByIsbn,
-  toggleListingStatus,
-  updateListingStock,
 } from "../api/books.api";
 import { bookKeys } from "../queries/book.keys";
 import type {
@@ -22,15 +19,10 @@ import type {
   CreateBookListingResponse,
   GetBooksParams,
 } from "../types/book.types";
-import type {
-  GetSellerListingsParams,
-  SellerListingsResponse,
-  ToggleListingStatusInput,
-  ToggleListingStatusResponse,
-  UpdateStockInput,
-  UpdateStockResponse,
-} from "../types/listing.types";
 import type { ApiClientError } from "@/lib/api";
+
+// Re-export seller listing and discount mutation hooks
+export * from "./use-listing-mutations";
 
 // Hook to fetch paginated/filtered books
 export function useBooks(params?: GetBooksParams) {
@@ -98,184 +90,5 @@ export function useCreateBookListingMutation(
   });
 }
 
-// Hook to fetch seller's own listings
-export function useMyBookListings(params?: GetSellerListingsParams) {
-  return useQuery({
-    queryKey: bookKeys.myListings(params),
-    queryFn: ({ signal }) => getMyBookListings(params, { signal }),
-  });
-}
-
-type MutationContext = {
-  previousSnapshots: [readonly unknown[], SellerListingsResponse | undefined][];
-};
-
-// Hook to update a listing's stock with optimistic updates
-export function useUpdateListingStockMutation(
-  options?: Omit<
-    UseMutationOptions<UpdateStockResponse, ApiClientError, UpdateStockInput, MutationContext>,
-    "mutationFn"
-  >,
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation<UpdateStockResponse, ApiClientError, UpdateStockInput, MutationContext>({
-    mutationFn: (input: UpdateStockInput) => updateListingStock(input),
-
-    onMutate: async (variables) => {
-      // Cancel outgoing refetches so they don't overwrite optimistic update
-      await queryClient.cancelQueries({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      // Snapshot previous listings data for rollback
-      const previousSnapshots = queryClient.getQueriesData<SellerListingsResponse>({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      // Optimistically update stock across active my-listings queries
-      queryClient.setQueriesData<SellerListingsResponse>(
-        { queryKey: bookKeys.myListingsAll() },
-        (old) => {
-          if (!old || !Array.isArray(old.data)) return old;
-
-          const updatedData = old.data.map((item) => {
-            if (item._id !== variables.listingId) return item;
-
-            const currentStock = item.stock ?? 0;
-            let newStock = currentStock;
-
-            if (variables.operation === "increase") {
-              newStock = currentStock + variables.quantity;
-            } else if (variables.operation === "decrease") {
-              newStock = Math.max(0, currentStock - variables.quantity);
-            } else if (variables.operation === "set") {
-              newStock = variables.quantity;
-            }
-
-            return {
-              ...item,
-              stock: newStock,
-            };
-          });
-
-          return {
-            ...old,
-            data: updatedData,
-          };
-        },
-      );
-
-      return { previousSnapshots };
-    },
-
-    onError: (...args) => {
-      const [, , context] = args;
-      // Rollback to previous state on error
-      if (context?.previousSnapshots) {
-        for (const [queryKey, data] of context.previousSnapshots) {
-          queryClient.setQueryData(queryKey, data);
-        }
-      }
-
-      options?.onError?.(...args);
-    },
-
-    onSettled: (...args) => {
-      // Invalidate relevant queries to ensure data consistency
-      queryClient.invalidateQueries({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: bookKeys.lists(),
-      });
-
-      options?.onSettled?.(...args);
-    },
-
-    ...options,
-  });
-}
-
-// Hook to toggle or set a listing's active status with optimistic updates
-export function useToggleListingStatusMutation(
-  options?: Omit<
-    UseMutationOptions<ToggleListingStatusResponse, ApiClientError, ToggleListingStatusInput, MutationContext>,
-    "mutationFn"
-  >,
-) {
-  const queryClient = useQueryClient();
-
-  return useMutation<ToggleListingStatusResponse, ApiClientError, ToggleListingStatusInput, MutationContext>({
-    mutationFn: (input: ToggleListingStatusInput) => toggleListingStatus(input),
-
-    onMutate: async (variables) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      // Snapshot previous data for rollback
-      const previousSnapshots = queryClient.getQueriesData<SellerListingsResponse>({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      // Optimistically update isActive across active my-listings queries
-      queryClient.setQueriesData<SellerListingsResponse>(
-        { queryKey: bookKeys.myListingsAll() },
-        (old) => {
-          if (!old || !Array.isArray(old.data)) return old;
-
-          const updatedData = old.data.map((item) => {
-            if (item._id !== variables.listingId) return item;
-
-            const nextActive =
-              variables.isActive !== undefined ? variables.isActive : !item.isActive;
-
-            return {
-              ...item,
-              isActive: nextActive,
-            };
-          });
-
-          return {
-            ...old,
-            data: updatedData,
-          };
-        },
-      );
-
-      return { previousSnapshots };
-    },
-
-    onError: (...args) => {
-      const [, , context] = args;
-      // Rollback on error
-      if (context?.previousSnapshots) {
-        for (const [queryKey, data] of context.previousSnapshots) {
-          queryClient.setQueryData(queryKey, data);
-        }
-      }
-
-      options?.onError?.(...args);
-    },
-
-    onSettled: (...args) => {
-      // Re-sync with backend
-      queryClient.invalidateQueries({
-        queryKey: bookKeys.myListingsAll(),
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: bookKeys.lists(),
-      });
-
-      options?.onSettled?.(...args);
-    },
-
-    ...options,
-  });
-}
 
 
