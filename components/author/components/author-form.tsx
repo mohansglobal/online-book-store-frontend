@@ -2,8 +2,8 @@
 "use client";
 
 import { type FormEvent } from "react";
-import { parseISO } from "date-fns";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { parseSmartDate } from "@/lib/date-utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -171,18 +171,23 @@ export function AuthorForm({
           </div>
         </div>
 
-        {/* Dates Row: Birth Date & Death Date (shadcn UI DatePickers) */}
+        {/* Dates Row: Birth Date & Death Date (Smart DatePickers with typing & copy-paste) */}
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Birth Date */}
           <div className="space-y-1.5">
-            <Label htmlFor="authorBirthDate" className={LABEL_CLASS}>
-              <span>Birth Date</span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="authorBirthDate" className={LABEL_CLASS}>
+                <span>Birth Date</span>
+              </Label>
+              <span className="text-[10px] text-text-muted">
+                Type, paste, or pick
+              </span>
+            </div>
             <DatePicker
               id="authorBirthDate"
               value={birthDate}
               onChange={onBirthDateChange}
-              placeholder="Select birth date"
+              placeholder="e.g. 1861-05-07 or 7 May 1861"
               maxDate={new Date()}
               disabled={isBusy}
             />
@@ -196,15 +201,20 @@ export function AuthorForm({
 
           {/* Death Date */}
           <div className="space-y-1.5">
-            <Label htmlFor="authorDeathDate" className={LABEL_CLASS}>
-              <span>Death Date (Optional)</span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="authorDeathDate" className={LABEL_CLASS}>
+                <span>Death Date (Optional)</span>
+              </Label>
+              <span className="text-[10px] text-text-muted">
+                Type, paste, or pick
+              </span>
+            </div>
             <DatePicker
               id="authorDeathDate"
               value={deathDate}
               onChange={onDeathDateChange}
-              placeholder="Select death date"
-              minDate={birthDate ? parseISO(birthDate) : undefined}
+              placeholder="e.g. 1941-08-07 or 7 Aug 1941"
+              minDate={birthDate ? (parseSmartDate(birthDate) ?? undefined) : undefined}
               maxDate={new Date()}
               disabled={isBusy}
             />

@@ -5,85 +5,117 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import {
+  DEFAULT_PRICE_MAX,
+  DEFAULT_PRICE_MIN,
+  getSliderStep,
+} from "../utils/price-bounds";
 
 export interface PriceFilterSectionProps {
   minPrice?: number;
   maxPrice?: number;
+  minLimit?: number;
+  maxLimit?: number;
+  step?: number;
+  isLoading?: boolean;
   onApplyPrice: (min?: number, max?: number) => void;
   onClearPrice: () => void;
   isOpenDefault?: boolean;
 }
 
-const MAX_SLIDER_LIMIT = 2000;
-const SLIDER_STEP = 25;
-
-const QUICK_PRESETS = [
-  { label: "Under ₹150", min: undefined, max: 150 },
-  { label: "₹150 - ₹300", min: 150, max: 300 },
-  { label: "₹300 - ₹600", min: 300, max: 600 },
-  { label: "₹600+", min: 600, max: undefined },
-];
-
 export function PriceFilterSection({
   minPrice,
   maxPrice,
+  minLimit,
+  maxLimit,
+  step,
   onApplyPrice,
   onClearPrice,
   isOpenDefault = true,
 }: PriceFilterSectionProps) {
   const [isOpen, setIsOpen] = useState(isOpenDefault);
 
+  const effectiveMinLimit = minLimit ?? DEFAULT_PRICE_MIN;
+  const effectiveMaxLimit = maxLimit ?? DEFAULT_PRICE_MAX;
+  const sliderStep = step ?? getSliderStep(effectiveMinLimit, effectiveMaxLimit);
+
   // Slider range values [min, max]
   const [sliderRange, setSliderRange] = useState<[number, number]>([
-    minPrice ?? 0,
-    maxPrice ?? MAX_SLIDER_LIMIT,
+    minPrice ?? effectiveMinLimit,
+    maxPrice ?? effectiveMaxLimit,
   ]);
 
   // Text inputs
-  const [inputMin, setInputMin] = useState(minPrice !== undefined ? String(minPrice) : "");
-  const [inputMax, setInputMax] = useState(maxPrice !== undefined ? String(maxPrice) : "");
+  const [inputMin, setInputMin] = useState(
+    minPrice !== undefined ? String(minPrice) : "",
+  );
+  const [inputMax, setInputMax] = useState(
+    maxPrice !== undefined ? String(maxPrice) : "",
+  );
 
   // Sync state when external props change
   useEffect(() => {
-    const curMin = minPrice ?? 0;
-    const curMax = maxPrice ?? MAX_SLIDER_LIMIT;
+    const curMin = minPrice ?? effectiveMinLimit;
+    const curMax = maxPrice ?? effectiveMaxLimit;
+
     setSliderRange([curMin, curMax]);
     setInputMin(minPrice !== undefined ? String(minPrice) : "");
     setInputMax(maxPrice !== undefined ? String(maxPrice) : "");
-  }, [minPrice, maxPrice]);
+  }, [minPrice, maxPrice, effectiveMinLimit, effectiveMaxLimit]);
 
   const handleSliderChange = (vals: number[]) => {
-    const minVal = vals[0] ?? 0;
-    const maxVal = vals[1] ?? MAX_SLIDER_LIMIT;
+    const minVal = vals[0] ?? effectiveMinLimit;
+    const maxVal = vals[1] ?? effectiveMaxLimit;
+
     setSliderRange([minVal, maxVal]);
-    setInputMin(minVal > 0 ? String(minVal) : "");
-    setInputMax(maxVal < MAX_SLIDER_LIMIT ? String(maxVal) : "");
+
+    const displayMin = minVal > effectiveMinLimit ? String(minVal) : "";
+    const displayMax = maxVal < effectiveMaxLimit ? String(maxVal) : "";
+
+    setInputMin(displayMin);
+    setInputMax(displayMax);
+  };
+
+  const handleSliderCommit = (vals: number[]) => {
+    const rawMin = vals[0] ?? effectiveMinLimit;
+    const rawMax = vals[1] ?? effectiveMaxLimit;
+
+    const sMin = rawMin > effectiveMinLimit ? rawMin : undefined;
+    const sMax = rawMax < effectiveMaxLimit ? rawMax : undefined;
+
+    onApplyPrice(sMin, sMax);
   };
 
   const handleApply = (event?: React.FormEvent) => {
     event?.preventDefault();
-    const parsedMin = inputMin.trim() !== "" ? Number(inputMin) : undefined;
-    const parsedMax = inputMax.trim() !== "" ? Number(inputMax) : undefined;
-    let safeMin = parsedMin !== undefined && !Number.isNaN(parsedMin) ? Math.max(0, parsedMin) : undefined;
-    let safeMax = parsedMax !== undefined && !Number.isNaN(parsedMax) ? Math.max(0, parsedMax) : undefined;
+
+    const trimmedMin = inputMin.trim();
+    const trimmedMax = inputMax.trim();
+
+    const parsedMin = trimmedMin !== "" ? Number(trimmedMin) : undefined;
+    const parsedMax = trimmedMax !== "" ? Number(trimmedMax) : undefined;
+
+    let safeMin =
+      parsedMin !== undefined && !Number.isNaN(parsedMin)
+        ? Math.max(0, parsedMin)
+        : undefined;
+
+    let safeMax =
+      parsedMax !== undefined && !Number.isNaN(parsedMax)
+        ? Math.max(0, parsedMax)
+        : undefined;
 
     // Handle inverted range edge case
     if (safeMin !== undefined && safeMax !== undefined && safeMin > safeMax) {
       const temp = safeMin;
       safeMin = safeMax;
       safeMax = temp;
+
       setInputMin(String(safeMin));
       setInputMax(String(safeMax));
     }
 
     onApplyPrice(safeMin, safeMax);
-  };
-
-  const handlePresetClick = (presetMin?: number, presetMax?: number) => {
-    setInputMin(presetMin !== undefined ? String(presetMin) : "");
-    setInputMax(presetMax !== undefined ? String(presetMax) : "");
-    setSliderRange([presetMin ?? 0, presetMax ?? MAX_SLIDER_LIMIT]);
-    onApplyPrice(presetMin, presetMax);
   };
 
   const hasActivePrice = minPrice !== undefined || maxPrice !== undefined;
@@ -114,45 +146,20 @@ export function PriceFilterSection({
 
       {isOpen && (
         <div className="mt-4 space-y-4">
-          {/* Quick Preset Buttons */}
-          {/* <div className="grid grid-cols-2 gap-1.5">
-            {QUICK_PRESETS.map((preset) => {
-              const isSelected = minPrice === preset.min && maxPrice === preset.max;
-              return (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => handlePresetClick(preset.min, preset.max)}
-                  className={`h-8 rounded-md px-2 text-xs font-medium border transition-colors cursor-pointer ${
-                    isSelected
-                      ? "border-accent bg-accent text-white"
-                      : "border-border/60 bg-[#F7F1E3] text-foreground hover:border-accent/60"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div> */}
-
-          {/* Compact Dual Range Slider */}
+          {/* Dual Range Slider with dynamic book min/max bounds */}
           <div className="pt-2 px-1 space-y-2">
             <Slider
               value={[sliderRange[0], sliderRange[1]]}
-              min={0}
-              max={MAX_SLIDER_LIMIT}
-              step={SLIDER_STEP}
+              min={effectiveMinLimit}
+              max={effectiveMaxLimit}
+              step={sliderStep}
               onValueChange={handleSliderChange}
-              onValueCommit={(vals) => {
-                const sMin = vals[0] > 0 ? vals[0] : undefined;
-                const sMax = vals[1] < MAX_SLIDER_LIMIT ? vals[1] : undefined;
-                onApplyPrice(sMin, sMax);
-              }}
+              onValueCommit={handleSliderCommit}
               className="w-full"
             />
             <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
               <span>₹{sliderRange[0]}</span>
-              <span>₹{sliderRange[1] >= MAX_SLIDER_LIMIT ? `${MAX_SLIDER_LIMIT}+` : sliderRange[1]}</span>
+              <span>₹{sliderRange[1]}</span>
             </div>
           </div>
 
@@ -166,7 +173,7 @@ export function PriceFilterSection({
                 <Input
                   type="number"
                   min="0"
-                  placeholder="Min"
+                  placeholder={`Min (₹${effectiveMinLimit})`}
                   value={inputMin}
                   onChange={(e) => setInputMin(e.target.value)}
                   className="h-8 bg-[#F7F1E3] border-border/70 pl-6 text-xs shadow-none"
@@ -180,7 +187,7 @@ export function PriceFilterSection({
                 <Input
                   type="number"
                   min="0"
-                  placeholder="Max"
+                  placeholder={`Max (₹${effectiveMaxLimit})`}
                   value={inputMax}
                   onChange={(e) => setInputMax(e.target.value)}
                   className="h-8 bg-[#F7F1E3] border-border/70 pl-6 text-xs shadow-none"

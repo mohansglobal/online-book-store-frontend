@@ -12,6 +12,7 @@ import {
   type UpdateAuthorInput,
 } from "@/features/authors";
 import { uploadSingleImage } from "@/lib/api/upload.api";
+import { parseAndFormatDate } from "@/lib/date-utils";
 
 export function useAddAuthorForm() {
   const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
@@ -151,6 +152,14 @@ export function useAddAuthorForm() {
     setFormErrors({});
     setCreatedAuthor(null);
 
+    const normalizedBirth = birthDate.trim()
+      ? parseAndFormatDate(birthDate.trim()) || birthDate.trim()
+      : undefined;
+
+    const normalizedDeath = deathDate.trim()
+      ? parseAndFormatDate(deathDate.trim()) || deathDate.trim()
+      : undefined;
+
     // 1. Edit mode submission
     if (isEditing && editingAuthor) {
       const rawPayload: UpdateAuthorInput = {
@@ -158,8 +167,8 @@ export function useAddAuthorForm() {
         nameBn: nameBn.trim() || undefined,
         bio: bio.trim() || undefined,
         photo: photo.trim() || undefined,
-        birthDate: birthDate || undefined,
-        deathDate: deathDate || undefined,
+        birthDate: normalizedBirth,
+        deathDate: normalizedDeath,
         isActive,
       };
 
@@ -206,8 +215,8 @@ export function useAddAuthorForm() {
       nameBn: nameBn.trim() || undefined,
       bio: bio.trim() || undefined,
       photo: photo.trim() || undefined,
-      birthDate: birthDate || undefined,
-      deathDate: deathDate || undefined,
+      birthDate: normalizedBirth,
+      deathDate: normalizedDeath,
       isActive,
     };
 

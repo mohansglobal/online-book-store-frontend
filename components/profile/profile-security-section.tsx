@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { LockKeyhole, ShieldAlert, KeyRound } from "lucide-react";
+import { LockKeyhole, ShieldAlert, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -26,40 +25,68 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { SectionHeading, SettingsRow, ToggleRow } from "./profile-shared";
+import { SectionHeading, SettingsRow } from "./profile-shared";
+import {
+  useCurrentUser,
+  useChangePasswordMutation,
+  changePasswordSchema,
+  ForgotPasswordFlow,
+} from "@/features/auth";
+import { isApiClientError } from "@/lib/api";
 
 export function ProfileSecuritySection() {
+  const { data: user } = useCurrentUser();
+
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const changePasswordMutation = useChangePasswordMutation();
+  const isUpdatingPassword = changePasswordMutation.isPending;
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("Please fill in all password fields");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+
+    const parseResult = changePasswordSchema.safeParse({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0];
+      toast.error(firstIssue.message);
       return;
     }
 
-    setIsUpdatingPassword(true);
-    setTimeout(() => {
-      setIsUpdatingPassword(false);
+    try {
+      const res = await changePasswordMutation.mutateAsync({
+        currentPassword,
+        newPassword,
+      });
+
+      toast.success(res.message || "Password updated successfully");
       setPasswordDialogOpen(false);
+      setShowForgotPassword(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast.success("Password updated successfully");
-    }, 500);
+    } catch (err: unknown) {
+      if (isApiClientError(err)) {
+        toast.error(err.message || "Failed to update password");
+        return;
+      }
+
+      if (err instanceof Error) {
+        toast.error(err.message);
+        return;
+      }
+
+      toast.error("An unexpected error occurred while updating password");
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -75,99 +102,156 @@ export function ProfileSecuritySection() {
       />
 
       <div className="space-y-4">
-        <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <Dialog
+          open={passwordDialogOpen}
+          onOpenChange={(open) => {
+            setPasswordDialogOpen(open);
+            if (!open) {
+              setShowForgotPassword(false);
+              setCurrentPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+            }
+          }}
+        >
           <SettingsRow
             icon={LockKeyhole}
             title="Password"
-            description="Last changed 3 months ago"
+            description="Manage your account password or reset if forgotten"
             action="Change password"
-            onClick={() => setPasswordDialogOpen(true)}
+            onClick={() => {
+              setShowForgotPassword(false);
+              setPasswordDialogOpen(true);
+            }}
           />
 
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <div className="flex items-center gap-2">
-                <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <KeyRound size={16} />
-                </span>
-                <DialogTitle>Change Password</DialogTitle>
-              </div>
-              <DialogDescription className="text-xs">
-                Enter your current password and a secure new password.
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-[460px]">
+            {showForgotPassword ? (
+              <div className="space-y-4 py-2">
+                <DialogHeader>
+                  <div className="flex items-center gap-2">
+                    <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <KeyRound size={16} />
+                    </span>
+                    <DialogTitle>Reset Password</DialogTitle>
+                  </div>
+                  <DialogDescription className="text-xs">
+                    Receive a verification code to set up a new password.
+                  </DialogDescription>
+                </DialogHeader>
 
-            <form onSubmit={handlePasswordSubmit} className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="curr-pass" className="text-xs">Current password</Label>
-                <Input
-                  id="curr-pass"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
+                <ForgotPasswordFlow
+                  initialIdentifier={user?.email || user?.mobileNumber || ""}
+                  onSuccess={() => {
+                    toast.success("Password reset successfully. You can now use your new password.");
+                    setShowForgotPassword(false);
+                    setPasswordDialogOpen(false);
+                  }}
+                  onCancel={() => setShowForgotPassword(false)}
                 />
               </div>
+            ) : (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-2">
+                    <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <KeyRound size={16} />
+                    </span>
+                    <DialogTitle>Change Password</DialogTitle>
+                  </div>
+                  <DialogDescription className="text-xs">
+                    Enter your current password and choose a secure new password.
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-2">
-                <Label htmlFor="new-pass" className="text-xs">New password</Label>
-                <Input
-                  id="new-pass"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+                <form onSubmit={handlePasswordSubmit} className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="curr-pass" className="text-xs">
+                        Current password
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm-pass" className="text-xs">Confirm new password</Label>
-                <Input
-                  id="confirm-pass"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+                    <Input
+                      id="curr-pass"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      disabled={isUpdatingPassword}
+                      required
+                    />
+                  </div>
 
-              <DialogFooter className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPasswordDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isUpdatingPassword}
-                >
-                  {isUpdatingPassword ? "Updating..." : "Update password"}
-                </Button>
-              </DialogFooter>
-            </form>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-pass" className="text-xs">
+                      New password (min. 8 characters)
+                    </Label>
+                    <Input
+                      id="new-pass"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      disabled={isUpdatingPassword}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-pass" className="text-xs">
+                      Confirm new password
+                    </Label>
+                    <Input
+                      id="confirm-pass"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      disabled={isUpdatingPassword}
+                      required
+                    />
+                  </div>
+
+                  <DialogFooter className="pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPasswordDialogOpen(false)}
+                      disabled={isUpdatingPassword}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={isUpdatingPassword}
+                      className="cursor-pointer"
+                    >
+                      {isUpdatingPassword ? (
+                        <>
+                          <Loader2 size={13} className="mr-1.5 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        "Update password"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </>
+            )}
           </DialogContent>
         </Dialog>
-
-        {/* <div className="overflow-hidden rounded-[22px] border border-border bg-card shadow-xs">
-          <ToggleRow
-            id="two-factor"
-            title="Two-factor authentication (2FA)"
-            description="Add an extra layer of security when logging into your account."
-            checked={twoFactorEnabled}
-            onChange={(checked) => {
-              setTwoFactorEnabled(checked);
-              toast.success(`Two-factor authentication ${checked ? "enabled" : "disabled"}`);
-            }}
-            last
-          />
-        </div> */}
       </div>
 
       <div className="rounded-[22px] border border-destructive/20 bg-destructive/5 p-5 sm:p-6 shadow-xs">
@@ -193,7 +277,7 @@ export function ProfileSecuritySection() {
                 type="button"
                 variant="destructive"
                 size="sm"
-                className="rounded-full text-xs font-medium"
+                className="rounded-full text-xs font-medium cursor-pointer"
               >
                 Delete account
               </Button>
@@ -210,7 +294,7 @@ export function ProfileSecuritySection() {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteAccount}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
                 >
                   Yes, delete my account
                 </AlertDialogAction>

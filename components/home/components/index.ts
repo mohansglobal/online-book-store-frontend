@@ -7,6 +7,7 @@ export { BookCarousel } from "./book-carousel";
 export { CuratedBooks, CURATED_BOOKS_CATEGORY_ID } from "./curated-books";
 export { Navbar } from "./navbar";
 export { Hero } from "./hero";
+export { HeroStats } from "./hero-stats";
 export { Authors } from "./authors";
 export { Publishers } from "./publishers";
 export { Recent } from "./recent";

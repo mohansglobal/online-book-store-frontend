@@ -18,7 +18,7 @@ All storefront and administrative pages are actively connected to the real Expre
 
 | Feature Key | Route / URL | Backend Endpoint(s) | Status |
 | :--- | :--- | :--- | :---: |
-| **`homepage`** | `/` | `GET /api/v1/listings?homesection=true` | 🟢 Live |
+| **`homepage`** | `/` | `GET /api/v1/listings?homesection=true`, `GET /api/v1/stats/hero` | 🟢 Live |
 | **`auth`** | `/login`, `/register`, `/auth/*` | `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `/auth/me` | 🟢 Live |
 | **`categories`** | `/categories` | `GET /api/v1/categories` | 🟢 Live |
 | **`categoryDetails`** | `/categories/[slug]` | `GET /api/v1/categories/:slug` | 🟢 Live |

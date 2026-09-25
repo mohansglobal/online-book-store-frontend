@@ -54,10 +54,10 @@ export const PAGE_INTEGRATION_FLAGS: PageIntegrationConfig = {
   wishlist: true, 
 
   // Seller Pages
-  sellerDashboard: true,
-  sellerInventory: true,
+  sellerDashboard: false,
+  sellerInventory: false,
   sellerAddBook: true,
-  sellerDiscounts: true,
+  sellerDiscounts: false,
 };
 
 // Check if a specific page or feature has real API integration enabled.
@@ -111,6 +111,10 @@ export function getEndpointPageKey(endpoint: string, params?: unknown): PageInte
   const segments = cleanEndpoint.split("/").filter(Boolean);
   const firstSegment = segments[0];
   const secondSegment = segments[1];
+
+  if (firstSegment === "stats") {
+    return "homepage";
+  }
 
   if (firstSegment === "authors") {
     return secondSegment ? "authorDetails" : "authors";

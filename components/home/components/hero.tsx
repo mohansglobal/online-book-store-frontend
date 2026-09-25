@@ -14,8 +14,9 @@ import {
   ArrowUpRight,
   BookOpen,
   Search,
-  Star,
 } from "lucide-react";
+import { useTypewriter } from "../hooks/use-typewriter";
+import { HeroStats } from "./hero-stats";
 
 const ROTATING_WORDS = [
   "journey.",
@@ -75,9 +76,11 @@ const itemVariants: Variants = {
 
 export function Hero() {
   const router = useRouter();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
-  const [placeholderText, setPlaceholderText] = useState("");
+
+  const placeholderText = useTypewriter(PLACEHOLDER_QUERIES);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -92,70 +95,13 @@ export function Hero() {
     };
   }, []);
 
-  useEffect(() => {
-    let phraseIndex = 0;
-    let characterIndex = 0;
-    let isDeleting = false;
-
-    let timeoutId: number;
-
-    const typeSpeed = 60;
-    const deleteSpeed = 30;
-    const pauseEnd = 1600;
-    const pauseStart = 350;
-
-    const tick = (): void => {
-      const currentPhrase = PLACEHOLDER_QUERIES[phraseIndex];
-
-      if (!isDeleting) {
-        characterIndex += 1;
-
-        setPlaceholderText(
-          currentPhrase.slice(0, characterIndex),
-        );
-
-        if (characterIndex === currentPhrase.length) {
-          isDeleting = true;
-          timeoutId = window.setTimeout(tick, pauseEnd);
-          return;
-        }
-
-        timeoutId = window.setTimeout(tick, typeSpeed);
-        return;
-      }
-
-      characterIndex -= 1;
-
-      setPlaceholderText(
-        currentPhrase.slice(0, characterIndex),
-      );
-
-      if (characterIndex === 0) {
-        isDeleting = false;
-        phraseIndex =
-          (phraseIndex + 1) %
-          PLACEHOLDER_QUERIES.length;
-
-        timeoutId = window.setTimeout(tick, pauseStart);
-        return;
-      }
-
-      timeoutId = window.setTimeout(tick, deleteSpeed);
-    };
-
-    timeoutId = window.setTimeout(tick, 400);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
   const handleSearchSubmit = (
     event: React.FormEvent<HTMLFormElement>,
   ): void => {
     event.preventDefault();
 
     const query = searchQuery.trim();
+
     if (query) {
       router.push(`/books?search=${encodeURIComponent(query)}`);
     } else if (placeholderText) {
@@ -366,63 +312,8 @@ export function Hero() {
           </a>
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          variants={itemVariants}
-          className="grid w-full max-w-[820px] grid-cols-2 items-center justify-center gap-6 rounded-2xl border border-white/5 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:flex md:gap-10 md:px-10"
-        >
-          <div className="flex flex-col items-center gap-1">
-            <strong className="font-display text-2xl font-normal tracking-tight text-white">
-              50,000+
-            </strong>
-
-            <span className="text-[11px] tracking-widest text-zinc-500 uppercase">
-              Curated Titles
-            </span>
-          </div>
-
-          <div className="hidden h-8 w-px bg-white/10 md:block" />
-
-          <div className="flex flex-col items-center gap-1">
-            <strong className="font-display text-2xl font-normal tracking-tight text-white">
-              1,200+
-            </strong>
-
-            <span className="text-[11px] tracking-widest text-zinc-500 uppercase">
-              Indie Authors
-            </span>
-          </div>
-
-          <div className="hidden h-8 w-px bg-white/10 md:block" />
-
-          <div className="flex flex-col items-center gap-1">
-            <strong className="font-display text-2xl font-normal tracking-tight text-white">
-              100%
-            </strong>
-
-            <span className="text-[11px] tracking-widest text-zinc-500 uppercase">
-              Eco-Friendly
-            </span>
-          </div>
-
-          <div className="hidden h-8 w-px bg-white/10 md:block" />
-
-          <div className="flex flex-col items-center gap-1">
-            <strong className="inline-flex items-center gap-1.5 font-display text-2xl font-normal tracking-tight text-white">
-              4.9
-
-              <Star
-                size={16}
-                aria-hidden="true"
-                className="fill-orange-500 text-orange-500"
-              />
-            </strong>
-
-            <span className="text-[11px] tracking-widest text-zinc-500 uppercase">
-              Reader Rating
-            </span>
-          </div>
-        </motion.div>
+        {/* Live Hero Stats from Backend API */}
+        <HeroStats variants={itemVariants} />
       </motion.div>
     </section>
   );

@@ -366,6 +366,34 @@ Validate and normalize search params.
 
 Use allowlists for values such as sorting.
 
+## Entity Identity & Data Contracts
+Always distinguish clearly between:
+- `bookListingId` / `listingId`: Sellable inventory record from a specific seller (has price, stock, condition).
+- `bookId` / `_id`: Canonical book metadata (has ISBN, title, authors, publisher).
+- `slug`: Human-readable URL identifier.
+Never create composite identifiers like `id || listingId || bookId || slug || title`. If an API response returns multiple IDs, normalize to explicit, typed names at the API boundary.
+
+## React 19 & Effect Guidelines
+- NEVER synchronize props to local state inside `useEffect` (no `setState` inside `useEffect`).
+- If state depends entirely on props, calculate it inline during render (derived state).
+- If state needs to reset when an entity changes, use `<Component key={entity.id} />`.
+- NEVER use `window.location.href` for internal Next.js routes. Always use `router.push()` or `<Link>`.
+- When using React Hook Form with React Compiler, use `useWatch({ control, name })` instead of destructuring `watch` in the component render phase.
+
+## File Organization & Naming Conventions
+- STRICT KEBAB-CASE: All files, hooks, components, and directories MUST be `kebab-case.tsx` or `kebab-case.ts`. Never create PascalCase files (`AuthorsPage.tsx`, `CategorySidebar.tsx`).
+- Pluralization: Domain feature directories must be pluralized (`features/authors`, `features/categories`, `features/books`).
+- Feature Components: All feature-specific components must reside in `features/<domain>/components/`, never in root `components/<domain>/`. Root `components/` is strictly for `ui/` (primitives) and `layout/` (navbar, footer, sidebar).
+- No Dead / Backup Files: Never leave files with suffixes like `_Integrated`, `.bak`, or duplicate implementations in the repository.
+
+## No Fake UI Delays or Mock Submissions
+- Never simulate server operations with `setTimeout` or synthetic delays in UI components.
+- Either connect a real TanStack Query mutation hook or clearly mark the feature with an explicit disabled state and "Coming Soon" notification.
+
+## Clean Code & Zero Logs
+- Remove all `console.log`, `console.debug`, and debugging logs before completing any task.
+- Ensure `npm run lint` passes with 0 errors before considering any task complete.
+
 
 ## Money
 

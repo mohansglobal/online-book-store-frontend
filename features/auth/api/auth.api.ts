@@ -19,6 +19,15 @@ import type {
   VerifyResetOtpResponse,
   ResetPasswordInput,
   ResetPasswordResponse,
+  ChangePasswordInput,
+  ChangePasswordResponse,
+  AccountDeletionInfoResponse,
+  SendDeletionOtpResponse,
+  ConfirmAccountDeletionInput,
+  ConfirmAccountDeletionResponse,
+  CancelAccountDeletionResponse,
+  RestoreAccountInput,
+  RestoreAccountResponse,
 } from "../types/auth.types";
 
 // register new user account
@@ -142,6 +151,16 @@ export async function resetPassword(
 
     throw err;
   }
+}
+
+// 4. change password for authenticated user
+export async function changePassword(
+  input: ChangePasswordInput,
+): Promise<ChangePasswordResponse> {
+  return apiClient.post<ChangePasswordResponse>("/auth/change-password", {
+    currentPassword: input.currentPassword,
+    newPassword: input.newPassword,
+  });
 }
 
 

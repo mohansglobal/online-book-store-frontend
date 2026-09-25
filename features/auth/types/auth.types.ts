@@ -161,3 +161,88 @@ export type ResetPasswordResponse = {
   success: boolean;
   message: string;
 };
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword?: string;
+};
+
+export type ChangePasswordResponse = {
+  success: boolean;
+  message: string;
+};
+
+// Account deletion info and policy
+export type AccountDeletionInfo = {
+  isScheduledForDeletion: boolean;
+  deletionStatus: "NONE" | "SCHEDULED" | "PERMANENTLY_DELETED";
+  deletionRequestedAt: string | null;
+  scheduledPermanentDeletionAt: string | null;
+  daysRemaining: number | null;
+  gracePeriodDays: number;
+  warning: string;
+  willBeDeleted: string[];
+  willBeRetained: string[];
+  cancellationPolicy: string;
+  confirmationPhrase: string;
+};
+
+export type AccountDeletionInfoResponse = {
+  success: boolean;
+  message: string;
+  data: AccountDeletionInfo;
+};
+
+// Deletion verification OTP dispatch
+export type SendDeletionOtpDestinations = {
+  email?: string;
+  mobile?: string;
+};
+
+export type SendDeletionOtpData = {
+  message: string;
+  expiresInMinutes: number;
+  destinations?: SendDeletionOtpDestinations;
+};
+
+export type SendDeletionOtpResponse = {
+  success: boolean;
+  message: string;
+  data?: SendDeletionOtpData;
+};
+
+// Confirm account deletion
+export type ConfirmAccountDeletionInput = {
+  otp: string;
+  confirmation: string;
+  reason?: string;
+};
+
+export type ConfirmAccountDeletionData = {
+  scheduledPermanentDeletionAt: string;
+  gracePeriodDays: number;
+};
+
+export type ConfirmAccountDeletionResponse = {
+  success: boolean;
+  message: string;
+  data?: ConfirmAccountDeletionData;
+};
+
+// Cancel account deletion (restore authenticated)
+export type CancelAccountDeletionResponse = {
+  success: boolean;
+  message: string;
+};
+
+// Restore account (public via credentials)
+export type RestoreAccountInput = {
+  identifier: string;
+  password: string;
+};
+
+export type RestoreAccountResponse = {
+  success: boolean;
+  message: string;
+};

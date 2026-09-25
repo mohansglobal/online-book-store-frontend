@@ -91,8 +91,8 @@ export function DailyOrdersAnalyticsCard() {
 
                   <span
                     className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${isGrowthPositive
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                       }`}
                   >
                     {isGrowthPositive ? (
@@ -221,8 +221,8 @@ export function DailyOrdersAnalyticsCard() {
                     >
                       <span
                         className={`mb-1.5 font-sans text-[11px] font-semibold tabular-nums transition-colors duration-200 ${isPeak
-                            ? "font-bold text-accent"
-                            : "text-muted-foreground group-hover:text-foreground"
+                          ? "font-bold text-accent"
+                          : "text-muted-foreground group-hover:text-foreground"
                           }`}
                       >
                         {dayData.orders}
@@ -231,8 +231,8 @@ export function DailyOrdersAnalyticsCard() {
                       <div className="flex h-36 w-full max-w-[3.25rem] items-end justify-center overflow-hidden rounded-lg border border-transparent bg-surface-soft p-0.5 transition-colors duration-200 group-hover:border-border sm:h-40">
                         <div
                           className={`w-full rounded-md transition-all duration-300 ${isPeak
-                              ? "bg-accent shadow-xs"
-                              : "bg-accent/45 group-hover:bg-accent/75"
+                            ? "bg-accent shadow-xs"
+                            : "bg-accent/45 group-hover:bg-accent/75"
                             }`}
                           style={{
                             height: `${percentage}%`,
@@ -242,8 +242,8 @@ export function DailyOrdersAnalyticsCard() {
 
                       <span
                         className={`mt-2 text-xs font-medium transition-colors duration-200 ${isPeak
-                            ? "font-bold text-accent"
-                            : "text-muted-foreground group-hover:text-foreground"
+                          ? "font-bold text-accent"
+                          : "text-muted-foreground group-hover:text-foreground"
                           }`}
                       >
                         {dayData.day}

@@ -3,7 +3,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { format, parseISO, isValid } from "date-fns";
+import { formatDateDisplay } from "@/lib/date-utils";
 import {
   Camera,
   Loader2,
@@ -16,7 +16,7 @@ import {
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger, 
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,15 +38,6 @@ interface AuthorPreviewCardProps {
 const DEFAULT_FALLBACK_PHOTO =
   "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
 
-function formatDateDisplay(dateStr?: string): string {
-  if (!dateStr) return "";
-  try {
-    const parsed = parseISO(dateStr);
-    return isValid(parsed) ? format(parsed, "MMM d, yyyy") : dateStr;
-  } catch {
-    return dateStr;
-  }
-}
 
 export function AuthorPreviewCard({
   name,

@@ -29,6 +29,9 @@ export interface BooksFilterSidebarProps {
   onSelectCategory: (categoryId: string, item?: FilterItem) => void;
   minPrice?: number;
   maxPrice?: number;
+  minLimit?: number;
+  maxLimit?: number;
+  isLoadingPriceBounds?: boolean;
   onApplyPrice?: (min?: number, max?: number) => void;
   onClearPrice?: () => void;
   onClearAll: () => void;
@@ -67,6 +70,9 @@ export function BooksFilterSidebar({
   onSelectCategory,
   minPrice,
   maxPrice,
+  minLimit,
+  maxLimit,
+  isLoadingPriceBounds,
   onApplyPrice,
   onClearPrice,
   onClearAll,
@@ -191,6 +197,9 @@ export function BooksFilterSidebar({
         <PriceFilterSection
           minPrice={minPrice}
           maxPrice={maxPrice}
+          minLimit={minLimit}
+          maxLimit={maxLimit}
+          isLoading={isLoadingPriceBounds}
           onApplyPrice={onApplyPrice}
           onClearPrice={onClearPrice}
         />

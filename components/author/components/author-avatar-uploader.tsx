@@ -15,8 +15,7 @@ interface AuthorAvatarUploaderProps {
   disabled?: boolean;
 }
 
-const DEFAULT_FALLBACK_PHOTO =
-  "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
+const DEFAULT_FALLBACK_PHOTO = "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
 
 //Resolves author photo source from preview, absolute CDN URL, or backend assets
 
@@ -85,7 +84,7 @@ export function AuthorAvatarUploader({
         className="hidden"
         onChange={handleFileSelect}
       />
-
+              
       <button
         type="button"
         onClick={handleAvatarClick}

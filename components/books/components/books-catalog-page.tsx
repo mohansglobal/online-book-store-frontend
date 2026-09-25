@@ -20,6 +20,7 @@ import {
 } from "@/features/books/types/book.types";
 import { useBooksCatalogFilters } from "../hooks/use-books-catalog-filters";
 import { useBooksLabelLookup } from "../hooks/use-books-label-lookup";
+import { useVisiblePriceBounds } from "../hooks/use-visible-price-bounds";
 
 import { buildActiveFiltersList } from "../utils/build-active-filters";
 
@@ -133,6 +134,30 @@ export function BooksCatalogPage({
 
   const isBusy = isLoading || isFetching;
 
+  // Stable context key representing the non-price filter combination
+  const contextKey = useMemo(() => {
+    return [
+      filterState.urlSearch.trim(),
+      filterState.selectedAuthorIds.join(","),
+      filterState.selectedPublisherIds.join(","),
+      filterState.selectedCategoryIds.join(","),
+    ].join("|");
+  }, [
+    filterState.urlSearch,
+    filterState.selectedAuthorIds,
+    filterState.selectedPublisherIds,
+    filterState.selectedCategoryIds,
+  ]);
+
+  // Dynamic price limits directly derived from visible books on screen,
+  // preserving full sliding range while price filters are applied
+  const { minLimit, maxLimit } = useVisiblePriceBounds({
+    books,
+    minPrice: filterState.minPrice,
+    maxPrice: filterState.maxPrice,
+    contextKey,
+  });
+
   const noDataMessage = useMemo(() => {
     if (filterState.urlSearch.trim()) {
       return `No books found for "${filterState.urlSearch.trim()}".`;
@@ -160,6 +185,9 @@ export function BooksCatalogPage({
       onSelectCategory={filterState.handleToggleCategory}
       minPrice={filterState.minPrice}
       maxPrice={filterState.maxPrice}
+      minLimit={minLimit}
+      maxLimit={maxLimit}
+      isLoadingPriceBounds={isBusy}
       onApplyPrice={filterState.handleApplyPrice}
       onClearPrice={filterState.handleClearPrice}
       onClearAll={filterState.handleClearAll}
