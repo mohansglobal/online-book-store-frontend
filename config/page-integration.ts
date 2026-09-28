@@ -139,6 +139,9 @@ export function getEndpointPageKey(endpoint: string, params?: unknown): PageInte
     if (segments.includes("discount")) {
       return "sellerDiscounts";
     }
+    if (segments.length === 1) {
+      return "sellerAddBook";
+    }
     return "sellerInventory";
   }
 

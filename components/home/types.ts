@@ -3,7 +3,10 @@ import type { StaticImageData } from "next/image";
 
 export type Book = {
   id?: string;
+  bookId?: string;
+  listingId?: string;
   slug?: string;
+  isWishlisted?: boolean;
   title: string;
   author: string;
   seller?: string;

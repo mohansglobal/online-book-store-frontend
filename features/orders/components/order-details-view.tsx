@@ -8,6 +8,7 @@ import { useOrderDetailQuery } from "../queries/use-order-detail-query";
 import { OrderDetailsHeader } from "./order-details-header";
 import { OrderTrackingProgress } from "./order-tracking-progress";
 import { OrderAddressPayment } from "./order-address-payment";
+import { OrderItemsList } from "./order-items-list";
 
 interface OrderDetailsViewProps {
   orderId: string;
@@ -86,6 +87,15 @@ export function OrderDetailsView({ orderId }: OrderDetailsViewProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Packages & Items with Tracking Details */}
+              <OrderItemsList
+                items={order.items}
+                orderId={order._id}
+                orderNumber={order.orderNumber}
+                orderStatus={order.orderStatus}
+                allowItemCancellation
+              />
 
               {/* Address & Payment Grid */}
               <OrderAddressPayment order={order} />

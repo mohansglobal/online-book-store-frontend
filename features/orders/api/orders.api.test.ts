@@ -5,6 +5,9 @@ import {
   getOrders,
   initiateRazorpayOrder,
   verifyOrderPayment,
+  cancelOrder,
+  cancelOrderItem,
+  updateOrderItemFulfillment,
   type VerifyPaymentResponse,
 } from "./orders.api";
 import type { CreateOrderInput, Order } from "../types/order.types";
@@ -13,6 +16,7 @@ vi.mock("@/lib/api", () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
@@ -197,16 +201,15 @@ describe("Orders API Client", () => {
   });
 
   describe("cancelOrder", () => {
-    it("should send POST /orders/:id/cancel with reason", async () => {
+    it("should send POST /orders/:id/cancel with reason string", async () => {
       const mockCancelResponse = {
         success: true,
         message: "Order cancelled successfully",
-        data: { _id: "ord_123", orderStatus: "CANCELLED" } as any,
+        data: { _id: "ord_123", orderStatus: "CANCELLED" } as unknown as Order,
       };
 
       vi.mocked(apiClient.post).mockResolvedValueOnce(mockCancelResponse);
 
-      const { cancelOrder } = await import("./orders.api");
       const result = await cancelOrder("ord_123", "Ordered by mistake");
 
       expect(apiClient.post).toHaveBeenCalledWith("/orders/ord_123/cancel", {
@@ -214,6 +217,77 @@ describe("Orders API Client", () => {
       });
       expect(result).toEqual(mockCancelResponse);
     });
+
+    it("should send POST /orders/:id/cancel with specific itemIds for partial cancellation", async () => {
+      const mockCancelResponse = {
+        success: true,
+        message: "Item cancelled, order is now partially cancelled",
+        data: { _id: "ord_123", orderStatus: "PARTIALLY_CANCELLED" } as unknown as Order,
+      };
+
+      vi.mocked(apiClient.post).mockResolvedValueOnce(mockCancelResponse);
+
+      const result = await cancelOrder("ord_123", {
+        itemIds: ["item_456"],
+        reason: "Found better price",
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith("/orders/ord_123/cancel", {
+        itemIds: ["item_456"],
+        reason: "Found better price",
+      });
+      expect(result).toEqual(mockCancelResponse);
+    });
+  });
+
+  describe("cancelOrderItem", () => {
+    it("should send POST /orders/:id/items/:itemId/cancel", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Item cancelled successfully",
+        data: { _id: "ord_123", orderStatus: "PARTIALLY_CANCELLED" } as unknown as Order,
+      };
+
+      vi.mocked(apiClient.post).mockResolvedValueOnce(mockResponse);
+
+      const result = await cancelOrderItem("ord_123", "item_789", "Changed mind");
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/orders/ord_123/items/item_789/cancel",
+        { reason: "Changed mind" },
+      );
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("updateOrderItemFulfillment", () => {
+    it("should send PATCH /orders/:id/items/:itemId/fulfillment with tracking details", async () => {
+      const fulfillmentPayload = {
+        courier: "Blue Dart",
+        trackingNumber: "BD-987654",
+        trackingUrl: "https://bluedart.com/track/BD-987654",
+        status: "SHIPPED" as const,
+      };
+
+      const mockResponse = {
+        success: true,
+        message: "Item marked as SHIPPED",
+        data: { _id: "ord_123", orderStatus: "PARTIALLY_SHIPPED" } as unknown as Order,
+      };
+
+      vi.mocked(apiClient.patch).mockResolvedValueOnce(mockResponse);
+
+      const result = await updateOrderItemFulfillment(
+        "ord_123",
+        "item_789",
+        fulfillmentPayload,
+      );
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/orders/ord_123/items/item_789/fulfillment",
+        fulfillmentPayload,
+      );
+      expect(result).toEqual(mockResponse);
+    });
   });
 });
-

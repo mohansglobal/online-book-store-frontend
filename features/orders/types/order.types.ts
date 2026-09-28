@@ -2,7 +2,7 @@
 
 export type OrderPaymentMethod = "ONLINE_PAY" | "CASH_ON_DELIVERY";
 
-export type OrderStatus =
+export type OrderItemStatus =
   | "PENDING"
   | "CONFIRMED"
   | "PROCESSING"
@@ -10,9 +10,24 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "PARTIALLY_SHIPPED"
+  | "PARTIALLY_CANCELLED";
+
 export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED";
 
-export type RefundStatus = "NONE" | "PENDING" | "PROCESSED" | "FAILED";
+export type RefundStatus =
+  | "NONE"
+  | "PENDING"
+  | "PROCESSED"
+  | "FAILED"
+  | "PARTIALLY_REFUNDED";
 
 export interface CreateOrderDirectItem {
   bookListing?: string;
@@ -33,7 +48,29 @@ export interface CreateOrderInput {
   items?: CreateOrderDirectItem[];
 }
 
+export interface OrderItemTracking {
+  courier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+}
+
+export interface OrderItemCancellation {
+  cancelledAt?: string;
+  cancellationReason?: string;
+}
+
+export interface OrderItemSeller {
+  _id: string;
+  name: string;
+  email?: string;
+  mobileNumber?: string;
+}
+
 export interface OrderItem {
+  _id?: string;
+  id?: string;
   bookListing: string;
   book?: string;
   title: string;
@@ -41,6 +78,11 @@ export interface OrderItem {
   priceInPaise: number;
   quantity: number;
   subtotalInPaise: number;
+  status?: OrderItemStatus;
+  seller?: string | OrderItemSeller;
+  estimatedDeliveryDate?: string;
+  tracking?: OrderItemTracking;
+  cancellation?: OrderItemCancellation;
 }
 
 export interface OrderSnapshotAddress {
@@ -67,6 +109,7 @@ export interface Order {
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
   refundStatus?: RefundStatus;
+  refundAmountInPaise?: number;
   cancelledAt?: string;
   cancellationReason?: string;
   shippingAddress: OrderSnapshotAddress;
@@ -74,6 +117,32 @@ export interface Order {
   billingSameAsShipping: boolean;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface CancelOrderInput {
+  orderId: string;
+  itemIds?: string[];
+  reason?: string;
+}
+
+export interface CancelOrderItemInput {
+  orderId: string;
+  itemId: string;
+  reason?: string;
+}
+
+export interface UpdateOrderItemFulfillmentInput {
+  courier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  estimatedDeliveryDate?: string;
+  status?: OrderItemStatus;
+}
+
+export interface UpdateOrderItemFulfillmentParams {
+  orderId: string;
+  itemId: string;
+  payload: UpdateOrderItemFulfillmentInput;
 }
 
 export interface CreateOrderResponse {

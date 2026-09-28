@@ -6,6 +6,7 @@ import type {
   Order,
   OrdersQueryParams,
   OrdersResponse,
+  UpdateOrderItemFulfillmentInput,
 } from "../types/order.types";
 
 //Place a new order with address references, payment method, and promo code.
@@ -48,15 +49,49 @@ export interface CancelOrderResponse {
   data: Order;
 }
 
-// Cancel an order
+export interface CancelOrderPayload {
+  itemIds?: string[];
+  reason?: string;
+}
+
+// Cancel an entire order or specific items
 // POST /api/v1/orders/:id/cancel
 export async function cancelOrder(
   orderId: string,
+  payloadOrReason?: string | CancelOrderPayload,
+): Promise<CancelOrderResponse> {
+  const body =
+    typeof payloadOrReason === "string"
+      ? { reason: payloadOrReason }
+      : payloadOrReason || {};
+
+  return apiClient.post<CancelOrderResponse>(`/orders/${orderId}/cancel`, body);
+}
+
+// Cancel a single specific item in an order
+// POST /api/v1/orders/:id/items/:itemId/cancel
+export async function cancelOrderItem(
+  orderId: string,
+  itemId: string,
   reason?: string,
 ): Promise<CancelOrderResponse> {
-  return apiClient.post<CancelOrderResponse>(`/orders/${orderId}/cancel`, {
-    reason,
-  });
+  return apiClient.post<CancelOrderResponse>(
+    `/orders/${orderId}/items/${itemId}/cancel`,
+    { reason },
+  );
+}
+
+// Seller updates fulfillment & tracking for their item
+// PATCH /api/v1/orders/:id/items/:itemId/fulfillment
+export async function updateOrderItemFulfillment(
+  orderId: string,
+  itemId: string,
+  payload: UpdateOrderItemFulfillmentInput,
+): Promise<CancelOrderResponse> {
+  return apiClient.patch<CancelOrderResponse>(
+    `/orders/${orderId}/items/${itemId}/fulfillment`,
+    payload,
+  );
 }
 
 

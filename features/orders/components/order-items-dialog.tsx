@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Package } from "lucide-react";
 import {
   Dialog,
@@ -70,22 +71,43 @@ export function OrderItemsDialog({
 
         <div className="max-h-[60vh] divide-y divide-border/50 overflow-y-auto pr-1">
           {items.map((item, idx) => {
+            const rawTarget = item.bookListing || item.book;
+            const bookTarget =
+              typeof rawTarget === "object" && rawTarget !== null
+                ? (rawTarget as { _id?: string })._id || ""
+                : rawTarget;
+
+            const bookHref = bookTarget
+              ? `/books/${encodeURIComponent(bookTarget)}`
+              : "/books";
+
             return (
               <div
                 key={item.bookListing || idx}
                 className="flex items-center gap-3.5 py-3 first:pt-1 last:pb-1"
               >
                 {/* Book Cover */}
-                <DialogItemThumbnail
-                  coverImage={item.coverImage}
-                  title={item.title}
-                />
+                <Link
+                  href={bookHref}
+                  onClick={() => onOpenChange(false)}
+                  className="block shrink-0 transition-opacity hover:opacity-85"
+                  aria-label={`View details for ${item.title}`}
+                >
+                  <DialogItemThumbnail
+                    coverImage={item.coverImage}
+                    title={item.title}
+                  />
+                </Link>
 
                 {/* Title & Quantity */}
                 <div className="min-w-0 flex-1">
-                  <h4 className="line-clamp-2 text-xs sm:text-sm font-semibold text-foreground">
+                  <Link
+                    href={bookHref}
+                    onClick={() => onOpenChange(false)}
+                    className="line-clamp-2 text-xs sm:text-sm font-semibold text-foreground transition-colors hover:text-accent hover:underline block"
+                  >
                     {item.title}
-                  </h4>
+                  </Link>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     Qty:{" "}
                     <span className="font-semibold text-foreground">
@@ -100,7 +122,7 @@ export function OrderItemsDialog({
                 <div className="text-right text-xs sm:text-sm font-bold text-foreground tabular-nums">
                   {formatOrderPrice(
                     item.subtotalInPaise ||
-                      item.priceInPaise * item.quantity,
+                    item.priceInPaise * item.quantity,
                   )}
                 </div>
               </div>

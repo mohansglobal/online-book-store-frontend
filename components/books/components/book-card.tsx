@@ -20,11 +20,14 @@ export function BookCard({ book, priority = false }: BookCardProps) {
     typeof book.cover === "string" && book.cover ? book.cover : FALLBACK_BOOK_COVER,
   );
 
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInWishlist, toggleWishlist, wishlistIds } = useWishlist();
   const { addItem: addToCart } = useCart();
-
-  const bookId = book.id || book.slug || "";
-  const isSaved = isInWishlist(bookId);
+  
+  const listingId = book.listingId || book.id || book.slug || "";
+  const canonicalBookId = book.bookId;
+  const isSaved = wishlistIds
+    ? isInWishlist(canonicalBookId, listingId)
+    : Boolean(book.isWishlisted || isInWishlist(canonicalBookId, listingId));
 
   const rawPrice =
     book.rawPrice ||
@@ -48,10 +51,12 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const primaryId = canonicalBookId || listingId;
     toggleWishlist({
-      id: bookId,
-      bookId: bookId,
-      slug: book.slug || bookId,
+      id: primaryId,
+      bookId: canonicalBookId || primaryId,
+      listingId: listingId,
+      slug: book.slug || listingId,
       title: book.title || "-",
       author: book.author || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
@@ -76,9 +81,9 @@ export function BookCard({ book, priority = false }: BookCardProps) {
     }
 
     void addToCart({
-      listingId: bookId,
-      bookId: bookId,
-      slug: book.slug || bookId,
+      listingId: listingId,
+      bookId: canonicalBookId || listingId,
+      slug: book.slug || listingId,
       title: book.title || "-",
       coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
       author: book.author || "-",
@@ -92,7 +97,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
   return (
     <article className="group relative flex flex-col min-w-0 h-full">
       <Link
-        href={`/books/${bookId}`}
+        href={`/books/${listingId}`}
         aria-label={`View details for ${book.title || "-"} by ${book.author || "-"}`}
         className="block shrink-0"
       >
@@ -168,7 +173,7 @@ export function BookCard({ book, priority = false }: BookCardProps) {
       <div className="pt-3 flex flex-col flex-1 justify-between min-h-[84px]">
         <div>
           {/* 1-line Title with ellipsis if longer than first line */}
-          <Link href={`/books/${bookId}`} className="block">
+          <Link href={`/books/${listingId}`} className="block">
             <h3
               title={book.title || "-"}
               className="truncate font-display text-[15px] sm:text-[16px] font-semibold leading-snug tracking-[-0.01em] text-foreground transition-colors duration-200 group-hover:text-primary"

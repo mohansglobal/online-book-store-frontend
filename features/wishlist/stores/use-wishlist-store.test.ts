@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   useWishlistStore,
-  selectWishlistItems,
   selectWishlistCount,
   selectIsInWishlist,
 } from "./use-wishlist-store";

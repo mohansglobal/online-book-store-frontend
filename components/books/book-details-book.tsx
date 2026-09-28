@@ -31,12 +31,16 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const book = bookResponse?.data;
   const { isAuthenticated, redirectToLogin } = useRequireAuth();
   const { addItem: addToCart } = useCart();
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInWishlist, toggleWishlist, wishlistIds } = useWishlist();
 
   const [quantity, setQuantity] = useState(1);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const isWishlisted = book ? isInWishlist(book._id || book.slug) : false;
+  const isWishlisted = book
+    ? (wishlistIds
+        ? isInWishlist(book.bookId, book._id || book.slug)
+        : Boolean(book.isWishlisted || isInWishlist(book.bookId, book._id || book.slug)))
+    : false;
   const stockInfo = getBookStockInfo(book);
 
   if (isLoading) {
@@ -185,11 +189,14 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         : parseFloat(String(book.originalPrice).replace(/[^0-9.]/g, "")) || undefined
       : undefined;
 
+    const canonicalBookId = book.bookId || book._id;
+    const listingId = book.listingId || (book.bookId ? book._id : undefined);
+
     toggleWishlist({
-      id: book._id,
-      bookId: book._id,
-      listingId: book._id,
-      slug: book.slug || book._id,
+      id: canonicalBookId,
+      bookId: canonicalBookId,
+      listingId,
+      slug: book.slug || canonicalBookId,
       title: book.title,
       author: book.authors?.map((a) => a.name).join(", ") || "-",
       seller: book.seller?.name,

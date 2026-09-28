@@ -92,12 +92,14 @@ describe("OrderDetailsView", () => {
     vi.clearAllMocks();
   });
 
+type OrderDetailQueryReturn = ReturnType<typeof useOrderDetailQuery>;
+
   it("renders CategoryBanner with 'Order Details'", () => {
     vi.mocked(useOrderDetailQuery).mockReturnValue({
       data: { success: true, message: "Order found", data: mockOrderDetail },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as OrderDetailQueryReturn);
 
     renderWithClient(<OrderDetailsView orderId="67d3fa89b33a8274092b71ab" />);
 
@@ -111,14 +113,14 @@ describe("OrderDetailsView", () => {
       data: { success: true, message: "Order found", data: mockOrderDetail },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as OrderDetailQueryReturn);
 
     renderWithClient(<OrderDetailsView orderId="67d3fa89b33a8274092b71ab" />);
 
     expect(screen.getByText("ORD-987654")).toBeInTheDocument();
     expect(screen.getAllByText("Shipped").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Clean Code/)).toBeInTheDocument();
-    expect(screen.getByText(/The Pragmatic Programmer/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Clean Code/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/The Pragmatic Programmer/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/View all items/i)).toBeInTheDocument();
     expect(screen.getByText("Delivery Address")).toBeInTheDocument();
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
@@ -132,7 +134,7 @@ describe("OrderDetailsView", () => {
       data: undefined,
       isLoading: false,
       isError: true,
-    } as any);
+    } as unknown as OrderDetailQueryReturn);
 
     renderWithClient(<OrderDetailsView orderId="invalid_id" />);
 
@@ -153,7 +155,7 @@ describe("OrderDetailsView", () => {
       data: { success: true, message: "Order found", data: cancelledOrder },
       isLoading: false,
       isError: false,
-    } as any);
+    } as unknown as OrderDetailQueryReturn);
 
     renderWithClient(<OrderDetailsView orderId="67d3fa89b33a8274092b71ab" />);
 

@@ -5,6 +5,8 @@ import {
   getOrderStatusGroup,
   matchesTabFilter,
   getStatusBadgeConfig,
+  getOrderItemStatusBadgeConfig,
+  canCancelOrderItem,
   formatItemsSummary,
   filterOrdersByDateRange,
 } from "@/features/orders/utils/order-helpers";
@@ -40,6 +42,8 @@ describe("Order Helpers", () => {
       expect(getOrderStatusGroup("CONFIRMED")).toBe("IN_PROGRESS");
       expect(getOrderStatusGroup("SHIPPED")).toBe("IN_PROGRESS");
       expect(getOrderStatusGroup("PROCESSING")).toBe("IN_PROGRESS");
+      expect(getOrderStatusGroup("PARTIALLY_SHIPPED")).toBe("IN_PROGRESS");
+      expect(getOrderStatusGroup("PARTIALLY_CANCELLED")).toBe("IN_PROGRESS");
     });
 
     it("matches tab filter appropriately", () => {
@@ -48,6 +52,8 @@ describe("Order Helpers", () => {
       expect(matchesTabFilter("CONFIRMED", "DELIVERED")).toBe(false);
       expect(matchesTabFilter("DELIVERED", "DELIVERED")).toBe(true);
       expect(matchesTabFilter("CANCELLED", "CANCELLED")).toBe(true);
+      expect(matchesTabFilter("PARTIALLY_CANCELLED", "IN_PROGRESS")).toBe(true);
+      expect(matchesTabFilter("PARTIALLY_SHIPPED", "IN_PROGRESS")).toBe(true);
     });
   });
 
@@ -122,11 +128,11 @@ describe("Order Helpers", () => {
         paymentMethod: "ONLINE_PAY",
         orderStatus: "DELIVERED" as OrderStatus,
         paymentStatus: "PAID",
-        shippingAddress: {} as any,
-        billingAddress: {} as any,
+        shippingAddress: {} as unknown as Order["shippingAddress"],
+        billingAddress: {} as unknown as Order["billingAddress"],
         billingSameAsShipping: true,
         createdAt,
-      }) as Order;
+      }) as unknown as Order;
 
     it("returns all orders when range is ALL_TIME", () => {
       const orders = [
@@ -145,6 +151,44 @@ describe("Order Helpers", () => {
       const filtered = filterOrdersByDateRange(orders, "last30days");
       expect(filtered).toHaveLength(1);
       expect(filtered[0].createdAt).toBe(recentDate);
+    });
+  });
+
+  describe("getOrderItemStatusBadgeConfig", () => {
+    it("returns correct labels and pill styles for all item statuses", () => {
+      expect(getOrderItemStatusBadgeConfig("SHIPPED").label).toBe("Shipped");
+      expect(getOrderItemStatusBadgeConfig("CANCELLED").label).toBe("Cancelled");
+      expect(getOrderItemStatusBadgeConfig("DELIVERED").label).toBe("Delivered");
+      expect(getOrderItemStatusBadgeConfig("CONFIRMED").label).toBe("Confirmed");
+      expect(getOrderItemStatusBadgeConfig("PROCESSING").label).toBe("Processing");
+      expect(getOrderItemStatusBadgeConfig("PENDING").label).toBe("Pending");
+    });
+  });
+
+  describe("canCancelOrderItem", () => {
+    const baseItem: OrderItem = {
+      bookListing: "list_1",
+      title: "Clean Code",
+      priceInPaise: 45000,
+      quantity: 1,
+      subtotalInPaise: 45000,
+    };
+
+    it("allows cancellation for PENDING, CONFIRMED, or PROCESSING items", () => {
+      expect(canCancelOrderItem({ ...baseItem, status: "PENDING" }, "CONFIRMED")).toBe(true);
+      expect(canCancelOrderItem({ ...baseItem, status: "CONFIRMED" }, "CONFIRMED")).toBe(true);
+      expect(canCancelOrderItem({ ...baseItem, status: "PROCESSING" }, "PROCESSING")).toBe(true);
+    });
+
+    it("blocks cancellation for SHIPPED, DELIVERED, or CANCELLED items", () => {
+      expect(canCancelOrderItem({ ...baseItem, status: "SHIPPED" }, "SHIPPED")).toBe(false);
+      expect(canCancelOrderItem({ ...baseItem, status: "DELIVERED" }, "DELIVERED")).toBe(false);
+      expect(canCancelOrderItem({ ...baseItem, status: "CANCELLED" }, "CANCELLED")).toBe(false);
+    });
+
+    it("blocks cancellation when parent order is already CANCELLED or DELIVERED", () => {
+      expect(canCancelOrderItem({ ...baseItem, status: "CONFIRMED" }, "CANCELLED")).toBe(false);
+      expect(canCancelOrderItem({ ...baseItem, status: "CONFIRMED" }, "DELIVERED")).toBe(false);
     });
   });
 });

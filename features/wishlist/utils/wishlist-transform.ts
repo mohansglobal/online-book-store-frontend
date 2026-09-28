@@ -34,10 +34,14 @@ export function transformServerWishlistToViews(
           ? item.seller
           : undefined;
 
-    const itemId = item.id || item.bookId || item.listingId || "";
+    const canonicalBookId = item.bookId || item.id || "";
+    const listingId = item.listingId || undefined;
+    const itemId = canonicalBookId || item.listingId || "";
 
     return {
       id: itemId,
+      bookId: canonicalBookId,
+      listingId,
       slug: item.slug || item.canonicalSlug || itemId,
       title: item.title || "Untitled Book",
       author: authorText,

@@ -3,6 +3,7 @@ export * from "./types/wishlist.types";
 export * from "./api/wishlist.api";
 export * from "./queries/wishlist.keys";
 export * from "./queries/use-wishlist-query";
+export * from "./queries/use-wishlist-ids-query";
 export * from "./mutations/use-wishlist-mutations";
 export * from "./stores/use-wishlist-store";
 export * from "./hooks/use-wishlist";

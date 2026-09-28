@@ -1,7 +1,6 @@
 // Helper functions to construct CreateBookListingInput payloads
 import {
   FALLBACK_BOOK_COVER,
-  type CanonicalBook,
   type CreateBookListingInput,
 } from "@/features/books";
 
@@ -26,59 +25,41 @@ export interface AddBookFormState {
   extraPreviews: string[];
 }
 
-// Builds payload for an existing canonical catalog book (Scenario B)
-export function buildExistingBookPayload(
-  canonicalBook: CanonicalBook,
+// Builds payload for a book listing entry
+export function buildBookListingPayload(
   form: AddBookFormState,
 ): CreateBookListingInput {
   const mrpNumber = parseFloat(form.mrp);
+
   const sellingNumber = form.sellingPrice
     ? parseFloat(form.sellingPrice)
     : mrpNumber;
-  const stockNumber = parseInt(form.stock, 10);
+
+  const stockNumber = parseInt(form.stock, 10) || 0;
 
   const mrpInPaise = Math.round(mrpNumber * 100);
+
   const sellingPriceInPaise = Math.round(sellingNumber * 100);
+
   const cleanSku = form.sku.trim() || undefined;
-  const bookIsbn = canonicalBook.isbn || form.isbn.trim() || undefined;
-  const images = form.extraPreviews.length > 0 ? form.extraPreviews : undefined;
 
-  return {
-    book: canonicalBook._id,
-    isbn: bookIsbn,
-    images,
-    mrpInPaise,
-    sellingPriceInPaise,
-    stock: stockNumber,
-    sku: cleanSku,
-  };
-}
-
-// Builds payload for a brand new book entry (Scenario A)
-export function buildNewBookPayload(
-  form: AddBookFormState,
-): CreateBookListingInput {
-  const mrpNumber = parseFloat(form.mrp);
-  const sellingNumber = form.sellingPrice
-    ? parseFloat(form.sellingPrice)
-    : mrpNumber;
-  const stockNumber = parseInt(form.stock, 10);
-
-  const mrpInPaise = Math.round(mrpNumber * 100);
-  const sellingPriceInPaise = Math.round(sellingNumber * 100);
-  const cleanSku = form.sku.trim() || undefined;
   const cleanIsbn = form.isbn.trim() || undefined;
+
   const parsedPages = form.pages ? parseInt(form.pages, 10) : undefined;
 
-  const formattedTags = form.searchTag
+  const parsedTags = form.searchTag
     ? form.searchTag
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean)
-    : undefined;
+    : [];
+
+  const formattedTags = parsedTags.length > 0 ? parsedTags : undefined;
 
   const resolvedLanguage = form.language === "bn" ? "Bengali" : "English";
+
   const coverImage = form.coverPreview || FALLBACK_BOOK_COVER;
+
   const images = form.extraPreviews.length > 0 ? form.extraPreviews : undefined;
 
   return {
@@ -103,3 +84,6 @@ export function buildNewBookPayload(
     sku: cleanSku,
   };
 }
+
+// Backward-compatibility alias
+export const buildNewBookPayload = buildBookListingPayload;

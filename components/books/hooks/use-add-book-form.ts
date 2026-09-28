@@ -4,10 +4,8 @@ import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useCreateBookListingMutation } from "@/features/books";
 import { uploadMultipleImages, uploadSingleImage } from "@/lib/api";
-import { useIsbnAutofill } from "./use-isbn-autofill";
 import {
-  buildExistingBookPayload,
-  buildNewBookPayload,
+  buildBookListingPayload,
   type AddBookFormState,
 } from "../utils/add-book-payload";
 
@@ -37,50 +35,6 @@ export function useAddBookForm() {
   const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
-
-  const setPublisher = useCallback((id: string, name: string) => {
-    setPublisherId(id);
-    setPublisherName(name);
-  }, []);
-
-  const setAuthor = useCallback((id: string, name: string) => {
-    setAuthorId(id);
-    setAuthorName(name);
-  }, []);
-
-  const setCategory = useCallback((id: string, name: string) => {
-    setCategoryId(id);
-    setCategoryName(name);
-  }, []);
-
-  const setCountry = useCallback((id: string, name: string) => {
-    setCountryId(id);
-    setCountryName(name);
-  }, []);
-
-  const {
-    debouncedIsbn,
-    lookupResponse,
-    canonicalBook,
-    isBookFound,
-    isAlreadyListed,
-    isChecking,
-    clearAutofillRef,
-  } = useIsbnAutofill(isbn, {
-    setTitleEn,
-    setTitleBn,
-    setPublisher,
-    setAuthor,
-    setCategory,
-    setCountry,
-    setDescription,
-    setEdition,
-    setPages,
-    setSearchTag,
-    setLanguage,
-    setCoverPreview,
-    setMrp,
-  });
 
   const { mutate: createListing, isPending: isSubmitting } =
     useCreateBookListingMutation();
@@ -142,9 +96,8 @@ export function useAddBookForm() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setIsbn("");
-    clearAutofillRef();
     setTitleEn("");
     setTitleBn("");
     setPublisherId("");
@@ -166,7 +119,7 @@ export function useAddBookForm() {
     setDescription("");
     setCoverPreview(null);
     setExtraPreviews([]);
-  };
+  }, []);
 
   const getFormState = (): AddBookFormState => ({
     isbn,
@@ -197,6 +150,31 @@ export function useAddBookForm() {
       return;
     }
 
+    if (!titleEn.trim()) {
+      toast.error("English Title is required");
+      return;
+    }
+
+    if (!titleBn.trim()) {
+      toast.error("Bengali Title is required");
+      return;
+    }
+
+    if (!publisherId) {
+      toast.error("Please select a publisher");
+      return;
+    }
+
+    if (!authorId) {
+      toast.error("Please select an author");
+      return;
+    }
+
+    if (!categoryId) {
+      toast.error("Please select a category");
+      return;
+    }
+
     const parsedMrp = parseFloat(mrp);
     if (!mrp || isNaN(parsedMrp) || parsedMrp <= 0) {
       toast.error("Please enter a valid MRP price");
@@ -216,47 +194,7 @@ export function useAddBookForm() {
     }
 
     const formState = getFormState();
-
-    if (isBookFound && canonicalBook) {
-      const payload = buildExistingBookPayload(canonicalBook, formState);
-
-      createListing(payload, {
-        onSuccess: (res) => {
-          toast.success(
-            res.message ||
-              `Listing for "${canonicalBook.title}" created successfully!`,
-          );
-          handleReset();
-        },
-        onError: (err) => {
-          toast.error(err.message || "Failed to create book listing");
-        },
-      });
-      return;
-    }
-
-    if (!titleEn.trim()) {
-      toast.error("English Title is required");
-      return;
-    }
-    if (!titleBn.trim()) {
-      toast.error("Bengali Title is required");
-      return;
-    }
-    if (!publisherId) {
-      toast.error("Please select a publisher");
-      return;
-    }
-    if (!authorId) {
-      toast.error("Please select an author");
-      return;
-    }
-    if (!categoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    const payload = buildNewBookPayload(formState);
+    const payload = buildBookListingPayload(formState);
 
     createListing(payload, {
       onSuccess: (res) => {
@@ -318,11 +256,6 @@ export function useAddBookForm() {
     setExtraPreviews,
     isUploadingCover,
     isUploadingGallery,
-    debouncedIsbn,
-    lookupResponse,
-    isBookFound,
-    isAlreadyListed,
-    isChecking,
     isSubmitting,
     handleCoverChange,
     handleExtraImagesChange,

@@ -2,10 +2,10 @@
 
 import type { ChangeEvent } from "react";
 import Image from "next/image";
-import { Book, Loader2, Lock, Plus, Trash2 } from "lucide-react";
+import { Book, Loader2, Plus, Trash2 } from "lucide-react";
 
 interface BookMediaAsideProps {
-  isBookFound: boolean;
+  isBookFound?: boolean;
   coverPreview: string | null;
   isUploadingCover?: boolean;
   onCoverChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -20,7 +20,6 @@ const LABEL_CLASS =
   "text-xs font-semibold uppercase tracking-wider text-text-secondary";
 
 export function BookMediaAside({
-  isBookFound,
   coverPreview,
   isUploadingCover = false,
   onCoverChange,
@@ -37,19 +36,16 @@ export function BookMediaAside({
           Cover Image
         </h2>
         <p className="text-sm text-text-secondary">
-          {isBookFound
-            ? "Canonical book cover from catalog."
-            : "Upload or review the book cover."}
+          Upload or review the book cover.
         </p>
       </div>
 
       <div
-        className={`group relative mb-6 flex aspect-[2/3] flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-surface-soft p-6 text-center transition-colors ${isBookFound
-            ? "cursor-default opacity-90"
-            : isUploadingCover
-              ? "cursor-wait opacity-80 border-accent"
-              : "cursor-pointer hover:border-accent"
-          }`}
+        className={`group relative mb-6 flex aspect-[2/3] flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-surface-soft p-6 text-center transition-colors ${
+          isUploadingCover
+            ? "cursor-wait opacity-80 border-accent"
+            : "cursor-pointer hover:border-accent"
+        }`}
       >
         {isUploadingCover ? (
           <div className="flex flex-col items-center gap-3 p-4">
@@ -67,19 +63,17 @@ export function BookMediaAside({
               unoptimized
               className="object-cover"
             />
-            {!isBookFound && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCoverRemove();
-                }}
-                className="absolute top-2 right-2 z-10 rounded-full bg-rose-600 p-1.5 text-white shadow-md hover:bg-rose-700"
-                title="Remove cover"
-              >
-                <Trash2 size={14} />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCoverRemove();
+              }}
+              className="absolute top-2 right-2 z-10 rounded-full bg-rose-600 p-1.5 text-white shadow-md hover:bg-rose-700"
+              title="Remove cover"
+            >
+              <Trash2 size={14} />
+            </button>
           </>
         ) : (
           <>
@@ -105,7 +99,7 @@ export function BookMediaAside({
               name="cover"
               accept="image/jpeg,image/png,image/webp"
               aria-label="Upload book cover"
-              disabled={isBookFound || isUploadingCover}
+              disabled={isUploadingCover}
               onChange={onCoverChange}
               className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
             />
@@ -166,11 +160,6 @@ export function BookMediaAside({
             </label>
           )}
         </div>
-        {isBookFound && (
-          <p className="text-[11px] text-muted-foreground">
-            You can add extra photos (e.g. book condition, pages) for your listing.
-          </p>
-        )}
       </div>
     </aside>
   );

@@ -79,6 +79,20 @@ export function getStatusBadgeConfig(status: OrderStatus | string): StatusBadgeC
         pillClass:
           "bg-blue-50 text-blue-800 border-blue-200/70 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40",
       };
+    case "PARTIALLY_SHIPPED":
+      return {
+        label: "Partially Shipped",
+        dotBg: "bg-sky-500",
+        pillClass:
+          "bg-sky-50 text-sky-800 border-sky-200/70 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/40",
+      };
+    case "PARTIALLY_CANCELLED":
+      return {
+        label: "Partially Cancelled",
+        dotBg: "bg-orange-500",
+        pillClass:
+          "bg-orange-50 text-orange-800 border-orange-200/70 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/40",
+      };
     case "PROCESSING":
       return {
         label: "Processing",
@@ -108,6 +122,75 @@ export function getStatusBadgeConfig(status: OrderStatus | string): StatusBadgeC
           "bg-amber-50 text-amber-800 border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40",
       };
   }
+}
+
+export function getOrderItemStatusBadgeConfig(
+  status?: string,
+): StatusBadgeConfig {
+  const upper = (status || "CONFIRMED").toUpperCase();
+
+  switch (upper) {
+    case "DELIVERED":
+      return {
+        label: "Delivered",
+        dotBg: "bg-emerald-500",
+        pillClass:
+          "bg-emerald-50 text-emerald-800 border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300",
+      };
+    case "CANCELLED":
+      return {
+        label: "Cancelled",
+        dotBg: "bg-rose-500",
+        pillClass:
+          "bg-rose-50 text-rose-800 border-rose-200/70 dark:bg-rose-950/40 dark:text-rose-300",
+      };
+    case "SHIPPED":
+      return {
+        label: "Shipped",
+        dotBg: "bg-blue-500",
+        pillClass:
+          "bg-blue-50 text-blue-800 border-blue-200/70 dark:bg-blue-950/40 dark:text-blue-300",
+      };
+    case "PROCESSING":
+      return {
+        label: "Processing",
+        dotBg: "bg-indigo-500",
+        pillClass:
+          "bg-indigo-50 text-indigo-800 border-indigo-200/70 dark:bg-indigo-950/40 dark:text-indigo-300",
+      };
+    case "CONFIRMED":
+      return {
+        label: "Confirmed",
+        dotBg: "bg-teal-500",
+        pillClass:
+          "bg-teal-50 text-teal-800 border-teal-200/70 dark:bg-teal-950/40 dark:text-teal-300",
+      };
+    case "PENDING":
+    default:
+      return {
+        label: "Pending",
+        dotBg: "bg-amber-500",
+        pillClass:
+          "bg-amber-50 text-amber-800 border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300",
+      };
+  }
+}
+
+export function canCancelOrderItem(
+  item: OrderItem,
+  orderStatus?: OrderStatus,
+): boolean {
+  if (orderStatus === "CANCELLED" || orderStatus === "DELIVERED") {
+    return false;
+  }
+
+  const itemStatus = (item.status || "CONFIRMED").toUpperCase();
+
+  return (
+    itemStatus !== "SHIPPED" &&
+    itemStatus !== "DELIVERED" &&
+    itemStatus !== "CANCELLED"
+  );
 }
 
 export interface ItemSummaryResult {

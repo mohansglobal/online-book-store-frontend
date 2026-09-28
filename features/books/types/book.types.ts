@@ -101,6 +101,7 @@ export type ApiBook = {
   isActive?: boolean;
   effectiveImages?: string[];
   listingImages?: string[];
+  isWishlisted?: boolean;
 };
 
 export type BookPaginationMeta = {
@@ -157,7 +158,10 @@ export type GetBooksParams = {
 
 export interface CatalogBook {
   id: string;
+  bookId?: string;
+  listingId?: string;
   slug: string;
+  isWishlisted?: boolean;
   title: string;
   author: string;
   publisher: string;

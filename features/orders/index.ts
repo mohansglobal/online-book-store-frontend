@@ -5,6 +5,8 @@ export * from "./queries/use-orders-query";
 export * from "./queries/use-order-detail-query";
 export * from "./mutations/use-create-order-mutation";
 export * from "./mutations/use-cancel-order-mutation";
+export * from "./mutations/use-cancel-order-item-mutation";
+export * from "./mutations/use-update-order-item-fulfillment-mutation";
 export * from "./utils/order-helpers";
 export * from "./components/order-status-tabs";
 export * from "./components/order-date-filter";

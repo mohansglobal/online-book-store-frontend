@@ -10,20 +10,20 @@ export function CartSkeleton() {
             key={key}
             className="flex items-stretch overflow-hidden rounded-xl border border-border bg-surface"
           >
-            {/* Cover Skeleton */}
-            <div className="relative h-36 w-24 shrink-0 border-r border-border/50 bg-surface-soft sm:w-32">
+            {/* Cover Skeleton (2:3 Aspect Ratio, flush to left) */}
+            <div className="relative aspect-[2/3] w-24 shrink-0 border-r border-border/50 bg-surface-soft sm:w-28">
               <Skeleton className="h-full w-full rounded-none" />
             </div>
 
             {/* Content Skeleton */}
-            <div className="flex min-w-0 flex-1 flex-col justify-between p-3 sm:p-4">
-              <div className="space-y-2">
+            <div className="flex min-w-0 flex-1 flex-col justify-between p-3 sm:p-3.5">
+              <div className="space-y-1.5">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="mt-2 h-5 w-24" />
+                <Skeleton className="mt-1.5 h-5 w-24" />
               </div>
 
-              <div className="flex items-center justify-between border-t border-border/60 pt-3">
+              <div className="mt-2.5 flex items-center justify-between border-t border-border/60 pt-2.5">
                 <Skeleton className="h-7 w-20 rounded-md" />
                 <Skeleton className="h-5 w-16" />
               </div>

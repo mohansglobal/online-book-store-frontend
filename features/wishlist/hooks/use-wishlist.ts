@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/features/auth";
 import { useCart } from "@/features/cart";
@@ -11,6 +12,7 @@ import {
   useWishlistStore,
 } from "../stores/use-wishlist-store";
 import { useWishlistQuery } from "../queries/use-wishlist-query";
+import { useWishlistIdsQuery } from "../queries/use-wishlist-ids-query";
 import {
   useAddToWishlistMutation,
   useClearWishlistMutation,
@@ -21,6 +23,7 @@ import type { AddWishlistItemInput, WishlistItem } from "../types/wishlist.types
 
 export type UseWishlistReturn = {
   items: WishlistItem[];
+  wishlistIds?: Set<string>;
   count: number;
   isHydrated: boolean;
   isLoggedIn: boolean;
@@ -31,18 +34,21 @@ export type UseWishlistReturn = {
   moveToCart: (item: WishlistItem, removeFromList?: boolean) => void;
   moveAllToCart: () => void;
   clearWishlist: () => Promise<void>;
-  isInWishlist: (idOrSlug: string) => boolean;
+  isInWishlist: (idOrSlug?: string | null, secondaryId?: string | null) => boolean;
 };
 
 export function useWishlist(): UseWishlistReturn {
+  const router = useRouter();
   const { data: user, isLoading: isAuthLoading } = useCurrentUser();
   const isLoggedIn = Boolean(user);
 
+  // Scalable lightweight IDs query (<1KB) for instant O(1) membership checks
+  const { data: serverWishlistIds } = useWishlistIdsQuery(isLoggedIn);
+  
   // Server wishlist query
   const {
     data: serverWishlistResponse,
     isLoading: isServerWishlistLoading,
-    isFetching: isServerWishlistFetching,
   } = useWishlistQuery(isLoggedIn);
 
   // Guest wishlist store
@@ -71,28 +77,63 @@ export function useWishlist(): UseWishlistReturn {
   const count = items.length;
 
   const isInWishlist = useCallback(
-    (idOrSlug: string) => {
-      if (!idOrSlug) return false;
-      const lower = idOrSlug.toLowerCase();
-      return items.some(
-        (i) =>
-          i.id === idOrSlug ||
-          i.slug === idOrSlug ||
-          (i.title && i.title.toLowerCase() === lower),
-      );
+    (idOrSlug?: string | null, secondaryId?: string | null) => {
+      if (!idOrSlug && !secondaryId) return false;
+
+      const candidates: string[] = [];
+      if (idOrSlug && typeof idOrSlug === "string" && idOrSlug.trim()) {
+        candidates.push(idOrSlug.trim());
+      }
+      if (
+        secondaryId &&
+        typeof secondaryId === "string" &&
+        secondaryId.trim() &&
+        secondaryId.trim() !== idOrSlug
+      ) {
+        candidates.push(secondaryId.trim());
+      }
+
+      if (candidates.length === 0) return false;
+
+      // 1. Fast O(1) serverWishlistIds lookup
+      if (serverWishlistIds && serverWishlistIds.size > 0) {
+        for (const candidate of candidates) {
+          if (serverWishlistIds.has(candidate)) {
+            return true;
+          }
+        }
+      }
+
+      // 2. Fallback scan on unified items
+      return candidates.some((candidate) => {
+        const lower = candidate.toLowerCase();
+        return items.some(
+          (i) =>
+            i.id === candidate ||
+            (i.bookId && i.bookId === candidate) ||
+            (i.listingId && i.listingId === candidate) ||
+            (i.slug && i.slug === candidate) ||
+            (i.title && i.title.toLowerCase() === lower),
+        );
+      });
     },
-    [items],
+    [serverWishlistIds, items],
   );
 
   const handleToggle = useCallback(
     async (input: AddWishlistItemInput): Promise<boolean> => {
-      const id = input.id || input.listingId || input.bookId || "";
-      const currentlyInWishlist = isInWishlist(id || input.slug || input.title);
+      const canonicalBookId = input.bookId || "";
+      const listingOrItemId = input.listingId || input.id || "";
+      const primaryId = canonicalBookId || listingOrItemId;
+      const currentlyInWishlist = isInWishlist(canonicalBookId, listingOrItemId || input.slug);
 
       if (isLoggedIn) {
         if (currentlyInWishlist) {
           try {
-            await removeMutation.mutateAsync(id);
+            await removeMutation.mutateAsync({
+              bookId: canonicalBookId || primaryId,
+              listingId: input.listingId,
+            });
             toast.info(`"${input.title}" removed from wishlist.`);
             return false;
           } catch (err: unknown) {
@@ -103,7 +144,11 @@ export function useWishlist(): UseWishlistReturn {
           }
         } else {
           try {
-            await addMutation.mutateAsync({ id });
+            await addMutation.mutateAsync({
+              bookId: canonicalBookId || primaryId,
+              listingId: input.listingId,
+              id: primaryId,
+            });
             toast.success(`"${input.title}" added to wishlist!`);
             return true;
           } catch (err: unknown) {
@@ -114,7 +159,7 @@ export function useWishlist(): UseWishlistReturn {
           }
         }
       } else {
-        const added = guestToggleItem({ ...input, id });
+        const added = guestToggleItem({ ...input, id: primaryId });
         if (added) {
           toast.success(`"${input.title}" added to wishlist!`);
         } else {
@@ -128,10 +173,17 @@ export function useWishlist(): UseWishlistReturn {
 
   const handleAddItem = useCallback(
     async (input: AddWishlistItemInput) => {
-      const id = input.id || input.listingId || input.bookId || "";
+      const canonicalBookId = input.bookId || "";
+      const listingOrItemId = input.listingId || input.id || "";
+      const primaryId = canonicalBookId || listingOrItemId;
+
       if (isLoggedIn) {
         try {
-          await addMutation.mutateAsync({ id });
+          await addMutation.mutateAsync({
+            bookId: canonicalBookId || primaryId,
+            listingId: input.listingId,
+            id: primaryId,
+          });
           toast.success(`"${input.title}" added to wishlist!`);
         } catch (err: unknown) {
           const message =
@@ -139,7 +191,7 @@ export function useWishlist(): UseWishlistReturn {
           toast.error(message);
         }
       } else {
-        guestAddItem({ ...input, id });
+        guestAddItem({ ...input, id: primaryId });
         toast.success(`"${input.title}" added to wishlist!`);
       }
     },
@@ -148,12 +200,17 @@ export function useWishlist(): UseWishlistReturn {
 
   const handleRemove = useCallback(
     async (itemOrId: WishlistItem | string) => {
-      const id = typeof itemOrId === "string" ? itemOrId : itemOrId.id || itemOrId.bookId || "";
-      const title = typeof itemOrId === "string" ? "Item" : itemOrId.title;
+      const isString = typeof itemOrId === "string";
+      const bookId = isString ? itemOrId : itemOrId.bookId || itemOrId.id;
+      const listingId = !isString ? itemOrId.listingId : undefined;
+      const title = !isString ? itemOrId.title : "Item";
 
       if (isLoggedIn) {
         try {
-          await removeMutation.mutateAsync(id);
+          await removeMutation.mutateAsync({
+            bookId,
+            listingId,
+          });
           toast.success(`Removed "${title}" from wishlist`);
         } catch (err: unknown) {
           const message =
@@ -161,7 +218,7 @@ export function useWishlist(): UseWishlistReturn {
           toast.error(message);
         }
       } else {
-        guestRemoveItem(id);
+        guestRemoveItem(bookId);
         toast.success(`Removed "${title}" from wishlist`);
       }
     },
@@ -210,12 +267,12 @@ export function useWishlist(): UseWishlistReturn {
         action: {
           label: "View Cart",
           onClick: () => {
-            window.location.href = "/cart";
+            router.push("/cart");
           },
         },
       });
     },
-    [addToCartStore, handleRemove],
+    [addToCartStore, handleRemove, router],
   );
 
   const handleMoveAllToCart = useCallback(() => {
@@ -247,11 +304,11 @@ export function useWishlist(): UseWishlistReturn {
       action: {
         label: "View Cart",
         onClick: () => {
-          window.location.href = "/cart";
+          router.push("/cart");
         },
       },
     });
-  }, [items, addToCartStore]);
+  }, [items, addToCartStore, router]);
 
   const isAuthSettled = !isAuthLoading;
   const isWishlistLoading =
@@ -261,6 +318,7 @@ export function useWishlist(): UseWishlistReturn {
 
   return {
     items,
+    wishlistIds: serverWishlistIds,
     count,
     isHydrated: isAuthSettled && (isLoggedIn ? !isServerWishlistLoading : isGuestHydrated),
     isLoggedIn,

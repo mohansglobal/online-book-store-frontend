@@ -68,6 +68,21 @@ export interface WishlistResponse {
   data: WishlistData;
 }
 
+export interface WishlistIdsResponse {
+  success: boolean;
+  message?: string;
+  data: string[];
+}
+
+export interface WishlistCheckResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    bookId: string;
+    isWishlisted: boolean;
+  };
+}
+
 // Payloads for mutations
 export type AddWishlistApiInput = {
   bookId?: string;

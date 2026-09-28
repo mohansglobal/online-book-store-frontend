@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AdminTopNav from "./components/AdminTopNav";
 import { BookCanonicalFields } from "./components/book-canonical-fields";
 import { BookMediaAside } from "./components/book-media-aside";
@@ -59,11 +59,6 @@ export default function AddBookPage() {
     setExtraPreviews,
     isUploadingCover,
     isUploadingGallery,
-    debouncedIsbn,
-    lookupResponse,
-    isBookFound,
-    isAlreadyListed,
-    isChecking,
     isSubmitting,
     handleCoverChange,
     handleExtraImagesChange,
@@ -82,15 +77,6 @@ export default function AddBookPage() {
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminTopNav activeTab="add-book" />
 
-          {isAlreadyListed && (
-            <div className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-700 dark:text-amber-400">
-              <AlertTriangle className="h-5 w-5 shrink-0" />
-              <div className="text-xs sm:text-sm">
-                <span className="font-semibold">Notice:</span> You already have an active listing for this book. Updating this form will adjust your listing.
-              </div>
-            </div>
-          )}
-
           <form
             onSubmit={handleSubmit}
             className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12"
@@ -101,9 +87,7 @@ export default function AddBookPage() {
                   Book Details
                 </h2>
                 <p className="text-sm text-text-secondary">
-                  {isBookFound
-                    ? "Canonical catalog details are locked. Enter your selling price and inventory stock below."
-                    : "Enter the ISBN to auto-lookup existing books or create a new entry."}
+                  Enter book information and inventory details to create a listing.
                 </p>
               </div>
 
@@ -111,14 +95,9 @@ export default function AddBookPage() {
                 <IsbnSearchField
                   isbn={isbn}
                   onIsbnChange={setIsbn}
-                  isChecking={isChecking}
-                  isBookFound={isBookFound}
-                  lookupResponse={lookupResponse}
-                  debouncedIsbn={debouncedIsbn}
                 />
 
                 <BookCanonicalFields
-                  isBookFound={isBookFound}
                   titleEn={titleEn}
                   onTitleEnChange={setTitleEn}
                   titleBn={titleBn}
@@ -160,7 +139,6 @@ export default function AddBookPage() {
                 />
 
                 <BookPricingFields
-                  isBookFound={isBookFound}
                   mrp={mrp}
                   onMrpChange={setMrp}
                   sellingPrice={sellingPrice}
@@ -205,7 +183,6 @@ export default function AddBookPage() {
             </section>
 
             <BookMediaAside
-              isBookFound={isBookFound}
               coverPreview={coverPreview}
               isUploadingCover={isUploadingCover}
               onCoverChange={handleCoverChange}

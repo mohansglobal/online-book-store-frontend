@@ -1,40 +1,35 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Heart, ShoppingBag, Star } from "lucide-react";
-import { toast } from "sonner";
 import type { BookCardProps } from "../types";
 import { FALLBACK_BOOK_COVER } from "@/features/books/types/book.types";
 import { useWishlist } from "@/features/wishlist";
 import { useCart } from "@/features/cart";
-import { Rating } from "./rating";
 
 export function BookCard({
   book,
-  compact = false,
   size = "md",
   className = "",
   onWish,
   onCart,
 }: BookCardProps) {
-  const [imgSrc, setImgSrc] = useState(
-    typeof book.cover === "string" && book.cover ? book.cover : FALLBACK_BOOK_COVER,
-  );
+  const [imgError, setImgError] = useState(false);
+  const coverSrc = !imgError && typeof book.cover === "string" && book.cover
+    ? book.cover
+    : FALLBACK_BOOK_COVER;
 
-  useEffect(() => {
-    if (typeof book.cover === "string" && book.cover) {
-      setImgSrc(book.cover);
-    }
-  }, [book.cover]);
-
-  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInWishlist, toggleWishlist, wishlistIds } = useWishlist();
   const { addItem: addToCart } = useCart();
 
   const isSmall = size === "sm";
-  const bookId = book.id || book.slug || book.title;
-  const isSaved = isInWishlist(bookId);
+  const listingId = book.listingId || book.id || book.slug || "";
+  const canonicalBookId = book.bookId;
+  const isSaved = wishlistIds
+    ? isInWishlist(canonicalBookId, listingId)
+    : Boolean(book.isWishlisted || isInWishlist(canonicalBookId, listingId));
 
   const rawPrice =
     book.rawPrice ??
@@ -63,13 +58,15 @@ export function BookCard({
       return;
     }
 
+    const primaryId = canonicalBookId || listingId;
     toggleWishlist({
-      id: bookId,
-      bookId: bookId,
-      slug: book.slug || bookId,
+      id: primaryId,
+      bookId: canonicalBookId || primaryId,
+      listingId: listingId,
+      slug: listingId,
       title: book.title || "-",
       author: book.author || "-",
-      coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
+      coverImage: typeof coverSrc === "string" ? coverSrc : FALLBACK_BOOK_COVER,
       format: "Paperback",
       price: rawPrice,
       originalPrice: origPrice,
@@ -88,11 +85,11 @@ export function BookCard({
     }
 
     void addToCart({
-      listingId: bookId,
-      bookId: bookId,
-      slug: book.slug || bookId,
+      listingId: listingId,
+      bookId: canonicalBookId || listingId,
+      slug: listingId,
       title: book.title || "-",
-      coverImage: typeof imgSrc === "string" ? imgSrc : FALLBACK_BOOK_COVER,
+      coverImage: typeof coverSrc === "string" ? coverSrc : FALLBACK_BOOK_COVER,
       author: book.author || "-",
       format: "Paperback",
       price: rawPrice,
@@ -114,12 +111,12 @@ export function BookCard({
       {/* Book Cover */}
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[12px] sm:rounded-[14px] bg-muted/40 shadow-xs border border-border/60 transition-all duration-500 ease-out group-hover:border-primary/40 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.14)]">
         <Image
-          src={imgSrc}
+          src={coverSrc}
           alt={`${book.title} book cover`}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-          unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
-          onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
+          unoptimized={typeof coverSrc === "string" && !coverSrc.startsWith("/")}
+          onError={() => setImgError(true)}
           className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
         />
 
@@ -219,24 +216,21 @@ export function BookCard({
 
         {/* Price & Discount Highlights */}
         <div
-          className={`flex items-baseline justify-between font-medium text-foreground ${
-            isSmall ? "mt-1.5" : "mt-2.5"
-          }`}
+          className={`flex items-baseline justify-between font-medium text-foreground ${isSmall ? "mt-1.5" : "mt-2.5"
+            }`}
         >
           <div className="flex items-baseline gap-1.5 flex-nowrap">
             <span
-              className={`font-bold tracking-tight text-foreground shrink-0 ${
-                isSmall ? "text-[13px] sm:text-[14px]" : "text-[15px] sm:text-[16px]"
-              }`}
+              className={`font-bold tracking-tight text-foreground shrink-0 ${isSmall ? "text-[13px] sm:text-[14px]" : "text-[15px] sm:text-[16px]"
+                }`}
             >
               {book.price}
             </span>
 
             {hasDiscount && book.originalPrice && (
               <span
-                className={`text-muted-foreground/70 line-through shrink-0 ${
-                  isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
-                }`}
+                className={`text-muted-foreground/70 line-through shrink-0 ${isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
+                  }`}
               >
                 {book.originalPrice}
               </span>
@@ -244,9 +238,8 @@ export function BookCard({
 
             {hasDiscount && discountPercent > 0 && (
               <span
-                className={`font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 ${
-                  isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
-                }`}
+                className={`font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 ${isSmall ? "text-[10px]" : "text-[11px] sm:text-[12px]"
+                  }`}
               >
                 {discountPercent}% off
               </span>
@@ -257,7 +250,7 @@ export function BookCard({
     </article>
   );
 
-  const targetId = book.id || book.slug;
+  const targetId = book.listingId || book.id || book.slug;
   if (targetId && targetId !== "-") {
     return (
       <Link href={`/books/${targetId}`} className="block h-full">

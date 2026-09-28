@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
@@ -31,15 +31,16 @@ export function CartItemCard({
       : 0;
 
   const isUnavailable = !item.isAvailable || item.isOutOfStock;
-  const targetBookId = item.id
+  const targetBookId = item.id;
 
   return (
     <article
-      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${isUnavailable ? "opacity-85 border-destructive/30" : ""
-        }`}
+      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${
+        isUnavailable ? "opacity-85 border-destructive/30" : ""
+      }`}
     >
-      {/* Cover */}
-      <div className="relative w-24 shrink-0 overflow-hidden border-r border-border/50 bg-surface-soft sm:w-32">
+      {/* Cover (Standard 2:3 Book Aspect Ratio, flush to left card edge) */}
+      <div className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden border-r border-border/50 bg-surface-soft sm:w-28">
         <Link
           href={targetBookId ? `/books/${targetBookId}` : "/books"}
           className="block h-full w-full"
@@ -48,9 +49,10 @@ export function CartItemCard({
             src={imgSrc}
             alt={`${item.title} cover`}
             fill
-            sizes="(max-width: 640px) 96px, 128px"
-            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUnavailable ? "grayscale" : ""
-              }`}
+            sizes="(max-width: 640px) 96px, 112px"
+            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
+              isUnavailable ? "grayscale" : ""
+            }`}
             onError={() => setHasError(true)}
             unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           />
@@ -65,69 +67,69 @@ export function CartItemCard({
       </div>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <Link
-              href={targetBookId ? `/books/${targetBookId}` : "/books"}
-              className="line-clamp-2 text-sm leading-tight font-bold text-foreground transition-colors hover:text-accent sm:text-base"
-            >
-              {item.title}
-            </Link>
+      <div className="flex min-w-0 flex-1 flex-col justify-between p-3 sm:p-3.5">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <Link
+                href={targetBookId ? `/books/${targetBookId}` : "/books"}
+                className="line-clamp-2 text-sm leading-tight font-bold text-foreground transition-colors hover:text-accent sm:text-base"
+              >
+                {item.title}
+              </Link>
 
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="max-w-[120px] truncate font-medium text-text-secondary sm:max-w-none">
-                {item.author}
-              </span>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="max-w-[120px] truncate font-medium text-text-secondary sm:max-w-none">
+                  {item.author}
+                </span>
 
-              {item.seller && (
-                <>
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
-                  <span className="truncate text-muted-foreground/80">
-                    Seller: <span className="font-medium text-foreground">{item.seller}</span>
-                  </span>
-                </>
-              )}
+                {item.seller && (
+                  <>
+                    <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
+                    <span className="truncate text-muted-foreground/80">
+                      Seller: <span className="font-medium text-foreground">{item.seller}</span>
+                    </span>
+                  </>
+                )}
 
-              <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
+                <span className="h-1 w-1 shrink-0 rounded-full bg-border" />
 
-              <span className="truncate">{item.format}</span>
+                <span className="truncate">{item.format}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Stock status alerts */}
-        {item.exceedsStock && typeof item.availableStock === "number" && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-            <AlertCircle size={13} />
-            <span>Only {item.availableStock} unit(s) available in stock.</span>
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            <span className="font-sans">₹</span>
-            {item.price.toFixed(2)}
-          </span>
-
-          {discountPercent > 0 && (
-            <>
-              <span className="text-xs text-muted-foreground line-through decoration-border">
-                ₹{item.originalPrice.toFixed(2)}
-              </span>
-
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                ({discountPercent}% OFF)
-              </span>
-            </>
+          {/* Stock status alerts */}
+          {item.exceedsStock && typeof item.availableStock === "number" && (
+            <div className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+              <AlertCircle size={13} />
+              <span>Only {item.availableStock} unit(s) available in stock.</span>
+            </div>
           )}
-        </div>
 
-        <div className="mt-auto pt-3" />
+          {/* Price */}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+            <span className="text-base sm:text-lg font-bold tracking-tight text-foreground">
+              <span className="font-sans">₹</span>
+              {item.price.toFixed(2)}
+            </span>
+
+            {discountPercent > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground line-through decoration-border">
+                  ₹{item.originalPrice.toFixed(2)}
+                </span>
+
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  ({discountPercent}% OFF)
+                </span>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-2.5">
           <div className="flex items-center gap-3">
             {/* Quantity Controls */}
             <div className="flex h-7 items-center overflow-hidden rounded-md border border-border bg-background">

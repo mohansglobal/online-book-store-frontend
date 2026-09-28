@@ -70,12 +70,12 @@ export async function lookupBookByIsbn(
   );
 }
 
-// Creates a new seller book listing via POST /api/v1/listings
+// Creates a new seller book listing via POST /api/v1/book-listings
 export async function createBookListing(
   input: CreateBookListingInput,
   options?: { signal?: AbortSignal },
 ): Promise<CreateBookListingResponse> {
-  return apiClient.post<CreateBookListingResponse>("/listings", input, {
+  return apiClient.post<CreateBookListingResponse>("/book-listings", input, {
     signal: options?.signal,
   });
 }

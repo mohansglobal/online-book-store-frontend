@@ -31,6 +31,8 @@ export const useWishlistStore = create<WishlistStore>()(
             (i) =>
               i.id === itemId ||
               (input.id && i.id === input.id) ||
+              (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
+              (input.listingId && (i.listingId === input.listingId || i.id === input.listingId)) ||
               (input.slug && i.slug === input.slug) ||
               (input.title && i.title.toLowerCase() === input.title.toLowerCase()),
           );
@@ -42,6 +44,8 @@ export const useWishlistStore = create<WishlistStore>()(
               ...updated[existingIndex],
               ...input,
               id: itemId,
+              bookId: input.bookId || updated[existingIndex].bookId,
+              listingId: input.listingId || updated[existingIndex].listingId,
               addedAt: input.addedAt || updated[existingIndex].addedAt || new Date().toISOString(),
             };
             return { items: updated };
@@ -49,6 +53,8 @@ export const useWishlistStore = create<WishlistStore>()(
 
           const newItem: WishlistItem = {
             id: itemId,
+            bookId: input.bookId,
+            listingId: input.listingId,
             slug: input.slug || itemId,
             title: input.title,
             author: input.author,
@@ -87,6 +93,8 @@ export const useWishlistStore = create<WishlistStore>()(
           (i) =>
             i.id === itemId ||
             (input.id && i.id === input.id) ||
+            (input.bookId && (i.bookId === input.bookId || i.id === input.bookId)) ||
+            (input.listingId && (i.listingId === input.listingId || i.id === input.listingId)) ||
             (input.slug && i.slug === input.slug) ||
             (input.title && i.title.toLowerCase() === input.title.toLowerCase()),
         );
@@ -138,14 +146,18 @@ export const selectIsWishlistHydrated = (state: WishlistStore) =>
   state._hydrated || (typeof window !== "undefined" && Boolean(useWishlistStore.persist?.hasHydrated?.()));
 
 export const selectIsInWishlist =
-  (idOrSlug: string) => (state: WishlistStore) => {
-    if (!idOrSlug) return false;
-    const lower = idOrSlug.toLowerCase();
-    return state.items.some(
-      (i) =>
-        i.id === idOrSlug ||
-        i.slug === idOrSlug ||
-        (i.title && i.title.toLowerCase() === lower),
+  (idOrSlug?: string | null, secondaryId?: string | null) => (state: WishlistStore) => {
+    if (!idOrSlug && !secondaryId) return false;
+    const candidates = [idOrSlug, secondaryId].filter(Boolean) as string[];
+    return state.items.some((i) =>
+      candidates.some(
+        (candidate) =>
+          i.id === candidate ||
+          (i.bookId && i.bookId === candidate) ||
+          (i.listingId && i.listingId === candidate) ||
+          (i.slug && i.slug === candidate) ||
+          (i.title && i.title.toLowerCase() === candidate.toLowerCase()),
+      ),
     );
   };
 

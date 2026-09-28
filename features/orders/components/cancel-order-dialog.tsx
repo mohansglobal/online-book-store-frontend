@@ -25,6 +25,10 @@ interface CancelOrderDialogProps {
   orderNumber?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  targetItem?: {
+    id: string;
+    title: string;
+  };
 }
 
 export function CancelOrderDialog({
@@ -32,13 +36,16 @@ export function CancelOrderDialog({
   orderNumber,
   open,
   onOpenChange,
+  targetItem,
 }: CancelOrderDialogProps) {
   const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0]);
   const cancelMutation = useCancelOrderMutation();
 
   const handleConfirmCancel = () => {
+    const itemIds = targetItem?.id ? [targetItem.id] : undefined;
+
     cancelMutation.mutate(
-      { orderId, reason: selectedReason },
+      { orderId, itemIds, reason: selectedReason },
       {
         onSuccess: () => {
           onOpenChange(false);
@@ -46,6 +53,8 @@ export function CancelOrderDialog({
       },
     );
   };
+
+  const isItemCancellation = Boolean(targetItem?.id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,14 +65,15 @@ export function CancelOrderDialog({
         />
 
         <DialogHeader className="relative z-10 text-left">
-          {/* <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400">
-            <AlertTriangle size={20} />
-          </div> */}
           <DialogTitle className="text-base font-bold text-foreground">
-            Cancel Order #{orderNumber || orderId}
+            {isItemCancellation
+              ? `Cancel Item: ${targetItem?.title}`
+              : `Cancel Order #${orderNumber || orderId}`}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground mt-1">
-            Are you sure you want to cancel this order? This action cannot be undone.
+            {isItemCancellation
+              ? "Are you sure you want to cancel this item? Other items in your order will continue fulfillment."
+              : "Are you sure you want to cancel this order? This action cannot be undone."}
           </DialogDescription>
         </DialogHeader>
 
@@ -106,7 +116,7 @@ export function CancelOrderDialog({
             disabled={cancelMutation.isPending}
             className="cursor-pointer rounded-xl border border-border bg-surface-soft px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
           >
-            Keep Order
+            {isItemCancellation ? "Keep Item" : "Keep Order"}
           </button>
           <button
             type="button"
@@ -120,7 +130,7 @@ export function CancelOrderDialog({
                 <span>Cancelling...</span>
               </>
             ) : (
-              <span>Cancel Order</span>
+              <span>{isItemCancellation ? "Cancel Item" : "Cancel Order"}</span>
             )}
           </button>
         </DialogFooter>

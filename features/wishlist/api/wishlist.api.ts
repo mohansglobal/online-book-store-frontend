@@ -3,6 +3,8 @@ import { apiClient } from "@/lib/api";
 import type {
   AddWishlistApiInput,
   SyncWishlistInput,
+  WishlistCheckResponse,
+  WishlistIdsResponse,
   WishlistResponse,
 } from "../types/wishlist.types";
 
@@ -12,6 +14,26 @@ import type {
  */
 export async function getWishlist(): Promise<WishlistResponse> {
   return apiClient.get<WishlistResponse>("/wishlist");
+}
+
+/**
+ * Fetch list of all wishlisted canonical book IDs for authenticated user.
+ * GET /api/v1/wishlist/ids
+ */
+export async function getWishlistIds(): Promise<WishlistIdsResponse> {
+  return apiClient.get<WishlistIdsResponse>("/wishlist/ids");
+}
+
+/**
+ * Check if a single book or listing is wishlisted.
+ * GET /api/v1/wishlist/check/:bookId
+ */
+export async function checkBookInWishlist(
+  bookId: string,
+): Promise<WishlistCheckResponse> {
+  return apiClient.get<WishlistCheckResponse>(
+    `/wishlist/check/${encodeURIComponent(bookId)}`,
+  );
 }
 
 /**

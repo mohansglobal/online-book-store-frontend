@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Lock,
   ShieldCheck,
@@ -13,6 +13,7 @@ import {
 import type { PaymentMethod } from "./types";
 import { OrderItemRow, type OrderItemDisplay } from "./order-item-row";
 import { CheckoutPaymentMethods } from "./checkout-payment-methods";
+import { TermsConditionsDialog } from "./terms-conditions-dialog";
 import type { CheckoutIssue, CheckoutPaymentMethod } from "@/features/checkout";
 
 interface CheckoutOrderSummaryProps {
@@ -65,6 +66,7 @@ export function CheckoutOrderSummary({
   deliveryDays,
   onProceed,
 }: CheckoutOrderSummaryProps) {
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
   const finalTotal = Math.max(0, subtotal + deliveryCharge - couponDiscount);
   const totalSavings = mrpSavings + couponDiscount;
 
@@ -152,11 +154,10 @@ export function CheckoutOrderSummary({
 
         {appliedCoupon && (
           <div
-            className={`mt-2 flex items-start justify-between gap-2 rounded-md border px-2.5 py-1.5 text-xs ${
-              isCouponValid
-                ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
-                : "border-destructive/30 bg-destructive/5 text-destructive"
-            }`}
+            className={`mt-2 flex items-start justify-between gap-2 rounded-md border px-2.5 py-1.5 text-xs ${isCouponValid
+              ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
+              : "border-destructive/30 bg-destructive/5 text-destructive"
+              }`}
           >
             <div className="flex min-w-0 flex-1 items-start gap-1.5">
               <Tag size={13} className="mt-0.5 shrink-0" />
@@ -206,18 +207,33 @@ export function CheckoutOrderSummary({
         />
 
         {/* Terms Checkbox */}
-        <label className="mt-4 flex cursor-pointer items-start gap-2">
+        <div className="mt-4 flex items-start gap-2">
           <input
+            id="checkout-terms-checkbox"
             type="checkbox"
             checked={acceptedTerms}
             onChange={(e) => onAcceptedTermsChange(e.target.checked)}
             className="mt-0.5 h-3.5 w-3.5 rounded-full accent-accent cursor-pointer"
           />
-          <span className="text-[10px] font-bold text-foreground uppercase">
+          <label
+            htmlFor="checkout-terms-checkbox"
+            className="text-[10px] font-bold text-foreground uppercase cursor-pointer select-none"
+          >
             I Accept the{" "}
-            <span className="text-accent underline">Terms & Conditions</span> *
-          </span>
-        </label>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsTermsOpen(true);
+              }}
+              className="text-accent underline hover:text-accent-hover cursor-pointer font-bold inline"
+            >
+              Terms & Conditions
+            </button>{" "}
+            *
+          </label>
+        </div>
 
         {/* Place Order CTA */}
         <button
@@ -261,6 +277,12 @@ export function CheckoutOrderSummary({
           <span>Easy Returns</span>
         </div>
       </div>
+
+      <TermsConditionsDialog
+        open={isTermsOpen}
+        onOpenChange={setIsTermsOpen}
+        onAccept={() => onAcceptedTermsChange(true)}
+      />
     </aside>
   );
 }

@@ -469,20 +469,20 @@ function normalizeListing(
 
   let id = "";
 
-  if (typeof record._id === "string") {
+  if (typeof record._id === "string" && record._id) {
     id = record._id;
-  } else if (typeof book._id === "string") {
+  } else if (typeof book._id === "string" && book._id) {
     id = book._id;
   }
 
   let slug = "";
 
-  if (typeof book._id === "string") {
-    slug = book._id;
-  } else if (typeof record._id === "string") {
+  if (typeof record._id === "string" && record._id) {
     slug = record._id;
-  } else if (typeof book.slug === "string") {
-    slug = book.slug;
+  } else if (typeof book.slug === "string" && book.slug.trim()) {
+    slug = book.slug.trim();
+  } else if (typeof book._id === "string" && book._id) {
+    slug = book._id;
   }
 
   let createdAt: string | undefined;
@@ -563,6 +563,13 @@ function normalizeListing(
 
     sku: record.sku as string | undefined,
     isActive: record.isActive as boolean | undefined,
+
+    isWishlisted:
+      typeof record.isWishlisted === "boolean"
+        ? record.isWishlisted
+        : typeof (book as Record<string, unknown>).isWishlisted === "boolean"
+          ? Boolean((book as Record<string, unknown>).isWishlisted)
+          : undefined,
 
     effectiveImages: galleryImages,
   };
@@ -1017,9 +1024,15 @@ export function transformApiBookToCatalogBook(
     language = book.language;
   }
 
+  const canonicalBookId = book.bookId || (book.listingId ? undefined : book._id);
+  const listingId = book.listingId || (book.bookId ? book._id : undefined) || id;
+
   return {
-    id,
-    slug: id,
+    id: listingId,
+    bookId: canonicalBookId,
+    listingId,
+    slug: listingId,
+    isWishlisted: book.isWishlisted,
 
     title,
     author: authorsText,
