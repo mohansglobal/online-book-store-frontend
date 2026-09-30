@@ -6,6 +6,8 @@ export const publisherKeys = {
   lists: () => [...publisherKeys.all, "list"] as const,
   list: (params?: GetPublishersParams) =>
     [...publisherKeys.lists(), params ?? {}] as const,
+  infinite: (params?: GetPublishersParams) =>
+    [...publisherKeys.all, "infinite", params ?? {}] as const,
   details: () => [...publisherKeys.all, "detail"] as const,
   detail: (slug: string) => [...publisherKeys.details(), slug] as const,
 };

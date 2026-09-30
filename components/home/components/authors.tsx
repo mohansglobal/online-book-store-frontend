@@ -8,11 +8,13 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
+  Calendar,
 } from "lucide-react";
 
 import { IconButton } from "./icon-button";
 import { SectionHeading } from "./section-heading";
 import { useAuthors } from "@/features/authors";
+import { formatAuthorLifespan } from "@/lib/date-utils";
 
 const DEFAULT_AUTHOR_FALLBACK = "https://i.pinimg.com/1200x/65/f4/d9/65f4d91a400d893d02d1151c4616bba5.jpg";
 
@@ -79,6 +81,8 @@ export function Authors() {
 
   const { data: authorsResponse, isLoading } = useAuthors({
     limit: 10,
+    sortOrder: "asce",
+    homepage: true,
   });
 
   const authorsList = useMemo(() => {
@@ -190,6 +194,21 @@ export function Authors() {
                     ? author.genre
                     : "Classic Icon";
 
+              const birthDate =
+                "birthDate" in author && typeof author.birthDate === "string"
+                  ? author.birthDate
+                  : undefined;
+
+              const deathDate =
+                "deathDate" in author && typeof author.deathDate === "string"
+                  ? author.deathDate
+                  : undefined;
+
+              const lifespan = formatAuthorLifespan(birthDate, deathDate);
+
+              const hasNameBn =
+                "nameBn" in author && Boolean(author.nameBn);
+
               return (
                 <article
                   key={`${author.name}-${index}`}
@@ -219,17 +238,32 @@ export function Authors() {
                     </div>
 
                     {/* Author Information */}
-                    <h3 className="mb-3 m-0 font-display text-[26px] leading-tight font-normal text-foreground transition-colors group-hover:text-primary sm:text-[30px]">
+                    <h3 className="mb-2 m-0 font-display text-[26px] leading-tight font-normal text-foreground transition-colors group-hover:text-primary sm:text-[30px]">
                       {author.name}
                     </h3>
 
-                    {"nameBn" in author && author.nameBn && (
-                      <p className="mb-2 text-xs font-semibold tracking-wide text-accent">
-                        {author.nameBn}
-                      </p>
+                    {(hasNameBn || lifespan) && (
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        {hasNameBn && (
+                          <span className="text-xs font-semibold tracking-wide text-accent">
+                            {author.nameBn}
+                          </span>
+                        )}
+
+                        {hasNameBn && lifespan && (
+                          <span className="text-xs text-muted-foreground/60">•</span>
+                        )}
+
+                        {lifespan && (
+                          <span className="inline-flex items-center gap-1 rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            <Calendar size={12} className="text-accent shrink-0" />
+                            <span>{lifespan}</span>
+                          </span>
+                        )}
+                      </div>
                     )}
 
-                    <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
+                    <p className="line-clamp-3 text-justify text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
                       {bioText}
                     </p>
                   </div>

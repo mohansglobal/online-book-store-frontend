@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { getCategories, getAllCategories, getCategoryBySlug } from "../api/categories.api";
 import { categoryKeys } from "../queries/category.keys";
 import type { GetCategoriesParams } from "../types/category.types";
@@ -32,5 +32,33 @@ export function useCategory(slug: string) {
     queryKey: categoryKeys.detail(slug),
     queryFn: ({ signal }) => getCategoryBySlug(slug, { signal }),
     enabled: Boolean(slug),
+  });
+}
+
+/**
+ * Hook to fetch categories infinitely with pagination for virtualized infinite scroll
+ */
+export function useInfiniteCategories(params?: Omit<GetCategoriesParams, "page">) {
+  const queryParams: GetCategoriesParams = {
+    limit: 20,
+    ...params,
+  };
+
+  return useInfiniteQuery({
+    queryKey: categoryKeys.infinite(queryParams),
+    queryFn: ({ pageParam = 1, signal }) =>
+      getCategories({ ...queryParams, page: pageParam as number }, { signal }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const meta = lastPage.meta;
+      if (!meta) return undefined;
+
+      const currentPage = meta.page ?? 1;
+      const totalPages = meta.totalPages ?? 1;
+      // Some APIs return hasNextPage, others we infer from currentPage < totalPages
+      const hasNext = (meta as any).hasNextPage ?? (currentPage < totalPages);
+
+      return hasNext ? currentPage + 1 : undefined;
+    },
   });
 }

@@ -12,6 +12,9 @@ export function useSellerTopAuthors(
     queryKey: sellerKeys.topAuthors(params),
     queryFn: ({ signal }) => getTopAuthorsAnalytics(params, { signal }),
     enabled: options?.enabled ?? true,
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 }
+

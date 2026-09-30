@@ -5,6 +5,8 @@ import type {
   Address,
   AddressType,
   CreateAddressInput,
+  DualAddressInput,
+  DualAddressResponse,
   SingleAddressResponse,
   UpdateAddressInput,
 } from "@/features/addresses";
@@ -14,6 +16,7 @@ interface UseCheckoutAddressSelectionProps {
   defaultAddress?: Address;
   setDefaultAddress: (id: string) => Promise<SingleAddressResponse>;
   createAddress: (payload: CreateAddressInput) => Promise<SingleAddressResponse>;
+  createDualAddress?: (payload: DualAddressInput) => Promise<DualAddressResponse>;
   updateAddress: (
     id: string,
     payload: UpdateAddressInput,
@@ -25,6 +28,7 @@ export function useCheckoutAddressSelection({
   defaultAddress,
   setDefaultAddress,
   createAddress,
+  createDualAddress,
   updateAddress,
 }: UseCheckoutAddressSelectionProps) {
   const [chosenBillingId, setChosenBillingId] = useState<string | null>(null);
@@ -36,23 +40,38 @@ export function useCheckoutAddressSelection({
   const [addressToEdit, setAddressToEdit] = useState<Address | null>(null);
   const [modalAddressType, setModalAddressType] = useState<AddressType>("BILLING");
 
+  // Derive preferred defaults separated by address type
+  const billingAddresses = addresses.filter((a) => a.addressType === "BILLING");
+  const shippingAddresses = addresses.filter((a) => a.addressType === "SHIPPING");
+
+  const defaultBillingAddress =
+    billingAddresses.find((a) => a.isDefault) || billingAddresses[0];
+
+  const defaultShippingAddress =
+    shippingAddresses.find((a) => a.isDefault) || shippingAddresses[0];
+
   // Purely derived selected IDs (avoids useEffect cascading renders)
   const selectedBillingId =
     chosenBillingId && addresses.some((a) => a._id === chosenBillingId)
       ? chosenBillingId
-      : defaultAddress?._id || addresses[0]?._id || null;
+      : defaultBillingAddress?._id || defaultAddress?._id || addresses[0]?._id || null;
 
   const selectedShippingId =
     chosenShippingId && addresses.some((a) => a._id === chosenShippingId)
       ? chosenShippingId
-      : defaultAddress?._id || addresses[0]?._id || null;
+      : defaultShippingAddress?._id || defaultAddress?._id || addresses[0]?._id || null;
 
   const selectedBillingAddress =
-    addresses.find((a) => a._id === selectedBillingId) || defaultAddress || null;
+    addresses.find((a) => a._id === selectedBillingId) ||
+    defaultBillingAddress ||
+    defaultAddress ||
+    null;
 
   const selectedShippingAddress = sameAsBilling
     ? selectedBillingAddress
-    : addresses.find((a) => a._id === selectedShippingId) || selectedBillingAddress;
+    : addresses.find((a) => a._id === selectedShippingId) ||
+      defaultShippingAddress ||
+      selectedBillingAddress;
 
   const handleSelectBillingAddress = (id: string) => {
     setChosenBillingId(id);
@@ -85,29 +104,53 @@ export function useCheckoutAddressSelection({
   const handleAddressSubmit = async (
     payload: CreateAddressInput,
     addressId?: string,
-  ) => {
+  ): Promise<SingleAddressResponse> => {
     if (addressId) {
       const res = await updateAddress(addressId, payload);
       if (res?.data?._id) {
-        if (payload.addressType === "SHIPPING" && !sameAsBilling) {
+        if (payload.addressType === "SHIPPING") {
           setChosenShippingId(res.data._id);
         } else {
           setChosenBillingId(res.data._id);
         }
       }
-    } else {
-      const res = await createAddress(payload);
-      if (res?.data?._id) {
-        if (payload.addressType === "SHIPPING" && !sameAsBilling) {
-          setChosenShippingId(res.data._id);
-        } else {
-          setChosenBillingId(res.data._id);
-        }
+      return res;
+    }
+
+    const res = await createAddress(payload);
+    if (res?.data?._id) {
+      if (payload.addressType === "SHIPPING") {
+        setChosenShippingId(res.data._id);
+        setSameAsBilling(false);
+      } else {
+        setChosenBillingId(res.data._id);
       }
     }
+    return res;
+  };
+
+  const handleDualAddressSubmit = async (
+    payload: DualAddressInput,
+  ): Promise<DualAddressResponse | void> => {
+    if (!createDualAddress) {
+      return;
+    }
+
+    const res = await createDualAddress(payload);
+    if (res?.data) {
+      const billingId = res.data.billingAddress._id;
+      const shippingId = res.data.shippingAddress._id;
+
+      setChosenBillingId(billingId);
+      setChosenShippingId(shippingId);
+      setSameAsBilling(payload.sameAsBilling);
+    }
+    return res;
   };
 
   return {
+    billingAddresses,
+    shippingAddresses,
     selectedBillingId,
     selectedShippingId,
     selectedBillingAddress,
@@ -123,5 +166,6 @@ export function useCheckoutAddressSelection({
     handleOpenAddModal,
     handleEditAddress,
     handleAddressSubmit,
+    handleDualAddressSubmit,
   };
 }

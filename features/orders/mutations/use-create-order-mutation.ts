@@ -5,6 +5,7 @@ import { createOrder } from "../api/orders.api";
 import { orderKeys } from "../queries/order.keys";
 import { cartKeys } from "@/features/cart";
 import { checkoutKeys } from "@/features/checkout";
+import { sellerKeys } from "@/features/seller/queries/seller.keys";
 import type { CreateOrderInput } from "../types/order.types";
 
 export function useCreateOrderMutation() {
@@ -16,6 +17,7 @@ export function useCreateOrderMutation() {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: cartKeys.all });
       queryClient.invalidateQueries({ queryKey: checkoutKeys.all });
+      queryClient.invalidateQueries({ queryKey: sellerKeys.dashboard() });
       toast.success(res.message || "Order placed successfully!");
     },
     onError: (err: unknown) => {

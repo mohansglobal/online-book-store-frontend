@@ -6,12 +6,16 @@ import type { SellerRecentOrdersParams } from "../types/seller.types";
 
 export function useSellerRecentOrders(
   params?: SellerRecentOrdersParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; refetchInterval?: number | false },
 ) {
   return useQuery({
     queryKey: sellerKeys.recentOrders(params),
     queryFn: ({ signal }) => getSellerRecentOrders(params, { signal }),
     enabled: options?.enabled ?? true,
-    staleTime: 30 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+    refetchInterval: options?.refetchInterval ?? 15 * 1000,
   });
 }
+

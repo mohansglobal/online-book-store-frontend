@@ -108,6 +108,7 @@ function TopicBookCard({ book, index }: { book: Book; index: number }) {
 
 function TopicRowSection({ config }: { config: TopicConfig }) {
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: config.categoryId,
     limit: 3,
     homesection: true,

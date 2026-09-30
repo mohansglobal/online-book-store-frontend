@@ -1,9 +1,10 @@
 "use client";
 
-// Row component for single seller recent order in live fulfillment feed
+import { useState } from "react";
 import Image from "next/image";
-import { User } from "lucide-react";
+import { User, ChevronRight, Lock } from "lucide-react";
 import type { SellerRecentOrder } from "../types/seller.types";
+import { SellerOrderStatusDialog } from "./seller-order-status-dialog";
 
 function formatOrderTime(dateString: string): string {
   const date = new Date(dateString);
@@ -52,6 +53,8 @@ function getStatusClasses(status: string): string {
 }
 
 export function RecentOrderRow({ order }: { order: SellerRecentOrder }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const firstItemTitle = order.items[0]?.title || "Book item";
   const extraCount = order.sellerItemCount - 1;
   const itemSubtitle =
@@ -64,55 +67,87 @@ export function RecentOrderRow({ order }: { order: SellerRecentOrder }) {
     maximumFractionDigits: 2,
   })}`;
 
+  const isTerminal =
+    order.orderStatus === "DELIVERED" || order.orderStatus === "CANCELLED";
+
   return (
-    <div className="group flex w-full items-center justify-between gap-3.5 rounded-xl px-1.5 py-3 transition-colors duration-200 hover:bg-background">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-          {order.customer.profilePicture ? (
-            <Image
-              src={order.customer.profilePicture}
-              alt={order.customer.name || "Customer"}
-              fill
-              sizes="40px"
-              className="object-cover"
-            />
-          ) : (
-            <User
-              size={18}
-              className="text-muted-foreground"
-              aria-hidden="true"
-            />
-          )}
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsDialogOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsDialogOpen(true);
+          }
+        }}
+        aria-label={`View and manage order ${order.orderNumber}`}
+        className="group flex w-full cursor-pointer items-center justify-between gap-3.5 rounded-xl px-2 py-3 transition-colors duration-200 hover:bg-surface-soft/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+            {order.customer.profilePicture ? (
+              <Image
+                src={order.customer.profilePicture}
+                alt={order.customer.name || "Customer"}
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
+            ) : (
+              <User
+                size={18}
+                className="text-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+              {order.customer.name || "Customer"}
+            </h3>
+
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {itemSubtitle}
+            </p>
+
+            <span className="mt-1 block text-xs font-medium text-text-secondary">
+              {earningsFormatted}
+            </span>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-foreground">
-            {order.customer.name || "Customer"}
-          </h3>
+        <div className="flex shrink-0 flex-col items-end text-right">
+          <span
+            className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-all group-hover:border-accent/40 ${getStatusClasses(
+              order.orderStatus,
+            )}`}
+          >
+            <span>{order.orderStatus.toLowerCase()}</span>
+            {isTerminal ? (
+              <Lock size={10} className="opacity-50" />
+            ) : (
+              <ChevronRight
+                size={11}
+                className="opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100"
+              />
+            )}
+          </span>
 
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {itemSubtitle}
-          </p>
-
-          <span className="mt-1 block text-xs font-medium text-text-secondary">
-            {earningsFormatted}
+          <span className="mt-1 text-xs text-muted-foreground">
+            {formatOrderTime(order.createdAt)}
           </span>
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end text-right">
-        <span
-          className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getStatusClasses(
-            order.orderStatus,
-          )}`}
-        >
-          {order.orderStatus.toLowerCase()}
-        </span>
-
-        <span className="mt-1 text-xs text-muted-foreground">
-          {formatOrderTime(order.createdAt)}
-        </span>
-      </div>
-    </div>
+      <SellerOrderStatusDialog
+        order={order}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
+    </>
   );
 }
+

@@ -9,6 +9,8 @@ export interface BooksSearchBarProps {
   onSubmit: (e?: React.FormEvent) => void;
   onClear: () => void;
   placeholder?: string;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onTabToResults?: () => void;
 }
 
 export function BooksSearchBar({
@@ -17,7 +19,18 @@ export function BooksSearchBar({
   onSubmit,
   onClear,
   placeholder = "Search books by title, Bangla title, tags, description...",
+  inputRef,
+  onTabToResults,
 }: BooksSearchBarProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowDown") {
+      if (onTabToResults) {
+        e.preventDefault();
+        onTabToResults();
+      }
+    }
+  };
+
   return (
     <div className="flex justify-center mb-8">
       <form
@@ -29,11 +42,13 @@ export function BooksSearchBar({
         </div>
 
         <input
+          ref={inputRef}
           type="search"
           placeholder={placeholder}
           aria-label="Search books"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full py-3 px-4 bg-transparent outline-none text-foreground placeholder:text-muted-foreground text-sm sm:text-base [&::-webkit-search-cancel-button]:hidden"
         />
 

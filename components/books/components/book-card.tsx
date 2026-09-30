@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, Heart, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { FALLBACK_BOOK_COVER, type CatalogBook } from "@/features/books/types/book.types";
@@ -13,9 +14,12 @@ import { useCart } from "@/features/cart";
 interface BookCardProps {
   book: CatalogBook;
   priority?: boolean;
+  isFirst?: boolean;
+  resultIndex?: number;
 }
 
-export function BookCard({ book, priority = false }: BookCardProps) {
+export function BookCard({ book, priority = false, isFirst = false, resultIndex }: BookCardProps) {
+  const router = useRouter();
   const [imgSrc, setImgSrc] = useState<string>(
     typeof book.cover === "string" && book.cover ? book.cover : FALLBACK_BOOK_COVER,
   );
@@ -93,9 +97,23 @@ export function BookCard({ book, priority = false }: BookCardProps) {
       quantity: 1,
     });
   };
-
   return (
-    <article className="group relative flex flex-col min-w-0 h-full">
+    <article
+      id={resultIndex !== undefined ? `book-catalog-item-${resultIndex}` : undefined}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          router.push(`/books/${listingId}`);
+        }
+        if (e.key === "Tab" && e.shiftKey && isFirst) {
+          e.preventDefault();
+          const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+          searchInput?.focus();
+        }
+      }}
+      className="group relative flex flex-col min-w-0 h-full rounded-2xl p-2 -m-2 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:bg-accent/5 cursor-pointer"
+    >
       <Link
         href={`/books/${listingId}`}
         aria-label={`View details for ${book.title || "-"} by ${book.author || "-"}`}

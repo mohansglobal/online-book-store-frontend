@@ -145,6 +145,44 @@ export interface UpdateOrderItemFulfillmentParams {
   payload: UpdateOrderItemFulfillmentInput;
 }
 
+export type AllowedUpdateOrderStatus =
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED";
+
+export interface UpdateOrderStatusInput {
+  status: AllowedUpdateOrderStatus;
+  itemId?: string;
+  courier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  estimatedDeliveryDate?: string;
+  message?: string;
+  cancellationReason?: string;
+}
+
+export interface UpdateOrderStatusData {
+  order: Order;
+  updatedItems?: OrderItem[];
+  newStatus: OrderStatus;
+  orderStatus: OrderStatus;
+  overallOrderStatus?: OrderStatus;
+}
+
+export interface UpdateOrderStatusResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: UpdateOrderStatusData;
+}
+
+export interface UpdateOrderStatusParams {
+  orderId: string;
+  payload: UpdateOrderStatusInput;
+}
+
 export interface CreateOrderResponse {
   success: boolean;
   message: string;

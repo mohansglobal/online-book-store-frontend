@@ -45,23 +45,31 @@ function removeDuplicateImages(images: string[]): string[] {
 }
 
 function getCoverImage(
-  book: Partial<ApiBook>,
+  book: Partial<ApiBook> & Record<string, unknown>,
   record: Record<string, unknown>,
 ): string | null {
-  if (typeof book.coverImage === "string") {
-    const bookCover = book.coverImage.trim();
-
-    if (bookCover) {
-      return bookCover;
-    }
+  if (typeof book.coverImage === "string" && book.coverImage.trim()) {
+    return book.coverImage.trim();
   }
 
-  if (typeof record.coverImage === "string") {
-    const listingCover = record.coverImage.trim();
+  if (typeof record.coverImage === "string" && record.coverImage.trim()) {
+    return record.coverImage.trim();
+  }
 
-    if (listingCover) {
-      return listingCover;
-    }
+  if (typeof record.bookCover === "string" && record.bookCover.trim()) {
+    return record.bookCover.trim();
+  }
+
+  if (typeof record.bookcover === "string" && record.bookcover.trim()) {
+    return record.bookcover.trim();
+  }
+
+  if (typeof book.bookCover === "string" && book.bookCover.trim()) {
+    return book.bookCover.trim();
+  }
+
+  if (typeof book.bookcover === "string" && book.bookcover.trim()) {
+    return book.bookcover.trim();
   }
 
   return null;
@@ -118,9 +126,14 @@ function getMrp(record: Record<string, unknown>): number | undefined {
 function getCalculatedPrice(
   sellingPriceInPaise: number | undefined,
   book: Partial<ApiBook>,
+  record?: Record<string, unknown>,
 ): number | string | undefined {
   if (sellingPriceInPaise !== undefined) {
     return sellingPriceInPaise / 100;
+  }
+
+  if (typeof record?.price === "number") {
+    return record.price;
   }
 
   return book.price;
@@ -130,9 +143,14 @@ function getCalculatedMrp(
   mrpInPaise: number | undefined,
   book: Partial<ApiBook>,
   calculatedPrice: number | string | undefined,
+  record?: Record<string, unknown>,
 ): number | string | undefined {
   if (mrpInPaise !== undefined) {
     return mrpInPaise / 100;
+  }
+
+  if (typeof record?.mrp === "number") {
+    return record.mrp;
   }
 
   if (book.priceIn !== undefined) {
@@ -165,20 +183,54 @@ function getPublisher(
   return undefined;
 }
 
-function getAuthors(book: Partial<ApiBook>): BookAuthor[] {
-  if (!Array.isArray(book.authors)) {
-    return [];
+function getAuthors(
+  book: Partial<ApiBook> & Record<string, unknown>,
+  record?: Record<string, unknown>,
+): BookAuthor[] {
+  if (Array.isArray(book.authors) && book.authors.length > 0) {
+    return book.authors as BookAuthor[];
   }
 
-  return book.authors as BookAuthor[];
+  if (record && Array.isArray(record.authors) && record.authors.length > 0) {
+    return record.authors as BookAuthor[];
+  }
+
+  const authorName =
+    (record && typeof record.authorName === "string" && record.authorName.trim()) ||
+    (record && typeof record.author === "string" && record.author.trim()) ||
+    (typeof book.authorName === "string" && book.authorName.trim()) ||
+    (typeof book.author === "string" && book.author.trim());
+
+  if (authorName) {
+    return [{ _id: "", slug: "", name: authorName }];
+  }
+
+  return [];
 }
 
-function getCategories(book: Partial<ApiBook>): BookCategory[] {
-  if (!Array.isArray(book.categories)) {
-    return [];
+function getCategories(
+  book: Partial<ApiBook> & Record<string, unknown>,
+  record?: Record<string, unknown>,
+): BookCategory[] {
+  if (Array.isArray(book.categories) && book.categories.length > 0) {
+    return book.categories as BookCategory[];
   }
 
-  return book.categories as BookCategory[];
+  if (record && Array.isArray(record.categories) && record.categories.length > 0) {
+    return record.categories as BookCategory[];
+  }
+
+  const categoryName =
+    (record && typeof record.categoryName === "string" && record.categoryName.trim()) ||
+    (record && typeof record.category === "string" && record.category.trim()) ||
+    (typeof book.categoryName === "string" && book.categoryName.trim()) ||
+    (typeof book.category === "string" && book.category.trim());
+
+  if (categoryName) {
+    return [{ _id: "", slug: "", name: categoryName }];
+  }
+
+  return [];
 }
 
 function getStock(
@@ -223,7 +275,7 @@ function getAverageRating(
 }
 
 function getRating(
-  book: Partial<ApiBook>,
+  book: Partial<ApiBook> & Record<string, unknown>,
   record: Record<string, unknown>,
   averageRating: number | undefined,
 ): number | string | undefined {
@@ -231,8 +283,16 @@ function getRating(
     return record.rating as number | string;
   }
 
+  if (record.ratings !== undefined) {
+    return record.ratings as number | string;
+  }
+
   if (book.rating !== undefined) {
     return book.rating;
+  }
+
+  if (book.ratings !== undefined) {
+    return book.ratings as number | string;
   }
 
   return averageRating;
@@ -421,17 +481,19 @@ function normalizeListing(
   const calculatedPrice = getCalculatedPrice(
     sellingPriceInPaise,
     book,
+    record,
   );
 
   const calculatedMrp = getCalculatedMrp(
     mrpInPaise,
     book,
     calculatedPrice,
+    record,
   );
 
   const publisher = getPublisher(book, record);
-  const authors = getAuthors(book);
-  const categories = getCategories(book);
+  const authors = getAuthors(book, record);
+  const categories = getCategories(book, record);
 
   const stock = getStock(book, record);
   const inStock = getInStock(stock, book);
@@ -503,7 +565,7 @@ function normalizeListing(
 
   return {
     _id: id,
-    title: String(book.title || ""),
+    title: String(book.title || record.title || record.name || book.name || ""),
     titleBn: book.titleBn as string | undefined,
     slug,
     isbn: book.isbn as string | undefined,
@@ -575,15 +637,15 @@ function normalizeListing(
   };
 }
 
-function normalizeDirectBook(book: ApiBook): ApiBook {
+function normalizeDirectBook(book: ApiBook & Record<string, unknown>): ApiBook {
   let coverImage: string | null = null;
 
-  if (typeof book.coverImage === "string") {
-    const trimmedCover = book.coverImage.trim();
-
-    if (trimmedCover) {
-      coverImage = trimmedCover;
-    }
+  if (typeof book.coverImage === "string" && book.coverImage.trim()) {
+    coverImage = book.coverImage.trim();
+  } else if (typeof book.bookCover === "string" && book.bookCover.trim()) {
+    coverImage = book.bookCover.trim();
+  } else if (typeof book.bookcover === "string" && book.bookcover.trim()) {
+    coverImage = book.bookcover.trim();
   }
 
   const listingImages = getValidImages(book.listingImages);
@@ -608,8 +670,15 @@ function normalizeDirectBook(book: ApiBook): ApiBook {
     }
   }
 
+  const authors = getAuthors(book);
+  const categories = getCategories(book);
+  const title = String(book.title || book.name || "");
+
   return {
     ...book,
+    title,
+    authors: authors.length > 0 ? authors : book.authors,
+    categories: categories.length > 0 ? categories : book.categories,
     coverImage,
     images: uniqueImages,
   };
@@ -981,7 +1050,7 @@ export function transformApiBookToCatalogBook(
   const detail = getBookDescription(book);
   const publishedYear = getPublishedYear(book);
   const inStock = getCatalogInStock(book);
-
+  
   let priceIn: string | undefined;
 
   if (parsedPriceIn.text !== "-") {

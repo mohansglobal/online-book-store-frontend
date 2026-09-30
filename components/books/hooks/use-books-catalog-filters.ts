@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SORT_MAP, VALID_SORTS, type SortOption } from "../components/books-catalog-toolbar";
 import type { FilterItem } from "../components/books-filter-sidebar";
 import { buildActiveFiltersList } from "../utils/build-active-filters";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export interface UseBooksCatalogFiltersProps {
   initialCategoryId?: string;
@@ -143,6 +144,14 @@ export function useBooksCatalogFilters({
     },
     [searchParams, pathname, router, page, urlSearch, sortOption],
   );
+
+  const debouncedSearch = useDebounce(searchInput, 350);
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch.trim()) {
+      updateUrlParams({ search: debouncedSearch.trim(), page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrlParams]);
 
   const handleTogglePublisher = (pubId: string, item?: FilterItem) => {
     if (item?.name) {

@@ -23,6 +23,7 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
   const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: POETRY_CATEGORY_ID,
     limit: 2,
     homesection: true,

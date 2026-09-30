@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,9 @@ export interface SearchableComboboxProps {
   triggerClassName?: string;
   required?: boolean;
   allowClear?: boolean;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function SearchableCombobox({
@@ -46,8 +50,51 @@ export function SearchableCombobox({
   className,
   triggerClassName,
   allowClear = true,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
 }: SearchableComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const listParentRef = React.useRef<HTMLDivElement>(null);
+
+  const itemCount = hasNextPage ? options.length + 1 : options.length;
+
+  const rowVirtualizer = useVirtualizer({
+    count: itemCount,
+    getScrollElement: () => listParentRef.current,
+    estimateSize: (index) => {
+      const option = options[index];
+      return option?.secondaryLabel ? 48 : 38;
+    },
+    overscan: 5,
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
+  // Trigger fetchNextPage when scrolled near the end of the virtual list
+  React.useEffect(() => {
+    const lastItem = virtualItems[virtualItems.length - 1];
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= options.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      onLoadMore
+    ) {
+      onLoadMore();
+    }
+  }, [
+    hasNextPage,
+    isFetchingNextPage,
+    onLoadMore,
+    options.length,
+    virtualItems,
+  ]);
+
 
   // Determine display label: prop selectedLabel, or find matching option, or placeholder
   const activeOption = options.find((opt) => opt.value === value);
@@ -138,9 +185,12 @@ export function SearchableCombobox({
             )}
           </div>
 
-          {/* Results List */}
-          <div className="max-h-56 overflow-y-auto p-1.5 text-sm">
-            {isLoading ? (
+          {/* Virtualized Results List */}
+          <div
+            ref={listParentRef}
+            className="max-h-60 overflow-y-auto p-1.5 text-sm"
+          >
+            {isLoading && options.length === 0 ? (
               <div className="flex items-center justify-center gap-2 py-6 text-xs text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin text-accent" />
                 <span>Loading items...</span>
@@ -150,33 +200,75 @@ export function SearchableCombobox({
                 {emptyMessage}
               </div>
             ) : (
-              <div className="space-y-0.5">
-                {options.map((option) => {
-                  const isSelected = value === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handleSelect(option)}
-                      className={cn(
-                        "flex w-full cursor-pointer items-center justify-between rounded-md px-2.5 py-2 text-left text-xs transition-colors sm:text-sm",
-                        isSelected
-                          ? "bg-accent/10 font-semibold text-accent"
-                          : "text-foreground hover:bg-surface-hover",
-                      )}
-                    >
-                      <div className="flex min-w-0 flex-col pr-2">
-                        <span className="truncate">{option.label}</span>
-                        {option.secondaryLabel && (
-                          <span className="truncate text-[11px] text-muted-foreground">
-                            {option.secondaryLabel}
-                          </span>
-                        )}
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {virtualItems.map((virtualRow) => {
+                  const isLoaderRow = virtualRow.index >= options.length;
+
+                  if (isLoaderRow) {
+                    return (
+                      <div
+                        key="infinite-loader-row"
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                        className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground"
+                      >
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
+                        <span>Loading more...</span>
                       </div>
-                      {isSelected && (
-                        <Check className="h-4 w-4 shrink-0 text-accent" />
-                      )}
-                    </button>
+                    );
+                  }
+
+                  const option = options[virtualRow.index];
+                  const isSelected = value === option.value;
+
+                  return (
+                    <div
+                      key={option.value}
+                      data-index={virtualRow.index}
+                      ref={rowVirtualizer.measureElement}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(option)}
+                        className={cn(
+                          "flex w-full cursor-pointer items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs transition-colors sm:text-sm",
+                          isSelected
+                            ? "bg-accent/10 font-semibold text-accent"
+                            : "text-foreground hover:bg-surface-hover",
+                        )}
+                      >
+                        <div className="flex min-w-0 flex-col pr-2">
+                          <span className="truncate">{option.label}</span>
+                          {option.secondaryLabel && (
+                            <span className="truncate text-[11px] text-muted-foreground">
+                              {option.secondaryLabel}
+                            </span>
+                          )}
+                        </div>
+                        {isSelected && (
+                          <Check className="h-4 w-4 shrink-0 text-accent" />
+                        )}
+                      </button>
+                    </div>
                   );
                 })}
               </div>

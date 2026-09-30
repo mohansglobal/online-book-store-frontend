@@ -4,11 +4,13 @@ import {
   getSellerRecentOrders,
   getSellerRevenueAnalytics,
   getDailyOrdersAnalytics,
+  getSellerOrders,
 } from "./seller.api";
 import type {
   SellerRecentOrdersParams,
   SellerRecentOrdersResponse,
   DailyOrdersAnalyticsResponse,
+  SellerOrdersResponse,
 } from "../types/seller.types";
 
 vi.mock("@/lib/api", () => ({
@@ -309,6 +311,108 @@ describe("Seller API Client", () => {
       expect(result.data.peak.day).toBe("Sat");
       expect(result.data.currentPeriod.days).toHaveLength(2);
       expect(result.data.currentPeriod.days[1].isPeak).toBe(true);
+    });
+  });
+
+  describe("getSellerOrders", () => {
+    it("should send GET /orders/seller with default parameters", async () => {
+      const mockResponse: SellerOrdersResponse = {
+        success: true,
+        message: "Seller orders retrieved successfully",
+        data: [
+          {
+            _id: "ord_999",
+            orderNumber: "ORD-2026-9999",
+            orderStatus: "CONFIRMED",
+            overallOrderStatus: "CONFIRMED",
+            sellerSubtotalInPaise: 120000,
+            paymentMethod: "ONLINE_PAY",
+            paymentStatus: "PAID",
+            buyer: {
+              _id: "buyer_1",
+              name: "Ananya Roy",
+              email: "ananya@example.com",
+            },
+            shippingAddress: {
+              fullName: "Ananya Roy",
+              mobileNumber: "+919876543210",
+              streetAddress: "12 Park Street",
+              city: "Kolkata",
+              state: "West Bengal",
+              postalCode: "700016",
+              country: "India",
+            },
+            items: [
+              {
+                bookListing: "lst_1",
+                title: "Rabindranath Tagore Omnibus",
+                priceInPaise: 120000,
+                quantity: 1,
+                subtotalInPaise: 120000,
+                status: "CONFIRMED",
+              },
+            ],
+            createdAt: "2026-09-28T10:00:00.000Z",
+          },
+        ],
+        meta: {
+          page: 1,
+          limit: 20,
+          total: 1,
+          totalPages: 1,
+        },
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+
+      const result = await getSellerOrders();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/orders/seller", {
+        params: undefined,
+        signal: undefined,
+      });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].orderNumber).toBe("ORD-2026-9999");
+      expect(result.data[0].sellerSubtotalInPaise).toBe(120000);
+    });
+
+    it("should pass query params for status, dateRange, and page", async () => {
+      const mockResponse: SellerOrdersResponse = {
+        success: true,
+        message: "Filtered seller orders",
+        data: [],
+        meta: {
+          page: 2,
+          limit: 10,
+          total: 25,
+          totalPages: 3,
+        },
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+
+      const params = {
+        status: "PROCESSING",
+        dateRange: "last7days",
+        page: 2,
+        limit: 10,
+      };
+
+      const result = await getSellerOrders(params);
+
+      expect(apiClient.get).toHaveBeenCalledWith("/orders/seller", {
+        params: {
+          status: "PROCESSING",
+          dateRange: "last7days",
+          page: 2,
+          limit: 10,
+        },
+        signal: undefined,
+      });
+
+      expect(result.meta.page).toBe(2);
+      expect(result.meta.total).toBe(25);
     });
   });
 });

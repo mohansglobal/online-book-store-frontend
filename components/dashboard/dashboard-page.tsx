@@ -19,7 +19,6 @@ import {
     TopAuthorsCard,
 } from "@/features/seller";
 
-const TIME_RANGE = "18 - 24 Sep";
 
 export default function AdminDashboardPage() {
     return (

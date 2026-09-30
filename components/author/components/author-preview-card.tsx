@@ -1,9 +1,9 @@
-// Interactive storefront preview card with integrated direct avatar photo uploader
+// Interactive storefront preview card with integrated direct avatar
 "use client";
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { formatDateDisplay } from "@/lib/date-utils";
+import { formatAuthorLifespan } from "@/lib/date-utils";
 import {
   Camera,
   Loader2,
@@ -60,9 +60,7 @@ export function AuthorPreviewCard({
   const displayBio = bio?.trim() || "";
   const displayPhoto = photoPreview?.trim() || photo?.trim() || DEFAULT_FALLBACK_PHOTO;
 
-  const birthFormatted = formatDateDisplay(birthDate);
-  const deathFormatted = formatDateDisplay(deathDate);
-  const dateLifespan = [birthFormatted, deathFormatted].filter(Boolean).join(" — ");
+  const lifespan = formatAuthorLifespan(birthDate, deathDate);
 
   
   
@@ -202,15 +200,15 @@ export function AuthorPreviewCard({
       </h3>
 
       {/* Lifespan */}
-      {dateLifespan && (
+      {lifespan && (
         <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <Calendar className="h-3.5 w-3.5 text-accent" />
-          <span>{dateLifespan}</span>
+          <span>{lifespan}</span>
         </p>
       )}
 
       {/* Bio */}
-      <p className="line-clamp-4 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+      <p className="line-clamp-4 text-justify text-xs leading-relaxed text-muted-foreground sm:text-sm">
         {displayBio}
       </p>
 

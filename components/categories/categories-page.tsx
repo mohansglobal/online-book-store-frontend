@@ -1,27 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   AlertCircle,
-  ArrowRight,
-  BookOpen,
   RefreshCw,
   Search,
-  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 import { CategoryBanner } from "./components/CategoryBanner";
-import {
-  USE_ASSET_IMAGES,
-  CARD_GRADIENTS,
-  getCategoryImage,
-} from "./category-images";
+import { CategoryCard } from "./components/category-card";
 import { NoData } from "@/components/ui/no-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useAllCategories } from "@/features/categories";
+import { useInfiniteCategories } from "@/features/categories";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const ALPHABET = [
   "All",
@@ -33,14 +26,77 @@ const ALPHABET = [
 export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeLetter, setActiveLetter] = useState("All");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const { data: allCategories, isLoading, error, refetch } = useAllCategories();
+  // Auto-focus search input on page visit
+  useEffect(() => {
+    searchInputRef.current?.focus();
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowDown") {
+      if (filteredCategories.length > 0) {
+        e.preventDefault();
+        const firstEl = document.getElementById("category-result-0");
+        if (firstEl) {
+          firstEl.focus();
+          firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+        }
+      }
+    }
+  };
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteCategories({
+    limit: 20,
+    search: debouncedSearch.trim() || undefined,
+  });
+
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const categoriesList = useMemo(() => {
-    return allCategories ?? [];
-  }, [allCategories]);
+    return data?.pages.flatMap((page) => page.data ?? []) ?? [];
+  }, [data?.pages]);
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const normalizedSearch = debouncedSearch.trim().toLowerCase();
 
   const filteredCategories = useMemo(() => {
     return categoriesList.filter((category) => {
@@ -75,9 +131,11 @@ export default function CategoriesPage() {
             />
 
             <input
+              ref={searchInputRef}
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search category by name or Bangla title..."
               aria-label="Search categories"
               className="w-full bg-transparent px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground"
@@ -103,11 +161,10 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => setActiveLetter(letter)}
                 aria-pressed={isActive}
-                className={`flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors ${
-                  isActive
+                className={`flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border px-2 text-sm font-semibold transition-colors ${isActive
                     ? "border-accent bg-accent text-white shadow-xs"
                     : "border-border/70 bg-[#F7F1E3] text-foreground/80 hover:border-accent hover:text-accent"
-                }`}
+                  }`}
               >
                 {letter}
               </button>
@@ -143,9 +200,8 @@ export default function CategoriesPage() {
             {Array.from({ length: 8 }).map((_, idx) => (
               <div
                 key={idx}
-                className={`relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-muted/40 p-6 ${
-                  idx === 0 ? "lg:col-span-2 lg:row-span-2" : "col-span-1 row-span-1"
-                }`}
+                className={`relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-muted/40 p-6 ${idx === 0 ? "lg:col-span-2 lg:row-span-2" : "col-span-1 row-span-1"
+                  }`}
               >
                 <div className="flex h-full flex-col justify-between">
                   <Skeleton className="h-6 w-24 rounded-full" />
@@ -158,106 +214,32 @@ export default function CategoriesPage() {
             ))}
           </div>
         )}
-
+        
         {/* Categories Grid */}
         {!isLoading && !error && filteredCategories.length > 0 && (
           <div className="grid auto-rows-[280px] grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredCategories.map((category, index) => {
-              const isFeatured = index === 0;
-              const image = getCategoryImage(category.name, category.slug, index);
-              const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
+            {filteredCategories.map((category, index) => (
+              <CategoryCard
+                key={category._id || category.slug}
+                category={category}
+                index={index}
+                isFirst={index === 0}
+              />
+            ))}
+          </div>
+        )}
 
-              return (
-                <Link
-                  key={category._id || category.slug}
-                  href={`/books?category=${category._id || encodeURIComponent(category.slug)}`}
-                  className={`group relative h-full w-full overflow-hidden rounded-2xl border border-border/70 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl ${
-                    isFeatured ? "lg:col-span-2 lg:row-span-2" : "col-span-1 row-span-1"
-                  }`}
-                >
-                  {USE_ASSET_IMAGES ? (
-                    <>
-                      {/* Background Image from Assets */}
-                      <Image
-                        src={image}
-                        alt={category.name}
-                        fill
-                        sizes={
-                          isFeatured
-                            ? "(max-width: 768px) 100vw, (max-width: 1280px) 66vw, 50vw"
-                            : "(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
-                        }
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      />
-
-                      {/* Dark Gradient Overlay for legibility */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/25 transition-all duration-500 group-hover:from-black/95 group-hover:via-black/60" />
-                    </>
-                  ) : (
-                    /* Gradient Background Pattern */
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${gradientClass} transition-transform duration-700 ease-out group-hover:scale-105`}
-                    />
-                  )}
-
-                  {/* Decorative Ambient Light */}
-                  <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-white/5 blur-2xl transition-all duration-500 group-hover:bg-white/10" />
-
-                  {/* Top Metadata Badges */}
-                  <div className="absolute top-5 inset-x-5 z-10 flex items-center justify-between">
-                    {/* {category.nameBn ? (
-                      <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-md">
-                        {category.nameBn}
-                      </span>
-                    ) : (
-                      <span className="rounded-full border border-white/15 bg-black/50 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-md">
-                        Category
-                      </span>
-                    )} */}
-
-                    {/* {isFeatured && (
-                      <span className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-200 backdrop-blur-md">
-                        <Sparkles className="h-3 w-3" />
-                        Featured
-                      </span>
-                    )} */}
-                  </div>
-
-                  {/* Bottom Content */}
-                  <div className="absolute inset-0 z-10 flex flex-col justify-end p-6 transition-all duration-500 group-hover:pb-20">
-                    <h2
-                      className={`mb-1 font-display font-bold text-white drop-shadow-md transition-colors group-hover:text-accent-foreground ${
-                        isFeatured ? "text-3xl lg:text-5xl" : "text-xl md:text-2xl"
-                      }`}
-                    >
-                      {category.name}
-                    </h2>
-
-                    {category.description ? (
-                      <p className="line-clamp-2 text-xs font-normal text-white/80">
-                        {category.description}
-                      </p>
-                    ) : (
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-white/80">
-                        <BookOpen size={13} aria-hidden="true" />
-                        <span>Browse Books</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Hover Action Bar */}
-                  <div className="absolute inset-x-0 bottom-0 z-20 flex h-16 translate-y-full items-center justify-between border-t border-white/20 bg-black/60 px-6 backdrop-blur-md transition-transform duration-500 ease-out group-hover:translate-y-0">
-                    <span className="text-sm font-semibold text-white">
-                      Explore Category
-                    </span>
-
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition-colors duration-300 group-hover:bg-white group-hover:text-black">
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+        {/* Infinite Scroll Target */}
+        {hasNextPage && !error && (
+          <div ref={observerTarget} className="mt-8 flex justify-center p-4">
+            {isFetchingNextPage ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading more categories...</span>
+              </div>
+            ) : (
+              <div className="h-10" />
+            )}
           </div>
         )}
 
@@ -268,11 +250,9 @@ export default function CategoriesPage() {
               size={320}
               text={
                 searchTerm || activeLetter !== "All"
-                  ? `No categories found matching ${
-                      searchTerm ? `"${searchTerm}"` : ""
-                    }${searchTerm && activeLetter !== "All" ? " under " : ""}${
-                      activeLetter !== "All" ? `letter "${activeLetter}"` : ""
-                    }.`
+                  ? `No categories found matching ${searchTerm ? `"${searchTerm}"` : ""
+                  }${searchTerm && activeLetter !== "All" ? " under " : ""}${activeLetter !== "All" ? `letter "${activeLetter}"` : ""
+                  }.`
                   : "No categories available at the moment."
               }
               className="w-full"

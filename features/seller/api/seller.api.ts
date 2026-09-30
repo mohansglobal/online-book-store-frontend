@@ -5,6 +5,8 @@ import type {
   CategoryBreakdownAnalyticsResponse,
   DailyOrdersAnalyticsParams,
   DailyOrdersAnalyticsResponse,
+  SellerOrdersQueryParams,
+  SellerOrdersResponse,
   SellerRecentOrdersParams,
   SellerRecentOrdersResponse,
   SellerRevenueAnalyticsParams,
@@ -12,6 +14,17 @@ import type {
   TopAuthorsAnalyticsParams,
   TopAuthorsAnalyticsResponse,
 } from "../types/seller.types";
+
+// GET /api/v1/orders/seller
+export async function getSellerOrders(
+  params?: SellerOrdersQueryParams,
+  options?: { signal?: AbortSignal },
+): Promise<SellerOrdersResponse> {
+  return apiClient.get<SellerOrdersResponse>("/orders/seller", {
+    params: params as Record<string, string | number | undefined>,
+    signal: options?.signal,
+  });
+}
 
 // GET /api/v1/dashboard/recent-orders
 export async function getSellerRecentOrders(

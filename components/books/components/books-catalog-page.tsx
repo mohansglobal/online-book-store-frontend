@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { CategoryBanner } from "@/components/categories/components/CategoryBanner";
 import { BooksFilterSidebar } from "./books-filter-sidebar";
 import { BooksSearchBar } from "./books-search-bar";
@@ -41,7 +41,7 @@ export function BooksCatalogPage({
 }: BooksCatalogPageProps) {
   // Reference queries for label lookup
   const { data: categoriesData } = useCategories({ limit: 100 });
-  const { data: authorsData } = useAuthors({ limit: 100 });
+  const { data: authorsData } = useAuthors({ limit: 100, sortOrder: "asce" });
   const { data: publishersData } = usePublishers({ limit: 100 });
 
   const filterState = useBooksCatalogFilters({
@@ -50,7 +50,28 @@ export function BooksCatalogPage({
     initialPublisherId,
   });
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  // Auto-focus search input on page visit
+  useEffect(() => {
+    searchInputRef.current?.focus();
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleTabToResults = () => {
+    if (filterState.searchInput.trim() !== filterState.urlSearch.trim()) {
+      filterState.updateUrlParams({ search: filterState.searchInput.trim(), page: 1 });
+    }
+    const firstEl = document.getElementById("book-catalog-item-0");
+    if (firstEl) {
+      firstEl.focus();
+      firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+    }
+  };
 
   // Single category detail if only 1 category is filtered
   const singleCategoryId =
@@ -118,10 +139,7 @@ export function BooksCatalogPage({
         onToggleAuthor: (id) => filterState.handleToggleAuthor(id),
         onToggleCategory: (id) => filterState.handleToggleCategory(id),
       }),
-    [
-      filterState,
-      labelLookupMap,
-    ],
+    [filterState, labelLookupMap],
   );
 
   // Transformed books for UI presentation
@@ -142,12 +160,7 @@ export function BooksCatalogPage({
       filterState.selectedPublisherIds.join(","),
       filterState.selectedCategoryIds.join(","),
     ].join("|");
-  }, [
-    filterState.urlSearch,
-    filterState.selectedAuthorIds,
-    filterState.selectedPublisherIds,
-    filterState.selectedCategoryIds,
-  ]);
+  }, [filterState.urlSearch, filterState.selectedAuthorIds, filterState.selectedPublisherIds, filterState.selectedCategoryIds]);
 
   // Dynamic price limits directly derived from visible books on screen,
   // preserving full sliding range while price filters are applied
@@ -204,6 +217,7 @@ export function BooksCatalogPage({
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         {/* Floating Centered Search Bar */}
         <BooksSearchBar
+          inputRef={searchInputRef}
           value={filterState.searchInput}
           onChange={filterState.setSearchInput}
           onSubmit={(e) => {
@@ -211,6 +225,7 @@ export function BooksCatalogPage({
             filterState.updateUrlParams({ search: filterState.searchInput, page: 1 });
           }}
           onClear={() => filterState.updateUrlParams({ search: "", page: 1 })}
+          onTabToResults={handleTabToResults}
         />
 
         {/* Main Content Layout with Sticky Sidebar */}

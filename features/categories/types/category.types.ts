@@ -7,6 +7,7 @@ export type Category = {
   slug: string;
   description?: string;
   isActive?: boolean;
+  bookCount?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -36,5 +37,6 @@ export type GetCategoriesParams = {
   limit?: number;
   search?: string;
   isActive?: boolean;
+  hasBooks?: boolean;
   sort?: string;
 };

@@ -1,19 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Plus, Save } from "lucide-react";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AddressFormFields, type AddressFormData } from "./address-form-fields";
+import { AddressFormFields } from "./address-form-fields";
+import { AddressModalTabs } from "./address-modal-tabs";
+import { useAddressModalForm } from "./use-address-modal-form";
 import type {
   Address,
   AddressType,
   CreateAddressInput,
+  DualAddressInput,
+  DualAddressResponse,
+  SingleAddressResponse,
 } from "@/features/addresses";
 
 interface AddressModalFormProps {
@@ -26,7 +30,13 @@ interface AddressModalFormProps {
     email?: string;
     mobileNumber?: string;
   } | null;
-  onSubmit: (payload: CreateAddressInput, addressId?: string) => Promise<void>;
+  onSubmit?: (
+    payload: CreateAddressInput,
+    addressId?: string,
+  ) => Promise<SingleAddressResponse | void>;
+  onDualSubmit?: (
+    payload: DualAddressInput,
+  ) => Promise<DualAddressResponse | void>;
   isSubmitting?: boolean;
 }
 
@@ -39,7 +49,13 @@ interface AddressFormInnerProps {
     mobileNumber?: string;
   } | null;
   onClose: () => void;
-  onSubmit: (payload: CreateAddressInput, addressId?: string) => Promise<void>;
+  onSubmit?: (
+    payload: CreateAddressInput,
+    addressId?: string,
+  ) => Promise<SingleAddressResponse | void>;
+  onDualSubmit?: (
+    payload: DualAddressInput,
+  ) => Promise<DualAddressResponse | void>;
   isSubmitting: boolean;
 }
 
@@ -49,104 +65,45 @@ function AddressFormInner({
   initialUser,
   onClose,
   onSubmit,
+  onDualSubmit,
   isSubmitting,
 }: AddressFormInnerProps) {
-  const isEditing = Boolean(addressToEdit);
-
-  const [formData, setFormData] = useState<AddressFormData>(() => {
-    if (addressToEdit) {
-      return {
-        addressType: addressToEdit.addressType,
-        fullName: addressToEdit.fullName,
-        email: addressToEdit.email,
-        mobileNumber: addressToEdit.mobileNumber,
-        country: addressToEdit.country || "India",
-        state: addressToEdit.state || "West Bengal",
-        city: addressToEdit.city || "",
-        postalCode: addressToEdit.postalCode || "",
-        streetAddress: addressToEdit.streetAddress || "",
-        apartment: addressToEdit.apartment || "",
-        isDefault: addressToEdit.isDefault,
-      };
-    }
-    return {
-      addressType: defaultType,
-      fullName: initialUser?.name || "",
-      email: initialUser?.email || "",
-      mobileNumber: initialUser?.mobileNumber || "",
-      country: "India",
-      state: "West Bengal",
-      city: "",
-      postalCode: "",
-      streetAddress: "",
-      apartment: "",
-      isDefault: true,
-    };
+  const {
+    isEditing,
+    activeTab,
+    handleTabChange,
+    currentData,
+    useAsShipping,
+    isSeparateMode,
+    billingFilled,
+    handleFieldChange,
+    handleToggleSameAsBilling,
+    handleSubmit,
+  } = useAddressModalForm({
+    addressToEdit,
+    defaultType,
+    initialUser,
+    onClose,
+    onSubmit,
+    onDualSubmit,
   });
-
-  const handleFieldChange = <K extends keyof AddressFormData>(
-    field: K,
-    value: AddressFormData[K],
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.fullName.trim()) {
-      toast.error("Please enter the full name.");
-      return;
-    }
-    if (!formData.email.trim() || !formData.email.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
-    if (!formData.mobileNumber.trim() || formData.mobileNumber.length < 7) {
-      toast.error("Please enter a valid mobile number.");
-      return;
-    }
-    if (!formData.streetAddress.trim()) {
-      toast.error("Please enter the street address.");
-      return;
-    }
-    if (!formData.city.trim()) {
-      toast.error("Please enter the city or town.");
-      return;
-    }
-    if (!formData.postalCode.trim()) {
-      toast.error("Please enter the PIN / Postcode.");
-      return;
-    }
-
-    const payload: CreateAddressInput = {
-      addressType: formData.addressType,
-      fullName: formData.fullName.trim(),
-      email: formData.email.trim(),
-      mobileNumber: formData.mobileNumber.trim(),
-      country: formData.country,
-      state: formData.state,
-      city: formData.city.trim(),
-      postalCode: formData.postalCode.trim(),
-      streetAddress: formData.streetAddress.trim(),
-      apartment: formData.apartment?.trim() || undefined,
-      isDefault: formData.isDefault,
-    };
-
-    try {
-      await onSubmit(payload, addressToEdit?._id);
-      onClose();
-    } catch {
-      // Error handled by mutation toast
-    }
-  };
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-4">
+      {!isEditing && (
+        <AddressModalTabs
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          billingFilled={billingFilled}
+          useAsShipping={useAsShipping}
+          onToggleUseAsShipping={handleToggleSameAsBilling}
+        />
+      )}
+
       <AddressFormFields
-        formData={formData}
+        formData={currentData}
         onChange={handleFieldChange}
-        showTypeSelector={true}
+        showTypeSelector={false}
       />
 
       <div className="mt-5 flex gap-3 pt-3 border-t border-border">
@@ -157,6 +114,7 @@ function AddressFormInner({
         >
           Cancel
         </button>
+
         <button
           type="submit"
           disabled={isSubmitting}
@@ -168,6 +126,11 @@ function AddressFormInner({
             <>
               <Save size={14} />
               Save Changes
+            </>
+          ) : isSeparateMode ? (
+            <>
+              <Save size={14} />
+              Save Both Addresses
             </>
           ) : (
             <>
@@ -188,27 +151,36 @@ export function AddressModalForm({
   defaultType = "BILLING",
   initialUser,
   onSubmit,
+  onDualSubmit,
   isSubmitting = false,
 }: AddressModalFormProps) {
   const isEditing = Boolean(addressToEdit);
+  const resolvedType = addressToEdit?.addressType || defaultType;
+
+  const modalTitle = isEditing
+    ? resolvedType === "SHIPPING"
+      ? "Edit Shipping Address"
+      : "Edit Billing Address"
+    : "Add Address Details";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display text-xl font-bold">
-            {isEditing ? "Edit Address" : "Add New Address"}
+            {modalTitle}
           </DialogTitle>
         </DialogHeader>
 
         {isOpen && (
           <AddressFormInner
-            key={addressToEdit?._id || "new-address"}
+            key={addressToEdit?._id || `new-${defaultType}`}
             addressToEdit={addressToEdit}
             defaultType={defaultType}
             initialUser={initialUser}
             onClose={onClose}
             onSubmit={onSubmit}
+            onDualSubmit={onDualSubmit}
             isSubmitting={isSubmitting}
           />
         )}

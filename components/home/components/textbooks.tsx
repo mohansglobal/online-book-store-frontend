@@ -33,6 +33,7 @@ export function Textbooks({ onWish, onCart }: TextbooksProps) {
   const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: TEXTBOOKS_CATEGORY_ID,
     limit: 1,
     homesection: true,

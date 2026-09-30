@@ -53,7 +53,7 @@ export function useAddBookForm() {
 
       if (deployedUrl) {
         setCoverPreview(deployedUrl);
-        toast.success("Cover image uploaded to Cloudinary!");
+        toast.success("Cover image uploaded");
       }
     } catch (err: unknown) {
       const message =

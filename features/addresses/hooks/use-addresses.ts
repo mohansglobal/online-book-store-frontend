@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/features/auth";
 import { useAddressesQuery } from "../queries/use-addresses-query";
 import {
   useCreateAddressMutation,
+  useCreateDualAddressMutation,
   useDeleteAddressMutation,
   useSetDefaultAddressMutation,
   useUpdateAddressMutation,
@@ -14,6 +15,7 @@ import type {
   Address,
   AddressType,
   CreateAddressInput,
+  DualAddressInput,
   UpdateAddressInput,
 } from "../types/address.types";
 
@@ -29,6 +31,7 @@ export function useAddresses(addressType?: AddressType) {
   } = useAddressesQuery(addressType, { enabled: isLoggedIn });
 
   const createMutation = useCreateAddressMutation();
+  const createDualMutation = useCreateDualAddressMutation();
   const updateMutation = useUpdateAddressMutation();
   const setDefaultMutation = useSetDefaultAddressMutation();
   const deleteMutation = useDeleteAddressMutation();
@@ -54,6 +57,10 @@ export function useAddresses(addressType?: AddressType) {
     return createMutation.mutateAsync(payload);
   };
 
+  const handleCreateDual = async (payload: DualAddressInput) => {
+    return createDualMutation.mutateAsync(payload);
+  };
+
   const handleUpdate = async (id: string, payload: UpdateAddressInput) => {
     return updateMutation.mutateAsync({ id, payload });
   };
@@ -73,10 +80,12 @@ export function useAddresses(addressType?: AddressType) {
     isFetching,
     isMutating:
       createMutation.isPending ||
+      createDualMutation.isPending ||
       updateMutation.isPending ||
       deleteMutation.isPending ||
       setDefaultMutation.isPending,
     createAddress: handleCreate,
+    createDualAddress: handleCreateDual,
     updateAddress: handleUpdate,
     setDefaultAddress: handleSetDefault,
     deleteAddress: handleDelete,

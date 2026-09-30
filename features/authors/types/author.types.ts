@@ -30,6 +30,8 @@ export type AuthorPaginationMeta = {
   limit: number;
   total: number;
   totalPages: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 };
 
 export type AuthorsResponse = {
@@ -82,5 +84,11 @@ export type GetAuthorsParams = {
   search?: string;
   letter?: string;
   isActive?: boolean;
+  sortBy?: "name" | "birthDate" | "createdAt" | string;
+  sortOrder?: "asc" | "desc" | "asce" | string;
+  order?: string;
   sort?: string;
+  asce?: boolean | string;
+  shuffle?: boolean | string;
+  homepage?: boolean | string;
 };

@@ -2,6 +2,7 @@
 import type {
   CategoryBreakdownAnalyticsParams,
   DailyOrdersAnalyticsParams,
+  SellerOrdersQueryParams,
   SellerRecentOrdersParams,
   SellerRevenueAnalyticsParams,
   TopAuthorsAnalyticsParams,
@@ -11,9 +12,12 @@ export const sellerKeys = {
   all: ["seller"] as const,
 
   dashboard: () => [...sellerKeys.all, "dashboard"] as const,
-
+  
   recentOrders: (params?: SellerRecentOrdersParams) =>
     [...sellerKeys.dashboard(), "recent-orders", params ?? {}] as const,
+
+  orders: (params?: SellerOrdersQueryParams) =>
+    [...sellerKeys.all, "orders", params ?? {}] as const,
 
   revenueAnalytics: (params?: SellerRevenueAnalyticsParams) =>
     [...sellerKeys.dashboard(), "revenue-analytics", params ?? {}] as const,

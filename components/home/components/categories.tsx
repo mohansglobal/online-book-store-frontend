@@ -171,17 +171,38 @@ export function Categories() {
                       {category.name}
                     </h3>
 
-                    {"nameBn" in category && category.nameBn && (
-                      <p
-                        className={`mt-1 text-[12px] font-medium ${
-                          hasImage
-                            ? "text-white/80"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {category.nameBn}
-                      </p>
-                    )}
+                    <div className="mt-1 flex items-center gap-2">
+                      {"nameBn" in category && category.nameBn && (
+                        <p
+                          className={`text-[12px] font-medium ${
+                            hasImage
+                              ? "text-white/80"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {category.nameBn}
+                        </p>
+                      )}
+
+                      {"bookCount" in category && category.bookCount !== undefined && (
+                        <>
+                          {"nameBn" in category && category.nameBn && (
+                            <span className={`text-[10px] ${hasImage ? "text-white/60" : "text-muted-foreground/60"}`}>
+                              •
+                            </span>
+                          )}
+                          <p
+                            className={`flex items-center gap-1 text-[12px] font-medium ${
+                              hasImage
+                                ? "text-white/90"
+                                : "text-foreground/80"
+                            }`}
+                          >
+                            {category.bookCount} {category.bookCount === 1 ? 'Book' : 'Books'}
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );

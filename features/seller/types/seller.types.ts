@@ -1,5 +1,11 @@
-// Seller domain and dashboard types matching backend contracts
-import type { OrderPaymentMethod, OrderStatus, PaymentStatus } from "@/features/orders/types/order.types";
+import type {
+  OrderItem,
+  OrderItemStatus,
+  OrderPaymentMethod,
+  OrderSnapshotAddress,
+  OrderStatus,
+  PaymentStatus,
+} from "@/features/orders/types/order.types";
 
 export interface SellerCustomerSummary {
   id: string;
@@ -9,6 +15,8 @@ export interface SellerCustomerSummary {
 }
 
 export interface SellerOrderItem {
+  itemId?: string;
+  _id?: string;
   bookListingId: string;
   bookId: string;
   title: string;
@@ -18,6 +26,7 @@ export interface SellerOrderItem {
   quantity: number;
   subtotalInRupees: number;
   subtotalInPaise: number;
+  status?: OrderItemStatus;
 }
 
 export interface SellerRecentOrder {
@@ -25,6 +34,7 @@ export interface SellerRecentOrder {
   orderNumber: string;
   customer: SellerCustomerSummary;
   orderStatus: OrderStatus;
+  overallOrderStatus?: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: OrderPaymentMethod;
   createdAt: string;
@@ -315,6 +325,55 @@ export interface TopAuthorsAnalyticsParams {
   month?: number;
   sellerId?: string;
   [key: string]: string | number | undefined;
+}
+
+// Seller Orders List matching GET /api/v1/orders/seller
+export interface SellerOrderBuyer {
+  _id?: string;
+  name?: string;
+  email?: string;
+  mobileNumber?: string;
+  profilePicture?: string;
+}
+
+export interface SellerOrder {
+  _id: string;
+  orderNumber: string;
+  orderStatus: OrderStatus;
+  overallOrderStatus?: OrderStatus;
+  sellerSubtotalInPaise: number;
+  subtotalInPaise?: number;
+  totalAmountInPaise?: number;
+  couponCode?: string;
+  couponDiscountInPaise?: number;
+  paymentMethod: OrderPaymentMethod;
+  paymentStatus: PaymentStatus;
+  buyer?: SellerOrderBuyer;
+  shippingAddress?: OrderSnapshotAddress;
+  items: OrderItem[];
+  createdAt: string;
+  updatedAt?: string;
+  cancellationReason?: string;
+  cancelledAt?: string;
+}
+
+export interface SellerOrdersQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+  q?: string;
+  dateRange?: string;
+  startDate?: string;
+  endDate?: string;
+  [key: string]: string | number | undefined;
+}
+
+export interface SellerOrdersResponse {
+  success: boolean;
+  message: string;
+  data: SellerOrder[];
+  meta: SellerPaginationMeta;
 }
 
 

@@ -7,6 +7,8 @@ import type {
   OrdersQueryParams,
   OrdersResponse,
   UpdateOrderItemFulfillmentInput,
+  UpdateOrderStatusInput,
+  UpdateOrderStatusResponse,
 } from "../types/order.types";
 
 //Place a new order with address references, payment method, and promo code.
@@ -90,6 +92,18 @@ export async function updateOrderItemFulfillment(
 ): Promise<CancelOrderResponse> {
   return apiClient.patch<CancelOrderResponse>(
     `/orders/${orderId}/items/${itemId}/fulfillment`,
+    payload,
+  );
+}
+
+// Seller or Admin updates status of order or specific item with optional courier & tracking
+// PATCH /api/v1/orders/:id/status (Alias: PATCH /api/v1/orders/:id/seller-status)
+export async function updateOrderStatus(
+  orderId: string,
+  payload: UpdateOrderStatusInput,
+): Promise<UpdateOrderStatusResponse> {
+  return apiClient.patch<UpdateOrderStatusResponse>(
+    `/orders/${orderId}/status`,
     payload,
   );
 }

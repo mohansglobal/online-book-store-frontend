@@ -21,6 +21,7 @@ export function Recent({ onWish, onCart }: RecentProps) {
   const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     limit: 6,
     sortBy: "publicationDate",
     sortOrder: "desc",

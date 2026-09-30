@@ -38,6 +38,12 @@ vi.mock("@/features/orders", () => ({
   useCreateOrderMutation: vi.fn(),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({
+    invalidateQueries: vi.fn(),
+  }),
+}));
+
 vi.mock("../categories/components/CategoryBanner", () => ({
   CategoryBanner: ({ categoryName }: { categoryName: string }) => (
     <div data-testid="category-banner">{categoryName}</div>

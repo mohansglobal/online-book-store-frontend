@@ -5,6 +5,8 @@ import type {
   AddressesResponse,
   CreateAddressInput,
   DeleteAddressResponse,
+  DualAddressInput,
+  DualAddressResponse,
   SingleAddressResponse,
   UpdateAddressInput,
 } from "../types/address.types";
@@ -99,4 +101,12 @@ export async function deleteAddress(
   return apiClient.delete<DeleteAddressResponse>(
     `/addresses/${encodeURIComponent(id)}`,
   );
+}
+
+// Create both billing and shipping addresses atomically
+// POST /api/v1/addresses/dual
+export async function createDualAddress(
+  payload: DualAddressInput,
+): Promise<DualAddressResponse> {
+  return apiClient.post<DualAddressResponse>("/addresses/dual", payload);
 }

@@ -153,6 +153,10 @@ export type GetBooksParams = {
   sortOrder?: BookSortOrder;
   homesection?: boolean | string;
   homeSection?: boolean | string;
+  homepage?: boolean | string;
+  ispopularnovel?: boolean | string;
+  bestsellers?: boolean | string;
+  period?: "week" | "month" | "all" | string;
   [key: string]: string | number | boolean | undefined;
 };
 

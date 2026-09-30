@@ -32,11 +32,13 @@ export function PopularNovels({
   const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: POPULAR_NOVELS_CATEGORY_ID,
     limit: 8,
     homesection: true,
+    ispopularnovel: true,
   });
-
+  
   const apiBooks = apiResponse?.data || [];
 
   const novelBooks: Book[] = apiBooks.map((b) => {
@@ -165,7 +167,7 @@ export function PopularNovels({
                 key={book.slug || `${book.title}-${index}`}
                 book={book}
                 onWish={onWish ? () => onWish(book) : undefined}
-                onCart={onCart ? () => onCart(book) : undefined}
+                onCart={onCart ? () => onCart(book) : () => handleCartClick(book)}
               />
             ))}
           </div>

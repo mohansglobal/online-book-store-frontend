@@ -12,6 +12,9 @@ export function useSellerRevenueAnalytics(
     queryKey: sellerKeys.revenueAnalytics(params),
     queryFn: ({ signal }) => getSellerRevenueAnalytics(params, { signal }),
     enabled: options?.enabled ?? true,
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 }
+

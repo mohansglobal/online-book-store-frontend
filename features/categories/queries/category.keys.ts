@@ -8,4 +8,6 @@ export const categoryKeys = {
     [...categoryKeys.lists(), params ?? {}] as const,
   details: () => [...categoryKeys.all, "detail"] as const,
   detail: (slug: string) => [...categoryKeys.details(), slug] as const,
+  infinite: (params?: GetCategoriesParams) =>
+    [...categoryKeys.all, "infinite", params ?? {}] as const,
 };

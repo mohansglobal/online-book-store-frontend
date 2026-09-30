@@ -31,7 +31,11 @@ export function CuratedBooks({
   const railRef = useRef<HTMLDivElement>(null);
   const { addItem: addToCart } = useCart();
 
+
+
+
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: CURATED_BOOKS_CATEGORY_ID,
     limit: 8,
     homesection: true,

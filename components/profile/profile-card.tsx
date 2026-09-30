@@ -204,12 +204,12 @@ export function ProfileCard() {
           </p>
 
           {/* Location badge */}
-          <div className="mt-2.5 flex items-center justify-center">
+          {/* <div className="mt-2.5 flex items-center justify-center">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface-soft px-3 py-0.5 text-[11px] font-medium text-text-secondary">
               <MapPin size={12} className="text-primary shrink-0" />
               <span>Kolkata, India</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Dedicated Photo Actions below: Clean and unblocking */}
           <div className="mt-3.5 flex items-center justify-center gap-2 border-t border-border/50 pt-3">

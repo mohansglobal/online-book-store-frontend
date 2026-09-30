@@ -112,6 +112,7 @@ export function BooksFilterSidebar({
   const { data: authorsData, isFetching: isFetchingAuthors } = useAuthors({
     limit: 100,
     search: debouncedAuthorSearch || undefined,
+    sortOrder: "asce",
   });
 
   const { data: categoriesData, isFetching: isFetchingCategories } = useCategories({

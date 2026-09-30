@@ -34,6 +34,7 @@ export async function handleMockRequest<T>(
   const cleanEndpoint = endpoint.split("?")[0].replace(/^\/+/, "");
   const pathParts = cleanEndpoint.split("/");
   const queryParams = parseParams(options.params);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const json = options.json as any;
 
   // 1. Listings & Books
@@ -97,7 +98,7 @@ export async function handleMockRequest<T>(
     }
 
     // GET /listings/:id or /books/:id
-    if (pathParts.length > 1 && pathParts[1] !== "isbn") {
+    if (pathParts.length > 1 && pathParts[1] !== "isbn" && pathParts[1] !== "bestsellers" && pathParts[1] !== "popular-novels") {
       const identifier = decodeURIComponent(pathParts[1]);
       const book = mockStore.books.find(
         (b) =>
@@ -172,7 +173,14 @@ export async function handleMockRequest<T>(
     }
 
     // Sorting
-    if (queryParams.sortBy === "price_low_to_high") {
+    if (
+      queryParams.bestsellers === "true" ||
+      pathParts[1] === "bestsellers" ||
+      queryParams.ispopularnovel === "true" ||
+      pathParts[1] === "popular-novels"
+    ) {
+      filtered.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+    } else if (queryParams.sortBy === "price_low_to_high") {
       filtered.sort((a, b) => (a.sellingPriceInPaise || 0) - (b.sellingPriceInPaise || 0));
     } else if (queryParams.sortBy === "price_high_to_low") {
       filtered.sort((a, b) => (b.sellingPriceInPaise || 0) - (a.sellingPriceInPaise || 0));

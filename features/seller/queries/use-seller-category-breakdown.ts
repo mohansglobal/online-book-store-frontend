@@ -12,6 +12,9 @@ export function useSellerCategoryBreakdown(
     queryKey: sellerKeys.categoryBreakdown(params),
     queryFn: ({ signal }) => getCategoryBreakdownAnalytics(params, { signal }),
     enabled: options?.enabled ?? true,
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 }
+

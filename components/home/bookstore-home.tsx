@@ -23,7 +23,7 @@ export function BookstoreHome() {
     return (
         <main className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
             {/* <Navbar wish={wishCount} cart={cartCount} /> */}
-
+            
             <Hero />
 
             <CuratedBooks className="bg-card" />

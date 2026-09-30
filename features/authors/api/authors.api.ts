@@ -1,6 +1,7 @@
 // Author API endpoint functions
 import { apiClient } from "@/lib/api";
 import type {
+  Author,
   AuthorsResponse,
   CreateAuthorInput,
   CreateAuthorResponse,
@@ -11,15 +12,58 @@ import type {
   UpdateAuthorResponse,
 } from "../types/author.types";
 
+// Fetches paginated or filtered authors from /api/v1/authors
+// Defaults to alphabetical sort (A to Z) via sortOrder=asce
 export async function getAuthors(
   params?: GetAuthorsParams,
   options?: { signal?: AbortSignal },
 ): Promise<AuthorsResponse> {
+  const queryParams: GetAuthorsParams = {
+    ...params,
+    sortOrder: params?.sortOrder ?? "asce",
+  };
+
   return apiClient.get<AuthorsResponse>("/authors", {
-    params: params as Record<string, string | number | boolean | undefined>,
+    params: queryParams as Record<string, string | number | boolean | undefined>,
     signal: options?.signal,
   });
 }
+
+// Fetches all authors across all pages concurrently sorted alphabetically A to Z
+export async function getAllAuthors(
+  options?: { signal?: AbortSignal },
+): Promise<Author[]> {
+  const firstPage = await getAuthors(
+    { limit: 100, page: 1, sortOrder: "asce" },
+    options,
+  );
+
+  const totalPages = firstPage.meta?.totalPages ?? 1;
+  const allAuthors = [...(firstPage.data ?? [])];
+
+  if (totalPages > 1) {
+    const pagePromises: Promise<AuthorsResponse>[] = [];
+
+    for (let p = 2; p <= totalPages; p++) {
+      pagePromises.push(
+        getAuthors({ limit: 100, page: p, sortOrder: "asce" }, options),
+      );
+    }
+
+    const remainingPages = await Promise.all(pagePromises);
+
+    for (const res of remainingPages) {
+      if (res.data) {
+        allAuthors.push(...res.data);
+      }
+    }
+  }
+
+  return allAuthors.sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", "en", { sensitivity: "base" }),
+  );
+}
+
 
 // Fetches a single author by 24-character ObjectId or URL slug from /api/v1/authors/:idOrSlug
 export async function getAuthorByIdOrSlug(

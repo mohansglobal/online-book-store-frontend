@@ -39,7 +39,7 @@ export function RecentOrdersFeed() {
   const currentYear = new Date().getFullYear();
   const queryMonth = `${currentYear}-${selectedMonth}`;
 
-  const { data, isLoading, isError, refetch } = useSellerRecentOrders({
+  const { data, isLoading, isError, refetch, isFetching } = useSellerRecentOrders({
     month: queryMonth,
     limit: 8,
   });
@@ -66,23 +66,44 @@ export function RecentOrdersFeed() {
               <h2 className="text-base font-semibold text-foreground">
                 Recent Orders
               </h2>
-
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Live fulfillment feed
-              </p>
+            
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  Live fulfillment feed
+                </p>
+              </div>
             </div>
 
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title="Refresh recent orders"
+                aria-label="Refresh recent orders"
+                className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-surface-soft/60 text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-50"
+              >
+                <RefreshCw
+                  size={13}
+                  className={isFetching ? "animate-spin text-accent" : ""}
+                  aria-hidden="true"
+                />
+              </button>
 
-            <DropdownMenu
-              open={isMonthDropdownOpen}
-              onOpenChange={setIsMonthDropdownOpen}
-            >
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Select month"
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-surface-soft/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                >
+              <DropdownMenu
+                open={isMonthDropdownOpen}
+                onOpenChange={setIsMonthDropdownOpen}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Select month"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-surface-soft/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-surface-soft hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  >
                   <span>{selectedOption?.label ?? "Month"}</span>
 
                   <ChevronDown
@@ -120,6 +141,7 @@ export function RecentOrdersFeed() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
 
 
           <div className="flex flex-1 flex-col min-h-0">
@@ -177,7 +199,7 @@ export function RecentOrdersFeed() {
 
           <div className="mt-4 border-t border-border/40 pt-4">
             <Link
-              href="/inventory"
+              href="/seller-orders"
               className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background text-sm font-medium text-text-secondary transition-colors duration-200 hover:border-muted-foreground hover:bg-surface hover:text-foreground active:scale-[0.98]"
             >
               <span>View All Orders</span>

@@ -262,3 +262,71 @@ export function parseAndFormatDate(rawInput: string): string | null {
 
   return formatDateToISO(parsed);
 }
+
+// Extracts a 4-digit year string from an ISO string, formatted date, or date string
+export function extractYear(dateString?: string | null): string | null {
+  if (!dateString || typeof dateString !== "string") {
+    return null;
+  }
+
+  const trimmed = dateString.trim();
+
+  if (!trimmed || trimmed === "null" || trimmed === "undefined") {
+    return null;
+  }
+
+  // 1. Direct match if string starts with 4 digits (e.g. "1868-08-07T00:00:00.000Z", "1868-08-07", "1868")
+  const leadingYearMatch = trimmed.match(/^(\d{4})/);
+
+  if (leadingYearMatch) {
+    const yearNumber = parseInt(leadingYearMatch[1], 10);
+
+    if (yearNumber >= 1000 && yearNumber <= 2100) {
+      return leadingYearMatch[1];
+    }
+  }
+
+  // 2. Parse via smart date parser (handles Bengali digits, textual dates like "7 May 1861")
+  const parsedDate = parseSmartDate(trimmed);
+
+  if (parsedDate) {
+    return String(parsedDate.getFullYear());
+  }
+
+  // 3. Fallback regex to capture any standalone 4-digit year
+  const anyYearMatch = trimmed.match(/\b(1\d{3}|20\d{2}|2100)\b/);
+
+  if (anyYearMatch) {
+    return anyYearMatch[1];
+  }
+
+  return null;
+}
+
+// Formats an author's lifespan:
+// Both dates: "1659-1785"
+// Living author (birthDate only): "1586-"
+// Death date only: "-1785"
+// Neither: ""
+export function formatAuthorLifespan(
+  birthDate?: string | null,
+  deathDate?: string | null,
+): string {
+  const birthYear = extractYear(birthDate);
+
+  const deathYear = extractYear(deathDate);
+
+  if (birthYear && deathYear) {
+    return `${birthYear}-${deathYear}`;
+  }
+
+  if (birthYear) {
+    return `${birthYear}-`;
+  }
+
+  if (deathYear) {
+    return `-${deathYear}`;
+  }
+
+  return "";
+}

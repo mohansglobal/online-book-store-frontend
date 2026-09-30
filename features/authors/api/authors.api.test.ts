@@ -5,8 +5,11 @@ import {
   getAuthorBySlug,
   updateAuthor,
   deleteAuthor,
+  getAuthors,
+  getAllAuthors,
 } from "./authors.api";
 import { updateAuthorSchema } from "../schemas/author.schema";
+import { authorKeys } from "../queries/author.keys";
 import type { UpdateAuthorInput } from "../types/author.types";
 
 vi.mock("@/lib/api", () => ({
@@ -21,6 +24,111 @@ vi.mock("@/lib/api", () => ({
 describe("Authors API Client & Validation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("getAuthors", () => {
+    it("should send GET /authors with default sortOrder=asce when no params provided", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Authors retrieved successfully",
+        data: [],
+        meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+
+      const result = await getAuthors();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/authors", {
+        params: { sortOrder: "asce" },
+        signal: undefined,
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should forward page, limit, and default sortOrder=asce", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Authors retrieved successfully",
+        data: [],
+        meta: { page: 1, limit: 20, total: 0, totalPages: 1 },
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+
+      const result = await getAuthors({ page: 1, limit: 20 });
+
+      expect(apiClient.get).toHaveBeenCalledWith("/authors", {
+        params: { page: 1, limit: 20, sortOrder: "asce" },
+        signal: undefined,
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should allow overriding sortOrder if explicitly provided", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Authors retrieved successfully",
+        data: [],
+        meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+      };
+
+      vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+
+      const result = await getAuthors({ sortOrder: "desc" });
+
+      expect(apiClient.get).toHaveBeenCalledWith("/authors", {
+        params: { sortOrder: "desc" },
+        signal: undefined,
+      });
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("getAllAuthors", () => {
+    it("should fetch all pages and return authors sorted A to Z", async () => {
+      const page1Response = {
+        success: true,
+        message: "Page 1",
+        data: [
+          { _id: "1", name: "Bankim Chandra", slug: "bankim" },
+          { _id: "2", name: "Abanindranath Tagore", slug: "abanindranath" },
+        ],
+        meta: { page: 1, limit: 100, total: 3, totalPages: 2 },
+      };
+
+      const page2Response = {
+        success: true,
+        message: "Page 2",
+        data: [
+          { _id: "3", name: "Rabindranath Tagore", slug: "rabindranath" },
+        ],
+        meta: { page: 2, limit: 100, total: 3, totalPages: 2 },
+      };
+
+      vi.mocked(apiClient.get)
+        .mockResolvedValueOnce(page1Response)
+        .mockResolvedValueOnce(page2Response);
+
+      const authors = await getAllAuthors();
+
+      expect(authors).toHaveLength(3);
+      expect(authors[0].name).toBe("Abanindranath Tagore");
+      expect(authors[1].name).toBe("Bankim Chandra");
+      expect(authors[2].name).toBe("Rabindranath Tagore");
+    });
+  });
+
+  describe("authorKeys", () => {
+    it("should generate correct infinite query key with parameters", () => {
+      const key = authorKeys.infinite({ limit: 20, sortOrder: "asce" });
+      expect(key).toEqual([
+        "authors",
+        "list",
+        "infinite",
+        { limit: 20, sortOrder: "asce" },
+      ]);
+    });
   });
 
   describe("getAuthorByIdOrSlug", () => {

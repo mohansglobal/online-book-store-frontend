@@ -110,6 +110,8 @@ export function BooksGrid({
           <BookCard
             book={book}
             priority={idx < 5}
+            isFirst={idx === 0}
+            resultIndex={idx}
           />
         </motion.div>
       ))}

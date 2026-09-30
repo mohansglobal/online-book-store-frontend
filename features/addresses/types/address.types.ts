@@ -52,3 +52,20 @@ export interface DeleteAddressResponse {
   success: boolean;
   message: string;
 }
+
+export interface DualAddressInput {
+  sameAsBilling: boolean;
+  billing: CreateAddressInput;
+  shipping?: CreateAddressInput;
+}
+
+export interface DualAddressData {
+  billingAddress: Address;
+  shippingAddress: Address;
+}
+
+export interface DualAddressResponse {
+  success: boolean;
+  message: string;
+  data: DualAddressData;
+}

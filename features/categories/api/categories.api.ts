@@ -26,14 +26,14 @@ export async function getCategories(
 export async function getAllCategories(
   options?: { signal?: AbortSignal },
 ): Promise<Category[]> {
-  const firstPage = await getCategories({ limit: 100, page: 1 }, options);
+  const firstPage = await getCategories({ limit: 20, page: 1 }, options);
   const totalPages = firstPage.meta?.totalPages ?? 1;
   const allCategories = [...(firstPage.data ?? [])];
 
   if (totalPages > 1) {
     const pagePromises: Promise<CategoriesResponse>[] = [];
     for (let p = 2; p <= totalPages; p++) {
-      pagePromises.push(getCategories({ limit: 100, page: p }, options));
+      pagePromises.push(getCategories({ limit: 20, page: p }, options));
     }
     const remainingPages = await Promise.all(pagePromises);
     for (const res of remainingPages) {

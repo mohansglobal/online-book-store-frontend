@@ -22,7 +22,7 @@ import { IconButton } from "./icon-button";
 import { useCurrentUser, useLogoutModalStore, useRequireAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import { useWishlistStore, selectWishlistCount, selectIsWishlistHydrated } from "@/features/wishlist";
-import { useCategories } from "@/features/categories";
+// import { useCategories } from "@/features/categories";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,17 +66,18 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
     wish > 0 ? wish : isWishHydrated ? storeWishCount : 0;
 
   const { data: user } = useCurrentUser();
-  const { withAuth, redirectToLogin } = useRequireAuth();
+  const { redirectToLogin } = useRequireAuth();
   const openLogoutModal = useLogoutModalStore((state) => state.open);
 
-  const { data: categoriesResponse, isLoading: isCategoriesLoading } =
-    useCategories({ limit: 10 });
-  const categoriesList = categoriesResponse?.data || [];
+  // Categories popover query and state commented out
+  // const { data: categoriesResponse, isLoading: isCategoriesLoading } =
+  //   useCategories({ limit: 10 });
+  // const categoriesList = categoriesResponse?.data || [];
 
   const userAvatar = user?.profilePicture || user?.avatar;
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  // const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const isHomePage = pathname === "/";
@@ -168,20 +169,19 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
               Publishers
             </Link>
 
-            {/* Categories Mega Menu */}
+            <Link
+              href="/categories"
+              className={navLinkClassName}
+            >
+              Categories
+            </Link>
+
+            {/* Categories popover commented out
             <div
               className="relative"
               onMouseEnter={() => setCategoriesOpen(true)}
               onMouseLeave={() => setCategoriesOpen(false)}
             >
-              <Link
-                href="/categories"
-                onClick={() => setCategoriesOpen(false)}
-                className={`${navLinkClassName} -my-4 py-4`}
-              >
-                Categories
-              </Link>
-
               <div
                 className={`absolute top-full left-1/2 z-50 w-max min-w-[300px] -translate-x-1/2 pt-12 transition-all duration-300 ${categoriesOpen
                   ? "visible opacity-100 pointer-events-auto"
@@ -189,7 +189,6 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                   }`}
               >
                 <div className="relative rounded-2xl border border-border bg-background p-4 shadow-2xl md:p-5">
-                  {/* Arrow */}
                   <div className="absolute -top-[7px] left-1/2 h-3.5 w-3.5 -translate-x-1/2 rotate-45 rounded-tl-[3px] border-t border-l border-border bg-background" />
 
                   {isCategoriesLoading && categoriesList.length === 0 ? (
@@ -220,7 +219,6 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                     </div>
                   )}
 
-                  {/* See more link */}
                   <div className="relative z-10 mt-4 border-t border-border/70 pt-3">
                     <Link
                       href="/categories"
@@ -237,6 +235,7 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                 </div>
               </div>
             </div>
+            */}
           </nav>
 
           {/* Actions */}

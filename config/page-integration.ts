@@ -54,7 +54,7 @@ export const PAGE_INTEGRATION_FLAGS: PageIntegrationConfig = {
   wishlist: true, 
 
   // Seller Pages
-  sellerDashboard: false,
+  sellerDashboard: true,
   sellerInventory: false,
   sellerAddBook: true,
   sellerDiscounts: false,

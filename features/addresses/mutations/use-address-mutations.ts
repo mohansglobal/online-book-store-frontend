@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   createAddress,
+  createDualAddress,
   deleteAddress,
   setDefaultAddress,
   updateAddress,
@@ -11,6 +12,7 @@ import { addressKeys } from "../queries/address.keys";
 import type {
   AddressesResponse,
   CreateAddressInput,
+  DualAddressInput,
   UpdateAddressInput,
 } from "../types/address.types";
 
@@ -26,6 +28,23 @@ export function useCreateAddressMutation() {
     onError: (err: unknown) => {
       const message =
         (err as { message?: string })?.message || "Failed to save address";
+      toast.error(message);
+    },
+  });
+}
+
+export function useCreateDualAddressMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DualAddressInput) => createDualAddress(payload),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: addressKeys.all });
+      toast.success(res.message || "Billing and shipping addresses saved successfully!");
+    },
+    onError: (err: unknown) => {
+      const message =
+        (err as { message?: string })?.message || "Failed to save addresses";
       toast.error(message);
     },
   });

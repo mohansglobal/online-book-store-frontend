@@ -96,6 +96,9 @@ export function CheckoutOrderConfirmed({
             Thank you for your purchase! Your book order has been successfully placed.
           </p>
 
+
+
+
           {/* 5-second countdown indicator */}
           <div className="mt-3.5 inline-flex items-center gap-2 rounded-full border border-border bg-surface-soft px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-xs">
             <span className="relative flex h-2 w-2">

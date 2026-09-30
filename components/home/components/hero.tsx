@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useTypewriter } from "../hooks/use-typewriter";
 import { HeroStats } from "./hero-stats";
+import { useCategories } from "@/features/categories";
 
 const ROTATING_WORDS = [
   "journey.",
@@ -34,13 +35,7 @@ const PLACEHOLDER_QUERIES = [
   "essays & poetry",
 ] as const;
 
-const POPULAR_TAGS = [
-  "Literary Fiction",
-  "Philosophy",
-  "Rare Editions",
-  "Essays & Poetry",
-  "Art & Architecture",
-] as const;
+
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -82,6 +77,13 @@ export function Hero() {
 
   const placeholderText = useTypewriter(PLACEHOLDER_QUERIES);
 
+  const { data: categoriesResponse } = useCategories({
+    limit: 5,
+    hasBooks: true,
+  });
+
+  const popularCategories = categoriesResponse?.data || [];
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setWordIndex(
@@ -113,6 +115,10 @@ export function Hero() {
 
   const handleTagClick = (tag: string): void => {
     router.push(`/books?search=${encodeURIComponent(tag.trim())}`);
+  };
+
+  const handleCategoryClick = (categoryTarget: string): void => {
+    router.push(`/books?category=${encodeURIComponent(categoryTarget)}`);
   };
 
   return (
@@ -268,16 +274,19 @@ export function Hero() {
           {/* Popular Tags */}
           <div className="hidden flex-wrap items-center justify-center gap-3 text-sm sm:flex">
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {POPULAR_TAGS.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => handleTagClick(tag)}
-                  className="cursor-pointer rounded-full border border-white/5 bg-white/5 px-4 py-1.5 text-xs text-zinc-300 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/15 hover:text-white"
-                >
-                  {tag}
-                </button>
-              ))}
+              {popularCategories.map((category) => {
+                const categoryTarget = category._id || category.slug;
+                return (
+                  <button
+                    key={categoryTarget}
+                    type="button"
+                    onClick={() => handleCategoryClick(categoryTarget)}
+                    className="cursor-pointer rounded-full border border-white/5 bg-white/5 px-4 py-1.5 text-xs text-zinc-300 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/15 hover:text-white"
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </motion.form>

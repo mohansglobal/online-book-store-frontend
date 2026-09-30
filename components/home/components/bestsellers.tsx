@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useBooks } from "@/features/books/hooks/use-books";
@@ -14,10 +14,6 @@ import type { Book } from "../types";
 
 function BestsellerItem({ book, index }: { book: Book; index: number }) {
   const [imgSrc, setImgSrc] = useState(book.cover || FALLBACK_BOOK_COVER);
-
-  useEffect(() => {
-    setImgSrc(book.cover || FALLBACK_BOOK_COVER);
-  }, [book.cover]);
 
   const isTopSeller = index === 0;
 
@@ -98,9 +94,9 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
 
 export function Bestsellers() {
   const { data: apiResponse, isLoading } = useBooks({
+    bestsellers: true,
     limit: 5,
-    sortBy: "publicationDate",
-    sortOrder: "desc",
+    homepage: true,
     homesection: true,
   });
 

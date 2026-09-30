@@ -251,6 +251,10 @@ class MockStore {
     const shippingAddress =
       this.addresses.find((a) => a._id === input.shippingAddressId) || this.addresses[0];
 
+    const billingAddress = input.billingAddressId
+      ? this.addresses.find((a) => a._id === input.billingAddressId) || shippingAddress
+      : shippingAddress;
+
     const newOrder: Order = {
       _id: `order_mock_${Date.now()}`,
       orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
@@ -274,15 +278,17 @@ class MockStore {
         country: shippingAddress.country,
       },
       billingAddress: {
-        fullName: shippingAddress.fullName,
-        mobileNumber: shippingAddress.mobileNumber,
-        streetAddress: shippingAddress.streetAddress,
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        postalCode: shippingAddress.postalCode,
-        country: shippingAddress.country,
+        fullName: billingAddress.fullName,
+        mobileNumber: billingAddress.mobileNumber,
+        streetAddress: billingAddress.streetAddress,
+        city: billingAddress.city,
+        state: billingAddress.state,
+        postalCode: billingAddress.postalCode,
+        country: billingAddress.country,
       },
-      billingSameAsShipping: true,
+      billingSameAsShipping:
+        input.billingSameAsShipping ??
+        (input.shippingAddressId === input.billingAddressId),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -293,8 +299,9 @@ class MockStore {
   }
 
   public createAddress(input: CreateAddressInput): Address {
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
     const newAddress: Address = {
-      _id: `addr_mock_${Date.now()}`,
+      _id: `addr_mock_${Date.now()}_${randomSuffix}`,
       user: this.user?.id || "user_mock_01",
       addressType: input.addressType || "SHIPPING",
       fullName: input.fullName,

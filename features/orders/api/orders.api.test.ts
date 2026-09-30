@@ -8,6 +8,7 @@ import {
   cancelOrder,
   cancelOrderItem,
   updateOrderItemFulfillment,
+  updateOrderStatus,
   type VerifyPaymentResponse,
 } from "./orders.api";
 import type { CreateOrderInput, Order } from "../types/order.types";
@@ -288,6 +289,70 @@ describe("Orders API Client", () => {
         fulfillmentPayload,
       );
       expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("updateOrderStatus", () => {
+    it("should send PATCH /orders/:id/status with full fulfillment payload", async () => {
+      const payload = {
+        status: "SHIPPED" as const,
+        itemId: "item_456",
+        courier: "BlueDart Express",
+        trackingNumber: "BD-12345678",
+        trackingUrl: "https://bluedart.com/track/BD-12345678",
+        estimatedDeliveryDate: "2026-10-05T12:00:00.000Z",
+        message: "We are preparing your package for dispatch.",
+      };
+
+      const mockResponse = {
+        success: true,
+        statusCode: 200,
+        message: "Order status updated successfully",
+        data: {
+          order: { _id: "ord_101", orderStatus: "SHIPPED" } as unknown as Order,
+          newStatus: "SHIPPED" as const,
+          orderStatus: "SHIPPED" as const,
+        },
+      };
+
+      vi.mocked(apiClient.patch).mockResolvedValueOnce(mockResponse);
+
+      const result = await updateOrderStatus("ord_101", payload);
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/orders/ord_101/status",
+        payload,
+      );
+      expect(result).toEqual(mockResponse);
+      expect(result.data.newStatus).toBe("SHIPPED");
+    });
+
+    it("should send PATCH /orders/:id/status with CANCELLED status and reason", async () => {
+      const payload = {
+        status: "CANCELLED" as const,
+        cancellationReason: "Out of stock inventory",
+      };
+
+      const mockResponse = {
+        success: true,
+        statusCode: 200,
+        message: "Order status updated successfully",
+        data: {
+          order: { _id: "ord_102", orderStatus: "CANCELLED" } as unknown as Order,
+          newStatus: "CANCELLED" as const,
+          orderStatus: "CANCELLED" as const,
+        },
+      };
+
+      vi.mocked(apiClient.patch).mockResolvedValueOnce(mockResponse);
+
+      const result = await updateOrderStatus("ord_102", payload);
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/orders/ord_102/status",
+        payload,
+      );
+      expect(result.data.orderStatus).toBe("CANCELLED");
     });
   });
 });

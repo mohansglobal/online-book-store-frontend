@@ -17,21 +17,23 @@ import { CheckoutLoadingState } from "./checkout-loading-state";
 import { CheckoutEmptyState } from "./checkout-empty-state";
 import { CheckoutInvalidBuyNowState } from "./checkout-invalid-buy-now";
 import { AddressModalForm } from "./address-modal-form";
-import { useCheckoutPromo } from "./use-checkout-promo";
+import { useCheckoutPromo, useCouponToast } from "./use-checkout-promo";
 import { useCheckoutAddressSelection } from "./use-checkout-address-selection";
 import { useCheckoutPricing } from "./use-checkout-pricing";
 import { useCheckoutOrderFlow } from "./use-checkout-order-flow";
+import { useCheckoutQuantity } from "./use-checkout-quantity";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
-  const { items, summary, isLoading: isCartLoading } = useCart();
+  const { items, summary, updateQuantity, isLoading: isCartLoading } = useCart();
   const {
     addresses,
     defaultAddress,
     isLoading: isAddressesLoading,
     isMutating,
     createAddress,
+    createDualAddress,
     updateAddress,
     setDefaultAddress,
     deleteAddress,
@@ -40,6 +42,8 @@ export default function CheckoutPage() {
   const createOrderMutation = useCreateOrderMutation();
 
   const {
+    billingAddresses,
+    shippingAddresses,
     selectedBillingId,
     selectedShippingId,
     selectedBillingAddress,
@@ -55,11 +59,13 @@ export default function CheckoutPage() {
     handleOpenAddModal,
     handleEditAddress,
     handleAddressSubmit,
+    handleDualAddressSubmit,
   } = useCheckoutAddressSelection({
     addresses,
     defaultAddress,
     setDefaultAddress,
     createAddress,
+    createDualAddress,
     updateAddress,
   });
 
@@ -99,10 +105,19 @@ export default function CheckoutPage() {
 
   const isSummaryEnabled = isBuyNow ? Boolean(listingId) : items.length > 0;
 
-  const { data: summaryResponse, isLoading: isSummaryLoading } = useCheckoutSummaryQuery(
+  const {
+    data: summaryResponse,
+    isLoading: isSummaryLoading,
+    isFetching: isSummaryFetching,
+  } = useCheckoutSummaryQuery(
     summaryParams,
     { enabled: isSummaryEnabled },
   );
+
+  const { handleUpdateQuantity, isUpdating: isQuantityUpdating } = useCheckoutQuantity({
+    isBuyNow,
+    updateQuantity,
+  });
 
   const checkoutSummary = summaryResponse?.data;
 
@@ -113,6 +128,7 @@ export default function CheckoutPage() {
     activeMrpSavings,
     activeCouponDiscount,
     activeDeliveryCharge,
+    activeTotalAmount,
     canCheckout,
     checkoutIssues,
     captureSnapshot,
@@ -122,7 +138,11 @@ export default function CheckoutPage() {
     items,
     isOrderComplete: false,
     isPlacingOrder: false,
+    isBuyNow,
+    buyNowQuantity,
   });
+
+  useCouponToast(appliedCouponCode, checkoutSummary?.coupon);
 
   const {
     paymentMethod,
@@ -172,11 +192,7 @@ export default function CheckoutPage() {
     ? activeItems.length === 0
     : items.length === 0 && activeItems.length === 0;
 
-  if (
-    hasNoItems &&
-    !isOrderComplete &&
-    !isPlacingOrder
-  ) {
+  if (hasNoItems && !isOrderComplete && !isPlacingOrder) {
     return <CheckoutEmptyState />;
   }
 
@@ -191,7 +207,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:col-span-8">
               <CheckoutBillingForm
-                addresses={addresses}
+                addresses={billingAddresses}
                 selectedAddressId={selectedBillingId}
                 onSelectAddress={handleSelectBillingAddress}
                 onOpenAddModal={() => handleOpenAddModal("BILLING")}
@@ -204,7 +220,7 @@ export default function CheckoutPage() {
 
               <CheckoutShippingForm
                 selectedBillingAddress={selectedBillingAddress}
-                addresses={addresses}
+                addresses={shippingAddresses}
                 selectedShippingAddressId={selectedShippingId}
                 onSelectShippingAddress={handleSelectShippingAddress}
                 onOpenAddModal={() => handleOpenAddModal("SHIPPING")}
@@ -222,6 +238,7 @@ export default function CheckoutPage() {
                 subtotal={activeSubtotal}
                 totalMrp={activeTotalMrp}
                 mrpSavings={activeMrpSavings}
+                totalAmount={activeTotalAmount}
                 couponCode={couponInput}
                 onCouponCodeChange={setCouponInput}
                 appliedCoupon={appliedCouponCode}
@@ -241,13 +258,12 @@ export default function CheckoutPage() {
                 deliveryCharge={activeDeliveryCharge}
                 deliveryDays={
                   checkoutSummary?.delivery
-                    ? {
-                      min: checkoutSummary.delivery.estimatedMinDays,
-                      max: checkoutSummary.delivery.estimatedMaxDays,
-                    }
+                    ? { min: checkoutSummary.delivery.estimatedMinDays, max: checkoutSummary.delivery.estimatedMaxDays }
                     : undefined
                 }
                 onProceed={handleProceedToPayment}
+                onUpdateQuantity={handleUpdateQuantity}
+                isUpdatingQuantity={isQuantityUpdating || isSummaryFetching}
               />
             </div>
           </div>
@@ -259,16 +275,9 @@ export default function CheckoutPage() {
         onClose={() => setIsAddressModalOpen(false)}
         addressToEdit={addressToEdit}
         defaultType={modalAddressType}
-        initialUser={
-          user
-            ? {
-              name: user.name,
-              email: user.email,
-              mobileNumber: user.mobileNumber,
-            }
-            : null
-        }
+        initialUser={user ? { name: user.name, email: user.email, mobileNumber: user.mobileNumber } : null}
         onSubmit={handleAddressSubmit}
+        onDualSubmit={handleDualAddressSubmit}
         isSubmitting={isMutating}
       />
 
@@ -283,5 +292,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-export { CheckoutPage };

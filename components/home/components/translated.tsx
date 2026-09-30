@@ -80,6 +80,7 @@ function TranslatedCard({ item }: { item: TranslatedBookItem }) {
 
 export function Translated() {
   const { data: apiResponse, isLoading } = useBooks({
+    homepage: true,
     category: TRANSLATED_CATEGORY_ID,
     limit: 3,
     homesection: true,
