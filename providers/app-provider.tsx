@@ -90,6 +90,7 @@ export function AppProvider({
         position="top-right"
         closeButton
         gap={12}
+
         toastOptions={{
           classNames: {
             toast:

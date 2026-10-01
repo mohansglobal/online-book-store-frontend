@@ -103,22 +103,31 @@ export function BooksFilterSidebar({
   const debouncedAuthorSearch = useDebounce(authorSearch.trim(), 300);
   const debouncedCategorySearch = useDebounce(categorySearch.trim(), 300);
 
+  // Query parameters memoized without limit
+  const publisherParams = useMemo(
+    () => (debouncedPublisherSearch ? { search: debouncedPublisherSearch } : undefined),
+    [debouncedPublisherSearch],
+  );
+
+  const authorParams = useMemo(
+    () =>
+      debouncedAuthorSearch
+        ? { search: debouncedAuthorSearch, sortOrder: "asce" as const }
+        : { sortOrder: "asce" as const },
+    [debouncedAuthorSearch],
+  );
+
+  const categoryParams = useMemo(
+    () => (debouncedCategorySearch ? { search: debouncedCategorySearch } : undefined),
+    [debouncedCategorySearch],
+  );
+
   // Queries
-  const { data: publishersData, isFetching: isFetchingPublishers } = usePublishers({
-    limit: 100,
-    search: debouncedPublisherSearch || undefined,
-  });
+  const { data: publishersData, isFetching: isFetchingPublishers } = usePublishers(publisherParams);
 
-  const { data: authorsData, isFetching: isFetchingAuthors } = useAuthors({
-    limit: 100,
-    search: debouncedAuthorSearch || undefined,
-    sortOrder: "asce",
-  });
+  const { data: authorsData, isFetching: isFetchingAuthors } = useAuthors(authorParams);
 
-  const { data: categoriesData, isFetching: isFetchingCategories } = useCategories({
-    limit: 100,
-    search: debouncedCategorySearch || undefined,
-  });
+  const { data: categoriesData, isFetching: isFetchingCategories } = useCategories(categoryParams);
 
   const rawPublishers: FilterItem[] = useMemo(
     () => deduplicateFilterItems((publishersData?.data ?? []) as FilterItem[]),

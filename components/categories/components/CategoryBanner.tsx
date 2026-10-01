@@ -3,6 +3,7 @@
 import React from "react";
 import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 import author1 from "@/assets/author-1.jpg";
 import author2 from "@/assets/author-2.jpg";
@@ -86,9 +87,11 @@ export function CategoryBanner({
 }: CategoryBannerProps) {
   return (
     <div
-      className={`relative flex w-full items-center justify-center overflow-hidden bg-black ${
-        compact ? "h-[156px] pt-[68px]" : "h-78 pt-[76px]"
-      } ${className}`}
+      className={cn(
+        "relative flex w-full items-center justify-center overflow-hidden bg-black",
+        compact ? "h-[156px] pt-[68px]" : "h-78 pt-[76px]",
+        className,
+      )}
     >
       <style>{`
         @keyframes scroll-up {

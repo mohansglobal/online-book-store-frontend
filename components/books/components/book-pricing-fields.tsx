@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, IndianRupee, Layers } from "lucide-react";
+import { IndianRupee, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -11,8 +11,8 @@ interface BookPricingFieldsProps {
   onSellingPriceChange: (value: string) => void;
   stock: string;
   onStockChange: (value: string) => void;
-  sku: string;
-  onSkuChange: (value: string) => void;
+  sku?: string;
+  onSkuChange?: (value: string) => void;
 }
 
 const LABEL_CLASS =
@@ -28,8 +28,6 @@ export function BookPricingFields({
   onSellingPriceChange,
   stock,
   onStockChange,
-  sku,
-  onSkuChange,
 }: BookPricingFieldsProps) {
   return (
     <>
@@ -100,29 +98,6 @@ export function BookPricingFields({
             onChange={(e) => onStockChange(e.target.value)}
             placeholder="25"
             className={`${INPUT_CLASS} pl-9 font-sans tabular-nums`}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="sku" className={LABEL_CLASS}>
-          <span>SKU Code</span>
-          <span className="text-xs font-normal normal-case text-muted-foreground">
-            (optional)
-          </span>
-        </Label>
-        <div className="relative">
-          <Barcode
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            id="sku"
-            type="text"
-            value={sku}
-            onChange={(e) => onSkuChange(e.target.value)}
-            placeholder="SKU-CLEANCODE-01"
-            className={`${INPUT_CLASS} pl-9 font-sans`}
           />
         </div>
       </div>

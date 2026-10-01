@@ -47,11 +47,15 @@ export function CountrySelect({
     onChange(newValue, selectedCountry);
   };
 
+  const effectiveSelectedLabel = value
+    ? (externalSelectedLabel !== undefined ? externalSelectedLabel : internalSelectedLabel)
+    : "";
+
   return (
     <SearchableCombobox
       id={id}
       value={value}
-      selectedLabel={externalSelectedLabel || internalSelectedLabel}
+      selectedLabel={effectiveSelectedLabel}
       onValueChange={handleValueChange}
       options={options}
       placeholder="Select Country"

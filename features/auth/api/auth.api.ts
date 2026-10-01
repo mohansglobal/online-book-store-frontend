@@ -13,6 +13,10 @@ import type {
   UploadProfileImageResponse,
   VerifyPhoneOtpInput,
   VerifyPhoneOtpResponse,
+  VerifyEmailOtpInput,
+  VerifyEmailOtpResponse,
+  ResendEmailOtpInput,
+  ResendEmailOtpResponse,
   ForgotPasswordInput,
   ForgotPasswordResponse,
   VerifyResetOtpInput,
@@ -33,6 +37,24 @@ import type {
 // register new user account
 export async function registerUser(input: RegisterInput): Promise<AuthResponse> {
   return apiClient.post<AuthResponse>("/auth/register", input, {
+    skipAuthRefresh: true,
+  });
+}
+
+// verify user email with 6-digit OTP
+export async function verifyEmailOtp(
+  input: VerifyEmailOtpInput,
+): Promise<VerifyEmailOtpResponse> {
+  return apiClient.post<VerifyEmailOtpResponse>("/auth/verify-email", input, {
+    skipAuthRefresh: true,
+  });
+}
+
+// resend 6-digit email verification OTP
+export async function resendEmailOtp(
+  input: ResendEmailOtpInput,
+): Promise<ResendEmailOtpResponse> {
+  return apiClient.post<ResendEmailOtpResponse>("/auth/resend-email-otp", input, {
     skipAuthRefresh: true,
   });
 }
@@ -130,27 +152,9 @@ export async function verifyResetOtp(
 export async function resetPassword(
   input: ResetPasswordInput,
 ): Promise<ResetPasswordResponse> {
-  try {
-    return await apiClient.post<ResetPasswordResponse>(
-      "/auth/password-reset",
-      input,
-      {
-        skipAuthRefresh: true,
-      },
-    );
-  } catch (err: unknown) {
-    if (isApiClientError(err) && err.status === 404) {
-      return apiClient.post<ResetPasswordResponse>(
-        "/auth/reset-password",
-        input,
-        {
-          skipAuthRefresh: true,
-        },
-      );
-    }
-
-    throw err;
-  }
+  return apiClient.post<ResetPasswordResponse>("/auth/reset-password", input, {
+    skipAuthRefresh: true,
+  });
 }
 
 // 4. change password for authenticated user

@@ -101,6 +101,15 @@ const mockPublishersData = [
     address: "Kolkata, India",
     publications: 50,
   },
+  {
+    _id: "pub_102",
+    name: "Dey's Publishing",
+    slug: "deys-publishing",
+    description: "Leading literary publisher.",
+    phone: "9876543210",
+    address: "College Street, Kolkata",
+    publications: 35,
+  },
 ];
 
 vi.mock("@/features/publishers", () => ({
@@ -265,6 +274,29 @@ describe("Search Main Text Field & Keyboard Navigation Workflow", () => {
       fireEvent.keyDown(firstPublisherCard!, { key: "Enter", code: "Enter" });
 
       expect(mockPush).toHaveBeenCalledWith("/books?publisher=pub_101");
+    });
+
+    it("moves focus to next publisher card on Tab instead of getting stuck on the arrow link", async () => {
+      render(<PublishersPage />);
+
+      const firstPublisherCard = document.getElementById("publisher-result-0");
+      const secondPublisherCard = document.getElementById("publisher-result-1");
+
+      expect(firstPublisherCard).toBeInTheDocument();
+      expect(secondPublisherCard).toBeInTheDocument();
+
+      firstPublisherCard?.focus();
+      expect(document.activeElement).toBe(firstPublisherCard);
+
+      // Hit Tab while on first publisher card
+      fireEvent.keyDown(firstPublisherCard!, { key: "Tab", code: "Tab" });
+      expect(document.activeElement).toBe(secondPublisherCard);
+
+      // Verify the arrow links inside have tabIndex="-1"
+      const arrowLinks = screen.getAllByRole("link", { name: /view/i });
+      arrowLinks.forEach((link) => {
+        expect(link).toHaveAttribute("tabindex", "-1");
+      });
     });
   });
 

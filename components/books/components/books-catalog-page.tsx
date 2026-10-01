@@ -39,10 +39,10 @@ export function BooksCatalogPage({
   initialPublisherId,
   showCategoriesFilter = true,
 }: BooksCatalogPageProps) {
-  // Reference queries for label lookup
-  const { data: categoriesData } = useCategories({ limit: 100 });
-  const { data: authorsData } = useAuthors({ limit: 100, sortOrder: "asce" });
-  const { data: publishersData } = usePublishers({ limit: 100 });
+  // Reference queries for label lookup without hardcoded limits
+  const { data: categoriesData } = useCategories();
+  const { data: authorsData } = useAuthors({ sortOrder: "asce" });
+  const { data: publishersData } = usePublishers();
 
   const filterState = useBooksCatalogFilters({
     initialCategoryId,
@@ -64,7 +64,7 @@ export function BooksCatalogPage({
 
   const handleTabToResults = () => {
     if (filterState.searchInput.trim() !== filterState.urlSearch.trim()) {
-      filterState.updateUrlParams({ search: filterState.searchInput.trim(), page: 1 });
+      filterState.handleSearchSubmit();
     }
     const firstEl = document.getElementById("book-catalog-item-0");
     if (firstEl) {
@@ -77,7 +77,7 @@ export function BooksCatalogPage({
   const singleCategoryId =
     filterState.selectedCategoryIds.length === 1 ? filterState.selectedCategoryIds[0] : "";
   const { data: categoryDetail } = useCategory(singleCategoryId);
-
+  // 
   // Main Books query with full backend multi-filter and sort support
   const {
     data: apiResponse,
@@ -89,18 +89,9 @@ export function BooksCatalogPage({
     page: filterState.page,
     limit: filterState.limit,
     search: filterState.urlSearch.trim() || undefined,
-    author:
-      filterState.selectedAuthorIds.length > 0
-        ? filterState.selectedAuthorIds.join(",")
-        : undefined,
-    publisher:
-      filterState.selectedPublisherIds.length > 0
-        ? filterState.selectedPublisherIds.join(",")
-        : undefined,
-    category:
-      filterState.selectedCategoryIds.length > 0
-        ? filterState.selectedCategoryIds.join(",")
-        : undefined,
+    author: filterState.selectedAuthorIds.join(",") || undefined,
+    publisher: filterState.selectedPublisherIds.join(",") || undefined,
+    category: filterState.selectedCategoryIds.join(",") || undefined,
     minPrice: filterState.minPrice,
     maxPrice: filterState.maxPrice,
     sortBy: filterState.currentSortConfig.sortBy,
@@ -133,7 +124,7 @@ export function BooksCatalogPage({
         selectedAuthorIds: filterState.selectedAuthorIds,
         selectedCategoryIds: filterState.selectedCategoryIds,
         labelLookupMap,
-        onRemoveSearch: () => filterState.updateUrlParams({ search: "", page: 1 }),
+        onRemoveSearch: filterState.handleClearSearch,
         onClearPrice: filterState.handleClearPrice,
         onTogglePublisher: (id) => filterState.handleTogglePublisher(id),
         onToggleAuthor: (id) => filterState.handleToggleAuthor(id),
@@ -219,12 +210,9 @@ export function BooksCatalogPage({
         <BooksSearchBar
           inputRef={searchInputRef}
           value={filterState.searchInput}
-          onChange={filterState.setSearchInput}
-          onSubmit={(e) => {
-            if (e) e.preventDefault();
-            filterState.updateUrlParams({ search: filterState.searchInput, page: 1 });
-          }}
-          onClear={() => filterState.updateUrlParams({ search: "", page: 1 })}
+          onChange={filterState.handleSearchInputChange}
+          onSubmit={filterState.handleSearchSubmit}
+          onClear={filterState.handleClearSearch}
           onTabToResults={handleTabToResults}
         />
 

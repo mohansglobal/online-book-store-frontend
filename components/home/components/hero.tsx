@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,8 +34,6 @@ const PLACEHOLDER_QUERIES = [
   "virginia woolf",
   "essays & poetry",
 ] as const;
-
-
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -75,14 +73,41 @@ export function Hero() {
   const [searchQuery, setSearchQuery] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
 
-  const placeholderText = useTypewriter(PLACEHOLDER_QUERIES);
-
   const { data: categoriesResponse } = useCategories({
-    limit: 5,
+    limit: 100,
     hasBooks: true,
   });
 
-  const popularCategories = categoriesResponse?.data || [];
+  const { placeholderQueries, chipCategories } = useMemo(() => {
+    const categoriesList = categoriesResponse?.data || [];
+
+    if (categoriesList.length === 0) {
+      return {
+        placeholderQueries: PLACEHOLDER_QUERIES,
+        chipCategories: [],
+      };
+    }
+
+    const shuffled = [...categoriesList];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+
+    const firstSet = shuffled.slice(0, 5);
+    const secondSet = shuffled.slice(5, 10);
+
+    const queries = firstSet.map((cat) => cat.name);
+
+    return {
+      placeholderQueries: queries.length > 0 ? queries : PLACEHOLDER_QUERIES,
+      chipCategories: secondSet,
+    };
+  }, [categoriesResponse?.data]);
+
+  const placeholderText = useTypewriter(placeholderQueries);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -274,7 +299,7 @@ export function Hero() {
           {/* Popular Tags */}
           <div className="hidden flex-wrap items-center justify-center gap-3 text-sm sm:flex">
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {popularCategories.map((category) => {
+              {chipCategories.map((category) => {
                 const categoryTarget = category._id || category.slug;
                 return (
                   <button

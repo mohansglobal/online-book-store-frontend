@@ -19,7 +19,7 @@ export interface AddBookFormState {
   sellingPrice: string;
   stock: string;
   sku: string;
-  countryId: string;
+  countryId?: string;
   description: string;
   coverPreview: string | null;
   extraPreviews: string[];

@@ -10,12 +10,17 @@ export const registerSchema = z
     mobileNumber: z
       .string()
       .trim()
-      .min(10, "Mobile number must be at least 10 digits")
-      .regex(/^\+?[0-9]{10,13}$/, "Please enter a valid mobile number"),
+      .optional()
+      .refine(
+        (val) => !val || /^\+?[0-9]{10,13}$/.test(val),
+        "Please enter a valid mobile number",
+      ),
     email: z
       .string()
       .trim()
       .email("Please enter a valid email address"),
+
+
     password: z
       .string()
       .min(8, "Password must be at least 8 characters"),

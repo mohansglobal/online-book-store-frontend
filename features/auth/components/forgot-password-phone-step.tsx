@@ -13,6 +13,7 @@ import {
   forgotPasswordIdentifierSchema,
   type ForgotPasswordIdentifierFormValues,
 } from "../schemas/forgot-password.schema";
+import { AUTH_MODE } from "../constants/auth.constants";
 
 type ForgotPasswordPhoneStepProps = {
   initialIdentifier?: string;
@@ -44,14 +45,14 @@ export function ForgotPasswordPhoneStep({
   const isSending = forgotPasswordMutation.isPending;
 
   const currentIdentifier = watch("identifier") || "";
-  const isEmailInput = currentIdentifier.includes("@");
+  const isEmailInput = AUTH_MODE === "email" || currentIdentifier.includes("@");
 
   const onSubmit = async (values: ForgotPasswordIdentifierFormValues) => {
     try {
       const rawInput = values.identifier.trim();
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawInput);
 
-      const normalizedIdentifier = isEmail
+      const normalizedIdentifier = isEmail || AUTH_MODE === "email"
         ? rawInput.toLowerCase()
         : rawInput.startsWith("+")
           ? rawInput
@@ -84,7 +85,11 @@ export function ForgotPasswordPhoneStep({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="forgot-identifier">Email Address or Mobile Number</Label>
+        <Label htmlFor="forgot-identifier">
+          {AUTH_MODE === "email"
+            ? "Email Address"
+            : "Email Address or Mobile Number"}
+        </Label>
         <div className="group relative">
           {isEmailInput ? (
             <Mail
@@ -101,8 +106,12 @@ export function ForgotPasswordPhoneStep({
           )}
           <Input
             id="forgot-identifier"
-            type="text"
-            placeholder="e.g. name@example.com or 9876543210"
+            type={AUTH_MODE === "email" ? "email" : "text"}
+            placeholder={
+              AUTH_MODE === "email"
+                ? "you@gmail.com"
+                : "e.g. name@example.com or 9876543210"
+            }
             autoComplete="username"
             {...register("identifier")}
             className={`h-11 pl-10 ${
@@ -116,9 +125,12 @@ export function ForgotPasswordPhoneStep({
           <p className="text-xs text-destructive">{errors.identifier.message}</p>
         )}
         <p className="text-xs text-muted-foreground">
-          Enter your registered email or phone to receive a 6-digit recovery code.
+          {AUTH_MODE === "email"
+            ? "Enter your registered email to receive a 6-digit recovery code."
+            : "Enter your registered email or phone to receive a 6-digit recovery code."}
         </p>
       </div>
+
 
       <Button
         type="submit"

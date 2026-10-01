@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,7 @@ import { registerSchema, type RegisterFormValues } from "../schemas/register.sch
 import { useRegisterMutation } from "../hooks/use-register";
 import { isApiClientError } from "@/lib/api";
 
+
 type RegisterFormProps = {
   onSuccessRedirect?: () => void;
   onSwitchToLogin: () => void;
@@ -32,6 +34,7 @@ export function RegisterForm({
   onSwitchToLogin,
   onRequireOtp,
 }: RegisterFormProps) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -39,7 +42,7 @@ export function RegisterForm({
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     setError,
     formState: { errors },
   } = useForm<RegisterFormValues>({
@@ -54,40 +57,47 @@ export function RegisterForm({
     },
   });
 
-  const selectedRole = watch("role");
+  const selectedRole = useWatch({ control, name: "role" });
   const registerMutation = useRegisterMutation();
 
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      const rawMobile = values.mobileNumber.trim();
-      const fullMobileNumber = rawMobile.startsWith("+")
-        ? rawMobile
-        : `+91${rawMobile.replace(/^0+/, "")}`;
+      const rawMobile = (values.mobileNumber || "").trim();
+      const formattedMobile = rawMobile
+        ? rawMobile.startsWith("+")
+          ? rawMobile
+          : `+91${rawMobile.replace(/^0+/, "")}`
+        : undefined;
+      
+      const userEmail = values.email.trim();
 
       await registerMutation.mutateAsync({
         name: values.name.trim(),
-        email: values.email.trim(),
+        email: userEmail,
         password: values.password,
-        mobileNumber: fullMobileNumber,
+        mobileNumber: formattedMobile,
         role: values.role,
       });
 
-      if (onRequireOtp) {
-        toast.success("Account created! Verification code sent.");
-        onRequireOtp(fullMobileNumber);
-      } else if (onSuccessRedirect) {
-        toast.success("Account created successfully! Please sign in.");
+      toast.success("Account registered successfully! Verification code sent to your email.");
+
+      if (onSuccessRedirect) {
         onSuccessRedirect();
       } else {
-        toast.success("Account created successfully! Please sign in.");
-        onSwitchToLogin();
+        const verifyUrl = `/verify-email?email=${encodeURIComponent(userEmail)}`;
+        router.push(verifyUrl);
       }
     } catch (err) {
       if (isApiClientError(err)) {
         if (err.fieldErrors) {
           for (const [field, messages] of Object.entries(err.fieldErrors)) {
-            if (field === "name" || field === "email" || field === "password" || field === "mobileNumber") {
-              setError(field, { message: messages[0] });
+            if (
+              field === "name" ||
+              field === "email" ||
+              field === "password" ||
+              field === "mobileNumber"
+            ) {
+              setError(field as keyof RegisterFormValues, { message: messages[0] });
             }
           }
         }
@@ -145,6 +155,8 @@ export function RegisterForm({
           <p className="text-xs text-destructive">{errors.mobileNumber.message}</p>
         )}
       </div>
+
+
 
       {/* Email */}
       <div className="space-y-1.5">

@@ -5,11 +5,12 @@ import { AlertCircle, RefreshCw, Search } from "lucide-react";
 
 import { NoData } from "../ui/no-data";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useInfiniteAuthors, type Author } from "@/features/authors";
 import { useDebounce } from "@/hooks/use-debounce";
 import { CategoryBanner } from "@/components/categories/components/CategoryBanner";
 import { AuthorCard } from "./components/author-card";
+import { AuthorCardSkeleton } from "./components/author-card-skeleton";
+import { AuthorDetailsDialog } from "./components/author-details-dialog";
 
 const ALPHABET = [
   "All",
@@ -18,33 +19,18 @@ const ALPHABET = [
   ),
 ];
 
-function AuthorCardSkeleton() {
-  return (
-    <div className="flex flex-col justify-between rounded-xl border border-border/70 bg-[#F7F1E3] p-6 shadow-xs md:p-8">
-      <div>
-        <div className="mb-6 flex items-start justify-between">
-          <Skeleton className="h-20 w-20 rounded-full" />
-          <Skeleton className="h-6 w-20 rounded-full" />
-        </div>
-        <Skeleton className="mb-4 h-8 w-3/4 rounded-md" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full rounded" />
-          <Skeleton className="h-4 w-5/6 rounded" />
-          <Skeleton className="h-4 w-2/3 rounded" />
-        </div>
-      </div>
-      <div className="mt-8 border-t border-border/60 pt-4">
-        <Skeleton className="h-5 w-28 rounded" />
-      </div>
-    </div>
-  );
-}
-
 export default function AuthorsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeLetter, setActiveLetter] = useState("All");
+  const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSelectAuthor = (author: Author) => {
+    setSelectedAuthor(author);
+    setIsModalOpen(true);
+  };
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -59,13 +45,11 @@ export default function AuthorsPage() {
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowDown") {
-      if (filteredAuthors.length > 0) {
+      const firstEl = document.getElementById("author-result-0");
+      if (firstEl) {
         e.preventDefault();
-        const firstEl = document.getElementById("author-result-0");
-        if (firstEl) {
-          firstEl.focus();
-          firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
-        }
+        firstEl.focus();
+        firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
       }
     }
   };
@@ -263,6 +247,7 @@ export default function AuthorsPage() {
                   author={author}
                   index={index}
                   isFirst={index === 0}
+                  onSelect={handleSelectAuthor}
                 />
               ))}
             </div>
@@ -294,6 +279,13 @@ export default function AuthorsPage() {
           />
         )}
       </div>
+
+      {/* Author Details Modal */}
+      <AuthorDetailsDialog
+        author={selectedAuthor}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </main>
   );
 }

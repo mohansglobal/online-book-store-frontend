@@ -16,8 +16,7 @@ interface BookMediaAsideProps {
   onExtraImageRemove: (index: number) => void;
 }
 
-const LABEL_CLASS =
-  "text-xs font-semibold uppercase tracking-wider text-text-secondary";
+const LABEL_CLASS = "text-xs font-semibold uppercase tracking-wider text-text-secondary";
 
 export function BookMediaAside({
   coverPreview,
@@ -114,11 +113,12 @@ export function BookMediaAside({
             {extraPreviews.length}/4
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+
+        <div className="grid grid-cols-4 gap-2.5">
           {extraPreviews.map((src, idx) => (
             <div
-              key={src}
-              className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface-soft"
+              key={`${src}-${idx}`}
+              className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-surface-soft"
             >
               <Image
                 src={src}
@@ -139,14 +139,14 @@ export function BookMediaAside({
           ))}
 
           {isUploadingGallery && (
-            <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-accent bg-accent/5">
+            <div className="flex aspect-[2/3] items-center justify-center rounded-lg border border-dashed border-accent bg-accent/5">
               <Loader2 className="h-5 w-5 animate-spin text-accent" />
             </div>
           )}
 
           {!isUploadingGallery && extraPreviews.length < 4 && (
             <label
-              className="flex aspect-square cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-surface-soft transition-colors hover:border-accent hover:bg-surface-hover"
+              className="flex aspect-[2/3] cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-surface-soft transition-colors hover:border-accent hover:bg-surface-hover"
               title="Add gallery image"
             >
               <Plus className="h-5 w-5 text-muted-foreground" />

@@ -107,6 +107,7 @@ describe("AddBookPage Component", () => {
     isUploadingCover: false,
     isUploadingGallery: false,
     isSubmitting: false,
+    formKey: 0,
     handleCoverChange: mockHandleCoverChange,
     handleExtraImagesChange: mockHandleExtraImagesChange,
     handleReset: mockHandleReset,

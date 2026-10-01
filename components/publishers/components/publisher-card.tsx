@@ -17,7 +17,6 @@ export interface PublisherCardProps {
 export function PublisherCard({
   publisher,
   index,
-  isFirst = false,
 }: PublisherCardProps) {
   const router = useRouter();
 
@@ -27,24 +26,72 @@ export function PublisherCard({
 
   const publicationsText = publisher.publications || "-";
 
+  const handleCardClick = () => {
+    router.push(`/books?publisher=${publisher._id}`);
+  };
+
   return (
     <article
-      id={isFirst ? "publisher-result-0" : undefined}
+      id={`publisher-result-${index}`}
       tabIndex={0}
+      role="button"
+      aria-label={`View ${publisher.name}`}
+      onClick={handleCardClick}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
           router.push(`/books?publisher=${publisher._id}`);
         }
-        if (e.key === "Tab" && e.shiftKey && isFirst) {
-          e.preventDefault();
-          const searchInput = document.querySelector(
-            'input[type="search"]',
-          ) as HTMLInputElement;
-          searchInput?.focus();
+        if (e.key === "Tab" && !e.shiftKey) {
+          const nextCard = document.getElementById(`publisher-result-${index + 1}`);
+          if (nextCard) {
+            e.preventDefault();
+            nextCard.focus();
+            nextCard.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+          }
+        }
+        if (e.key === "Tab" && e.shiftKey) {
+          if (index > 0) {
+            const prevCard = document.getElementById(`publisher-result-${index - 1}`);
+            if (prevCard) {
+              e.preventDefault();
+              prevCard.focus();
+              prevCard.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+            }
+          } else {
+            e.preventDefault();
+            const searchInput = document.querySelector(
+              'input[type="search"]',
+            ) as HTMLInputElement;
+            searchInput?.focus();
+          }
+        }
+        if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+          const nextCard = document.getElementById(`publisher-result-${index + 1}`);
+          if (nextCard) {
+            e.preventDefault();
+            nextCard.focus();
+            nextCard.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+          }
+        }
+        if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          if (index > 0) {
+            const prevCard = document.getElementById(`publisher-result-${index - 1}`);
+            if (prevCard) {
+              e.preventDefault();
+              prevCard.focus();
+              prevCard.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+            }
+          } else {
+            e.preventDefault();
+            const searchInput = document.querySelector(
+              'input[type="search"]',
+            ) as HTMLInputElement;
+            searchInput?.focus();
+          }
         }
       }}
-      className="group relative flex min-h-[118px] items-center gap-3 rounded-xl border border-border/70 bg-[#F7F1E3] p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:outline-hidden focus:-translate-y-0.5 focus:border-accent/40 focus:shadow-md cursor-pointer"
+      className="group relative flex min-h-[118px] items-center gap-3 rounded-xl border border-border/70 bg-[#F7F1E3] p-3 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:outline-hidden focus:-translate-y-0.5 focus:border-accent/40 focus:shadow-md cursor-pointer select-none"
     >
       {/* Publisher Logo */}
       <PublisherAvatar
@@ -78,6 +125,8 @@ export function PublisherCard({
 
           <Link
             href={`/books?publisher=${publisher._id}`}
+            tabIndex={-1}
+            onClick={(e) => e.stopPropagation()}
             aria-label={`View ${publisher.name}`}
             className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-all duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-white"
           >

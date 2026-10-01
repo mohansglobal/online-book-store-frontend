@@ -184,4 +184,70 @@ describe("useCheckoutAddressSelection", () => {
     expect(result.current.selectedBillingId).toBe("dual_billing_id");
     expect(result.current.selectedShippingId).toBe("dual_shipping_id");
   });
+
+  it("handles dedicated billing modal state and handlers independently", () => {
+    const { result } = renderHook(() =>
+      useCheckoutAddressSelection({
+        addresses: [billingAddr],
+        defaultAddress: billingAddr,
+        setDefaultAddress: mockSetDefault,
+        createAddress: mockCreateAddress,
+        updateAddress: mockUpdateAddress,
+      }),
+    );
+
+    expect(result.current.isBillingModalOpen).toBe(false);
+    expect(result.current.billingAddressToEdit).toBeNull();
+
+    act(() => {
+      result.current.handleOpenBillingModal();
+    });
+    expect(result.current.isBillingModalOpen).toBe(true);
+    expect(result.current.billingAddressToEdit).toBeNull();
+    expect(result.current.isShippingModalOpen).toBe(false);
+
+    act(() => {
+      result.current.handleCloseBillingModal();
+    });
+    expect(result.current.isBillingModalOpen).toBe(false);
+
+    act(() => {
+      result.current.handleEditBillingAddress(billingAddr);
+    });
+    expect(result.current.isBillingModalOpen).toBe(true);
+    expect(result.current.billingAddressToEdit).toEqual(billingAddr);
+  });
+
+  it("handles dedicated shipping modal state and handlers independently", () => {
+    const { result } = renderHook(() =>
+      useCheckoutAddressSelection({
+        addresses: [shippingAddr],
+        defaultAddress: shippingAddr,
+        setDefaultAddress: mockSetDefault,
+        createAddress: mockCreateAddress,
+        updateAddress: mockUpdateAddress,
+      }),
+    );
+
+    expect(result.current.isShippingModalOpen).toBe(false);
+    expect(result.current.shippingAddressToEdit).toBeNull();
+
+    act(() => {
+      result.current.handleOpenShippingModal();
+    });
+    expect(result.current.isShippingModalOpen).toBe(true);
+    expect(result.current.shippingAddressToEdit).toBeNull();
+    expect(result.current.isBillingModalOpen).toBe(false);
+
+    act(() => {
+      result.current.handleCloseShippingModal();
+    });
+    expect(result.current.isShippingModalOpen).toBe(false);
+
+    act(() => {
+      result.current.handleEditShippingAddress(shippingAddr);
+    });
+    expect(result.current.isShippingModalOpen).toBe(true);
+    expect(result.current.shippingAddressToEdit).toEqual(shippingAddr);
+  });
 });

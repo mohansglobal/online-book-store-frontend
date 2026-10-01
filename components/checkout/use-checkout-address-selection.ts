@@ -35,10 +35,18 @@ export function useCheckoutAddressSelection({
   const [chosenShippingId, setChosenShippingId] = useState<string | null>(null);
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
-  // Address Modal state
+  // Address Modal state (legacy / unified)
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState<Address | null>(null);
   const [modalAddressType, setModalAddressType] = useState<AddressType>("BILLING");
+
+  // Dedicated Billing Modal state
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
+  const [billingAddressToEdit, setBillingAddressToEdit] = useState<Address | null>(null);
+
+  // Dedicated Shipping Modal state
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [shippingAddressToEdit, setShippingAddressToEdit] = useState<Address | null>(null);
 
   // Derive preferred defaults separated by address type
   const billingAddresses = addresses.filter((a) => a.addressType === "BILLING");
@@ -89,13 +97,53 @@ export function useCheckoutAddressSelection({
     }
   };
 
+  const handleOpenBillingModal = () => {
+    setBillingAddressToEdit(null);
+    setIsBillingModalOpen(true);
+  };
+
+  const handleCloseBillingModal = () => {
+    setIsBillingModalOpen(false);
+    setBillingAddressToEdit(null);
+  };
+
+  const handleEditBillingAddress = (address: Address) => {
+    setBillingAddressToEdit(address);
+    setIsBillingModalOpen(true);
+  };
+
+  const handleOpenShippingModal = () => {
+    setShippingAddressToEdit(null);
+    setIsShippingModalOpen(true);
+  };
+
+  const handleCloseShippingModal = () => {
+    setIsShippingModalOpen(false);
+    setShippingAddressToEdit(null);
+  };
+
+  const handleEditShippingAddress = (address: Address) => {
+    setShippingAddressToEdit(address);
+    setIsShippingModalOpen(true);
+  };
+
   const handleOpenAddModal = (type: AddressType = "BILLING") => {
+    if (type === "SHIPPING") {
+      handleOpenShippingModal();
+    } else {
+      handleOpenBillingModal();
+    }
     setAddressToEdit(null);
     setModalAddressType(type);
     setIsAddressModalOpen(true);
   };
 
   const handleEditAddress = (address: Address) => {
+    if (address.addressType === "SHIPPING") {
+      handleEditShippingAddress(address);
+    } else {
+      handleEditBillingAddress(address);
+    }
     setAddressToEdit(address);
     setModalAddressType(address.addressType);
     setIsAddressModalOpen(true);
@@ -159,6 +207,21 @@ export function useCheckoutAddressSelection({
     setSameAsBilling,
     handleSelectBillingAddress,
     handleSelectShippingAddress,
+    // Dedicated Billing Modal
+    isBillingModalOpen,
+    setIsBillingModalOpen,
+    billingAddressToEdit,
+    handleOpenBillingModal,
+    handleCloseBillingModal,
+    handleEditBillingAddress,
+    // Dedicated Shipping Modal
+    isShippingModalOpen,
+    setIsShippingModalOpen,
+    shippingAddressToEdit,
+    handleOpenShippingModal,
+    handleCloseShippingModal,
+    handleEditShippingAddress,
+    // Unified / Legacy Modal
     isAddressModalOpen,
     setIsAddressModalOpen,
     addressToEdit,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -10,78 +10,92 @@ import {
   EyeOff,
   Loader2,
   Lock,
+  Mail,
   Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginSchema, type LoginFormValues } from "../schemas/login.schema";
+import { AUTH_MODE } from "../constants/auth.constants";
 import { useLoginMutation } from "../hooks/use-login";
 import { getSafePostLoginRedirect } from "../utils/auth-redirect";
 import { isApiClientError } from "@/lib/api";
 
 type LoginFormProps = {
-  initialMobileNumber?: string;
+  initialIdentifier?: string;
   onSwitchToRegister: () => void;
-  onForgotPassword?: (mobileNumber?: string) => void;
+  onForgotPassword?: (identifier?: string) => void;
 };
 
 export function LoginForm({
-  initialMobileNumber = "",
+  initialIdentifier = "",
   onSwitchToRegister,
   onForgotPassword,
 }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const cleanInitialPhone = initialMobileNumber.replace(/^\+91/, "");
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    control,
     setError,
     getValues,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      mobileNumber: cleanInitialPhone,
+      identifier: initialIdentifier,
       password: "",
     },
   });
 
+  const currentIdentifier = useWatch({ control, name: "identifier" }) || "";
+  const isEmailInput = AUTH_MODE === "email" || currentIdentifier.includes("@");
   const loginMutation = useLoginMutation();
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      const rawMobile = values.mobileNumber.trim();
-      const fullMobileNumber = rawMobile.startsWith("+")
-        ? rawMobile
-        : `+91${rawMobile.replace(/^0+/, "")}`;
+      setUnverifiedEmail(null);
+      const rawIdentifier = values.identifier.trim();
 
       const res = await loginMutation.mutateAsync({
-        mobileNumber: fullMobileNumber,
+        identifier: rawIdentifier,
         password: values.password,
       });
 
       toast.success(res.message || "Login successful!");
 
-      // Role-validated safe post-login destination
       const targetUrl = getSafePostLoginRedirect({
         redirect: searchParams.get("redirect"),
         role: res.data.user.role,
       });
 
       router.push(targetUrl);
-    } catch (err) {
+    } catch (err: unknown) {
       if (isApiClientError(err)) {
-        if (err.fieldErrors) {
-          for (const [field, messages] of Object.entries(err.fieldErrors)) {
-            if (field === "mobileNumber" || field === "password") {
-              setError(field, { message: messages[0] });
-            }
+        if (err.fieldErrors?.identifier || err.fieldErrors?.password) {
+          if (err.fieldErrors.identifier) {
+            setError("identifier", { message: err.fieldErrors.identifier[0] });
+          }
+          if (err.fieldErrors.password) {
+            setError("password", { message: err.fieldErrors.password[0] });
           }
         }
+
+        const msg = (err.message || "").toLowerCase();
+        const isUnverifiedErr =
+          err.status === 403 ||
+          msg.includes("verify") ||
+          msg.includes("unverified");
+
+        if (isUnverifiedErr && values.identifier.includes("@")) {
+          setUnverifiedEmail(values.identifier.trim());
+        }
+
         toast.error(err.message || "Invalid credentials. Please try again.");
       } else {
         toast.error("An unexpected error occurred during login.");
@@ -91,28 +105,43 @@ export function LoginForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Mobile Number */}
+      {/* Email or Mobile Number */}
       <div className="space-y-2">
-        <Label htmlFor="login-mobile">Mobile Number</Label>
+        <Label htmlFor="login-identifier">
+          {AUTH_MODE === "email" ? "Email Address" : "Email or Mobile Number"}
+        </Label>
         <div className="group relative">
-          <Phone
-            size={16}
-            aria-hidden="true"
-            className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-accent"
-          />
+          {isEmailInput ? (
+            <Mail
+              size={16}
+              aria-hidden="true"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-accent"
+            />
+          ) : (
+            <Phone
+              size={16}
+              aria-hidden="true"
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-accent"
+            />
+          )}
           <Input
-            id="login-mobile"
-            type="tel"
-            placeholder="e.g. 9876543210"
-            autoComplete="tel"
-            {...register("mobileNumber")}
-            className={`h-11 pl-10 ${errors.mobileNumber ? "border-destructive focus-visible:ring-destructive focus-visible:border-destructive" : ""}`}
+            id="login-identifier"
+            type={AUTH_MODE === "email" ? "email" : "text"}
+            placeholder={
+              AUTH_MODE === "email"
+                ? "you@gmail.com"
+                : "you@gmail.com or 9876543210"
+            }
+            autoComplete="username"
+            {...register("identifier")}
+            className={`h-11 pl-10 ${errors.identifier ? "border-destructive focus-visible:ring-destructive focus-visible:border-destructive" : ""}`}
           />
         </div>
-        {errors.mobileNumber && (
-          <p className="text-xs text-destructive">{errors.mobileNumber.message}</p>
+        {errors.identifier && (
+          <p className="text-xs text-destructive">{errors.identifier.message}</p>
         )}
       </div>
+
 
       {/* Password */}
       <div className="space-y-2">
@@ -122,7 +151,7 @@ export function LoginForm({
             type="button"
             variant="link"
             size="sm"
-            onClick={() => onForgotPassword?.(getValues("mobileNumber"))}
+            onClick={() => onForgotPassword?.(getValues("identifier"))}
             className="h-auto p-0 text-xs font-medium text-accent hover:text-accent-hover hover:underline cursor-pointer"
           >
             Forgot password?
@@ -158,6 +187,21 @@ export function LoginForm({
           <p className="text-xs text-destructive">{errors.password.message}</p>
         )}
       </div>
+
+      {/* Unverified Email Warning Banner */}
+      {unverifiedEmail && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400 space-y-2">
+          <p>Your email address is not verified yet.</p>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => router.push(`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`)}
+            className="w-full h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium cursor-pointer"
+          >
+            Verify your email now
+          </Button>
+        </div>
+      )}
 
       {/* Submit Button */}
       <Button

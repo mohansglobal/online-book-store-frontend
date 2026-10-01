@@ -5,6 +5,8 @@ import {
   forgotPasswordResetSchema,
 } from "./forgot-password.schema";
 
+import { AUTH_MODE } from "../constants/auth.constants";
+
 describe("forgotPasswordIdentifierSchema", () => {
   it("validates valid email addresses", () => {
     expect(
@@ -17,16 +19,18 @@ describe("forgotPasswordIdentifierSchema", () => {
     ).toBe(true);
   });
 
-  it("validates valid 10-digit Indian phone numbers", () => {
+  it("handles phone numbers based on AUTH_MODE", () => {
+    const isBoth = AUTH_MODE === "both";
     expect(
       forgotPasswordIdentifierSchema.safeParse({ identifier: "9876543210" })
         .success,
-    ).toBe(true);
+    ).toBe(isBoth);
     expect(
       forgotPasswordIdentifierSchema.safeParse({ identifier: "+919876543210" })
         .success,
-    ).toBe(true);
+    ).toBe(isBoth);
   });
+
 
   it("fails on invalid email and phone numbers", () => {
     expect(

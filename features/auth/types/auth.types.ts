@@ -21,13 +21,38 @@ export type RegisterInput = {
   name: string;
   email: string;
   password: string;
-  mobileNumber: string;
-  role: UserRole;
+  mobileNumber?: string;
+  role?: UserRole;
 };
 
 export type LoginInput = {
-  mobileNumber: string;
+  identifier: string;
   password: string;
+};
+
+export type VerifyEmailOtpInput = {
+  email: string;
+  otp: string;
+};
+
+export type VerifyEmailOtpData = {
+  user?: User;
+  accessToken?: string;
+};
+
+export type VerifyEmailOtpResponse = {
+  success: boolean;
+  message: string;
+  data?: VerifyEmailOtpData;
+};
+
+export type ResendEmailOtpInput = {
+  email: string;
+};
+
+export type ResendEmailOtpResponse = {
+  success: boolean;
+  message: string;
 };
 
 export type LoginResponseData = {

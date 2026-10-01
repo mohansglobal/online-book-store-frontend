@@ -13,7 +13,7 @@ type AuthMode = "login" | "register" | "otp" | "forgot-password";
 
 export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [pendingMobileNumber, setPendingMobileNumber] = useState("");
+  const [pendingIdentifier, setPendingIdentifier] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
       case "forgot-password":
         return {
           title: "Reset password",
-          description: "Recover and update your account password with SMS verification",
+          description: "Recover and update your account password with OTP verification",
         };
     }
   };
@@ -137,11 +137,11 @@ export default function LoginPage() {
                 transition={{ duration: 0.25 }}
               >
                 <LoginForm
-                  initialMobileNumber={pendingMobileNumber}
+                  initialIdentifier={pendingIdentifier}
                   onSwitchToRegister={() => setAuthMode("register")}
-                  onForgotPassword={(mobileNumber) => {
-                    if (mobileNumber) {
-                      setPendingMobileNumber(mobileNumber);
+                  onForgotPassword={(identifier) => {
+                    if (identifier) {
+                      setPendingIdentifier(identifier);
                     }
                     setAuthMode("forgot-password");
                   }}
@@ -158,9 +158,9 @@ export default function LoginPage() {
                 transition={{ duration: 0.25 }}
               >
                 <ForgotPasswordFlow
-                  initialIdentifier={pendingMobileNumber}
-                  onSuccess={(verifiedPhone) => {
-                    setPendingMobileNumber(verifiedPhone);
+                  initialIdentifier={pendingIdentifier}
+                  onSuccess={(verifiedIdentifier) => {
+                    setPendingIdentifier(verifiedIdentifier);
                     setAuthMode("login");
                   }}
                   onCancel={() => setAuthMode("login")}
@@ -178,10 +178,6 @@ export default function LoginPage() {
               >
                 <RegisterForm
                   onSwitchToLogin={() => setAuthMode("login")}
-                  onRequireOtp={(mobileNumber) => {
-                    setPendingMobileNumber(mobileNumber);
-                    setAuthMode("otp");
-                  }}
                 />
               </motion.div>
             )}
@@ -195,7 +191,7 @@ export default function LoginPage() {
                 transition={{ duration: 0.25 }}
               >
                 <OtpVerificationForm
-                  mobileNumber={pendingMobileNumber}
+                  mobileNumber={pendingIdentifier}
                   onSuccess={() => setAuthMode("login")}
                   onSwitchToLogin={() => setAuthMode("login")}
                   onChangeNumber={() => setAuthMode("register")}

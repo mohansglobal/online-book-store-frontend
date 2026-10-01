@@ -30,10 +30,7 @@ export async function uploadSingleImage(
   options?: { signal?: AbortSignal },
 ): Promise<UploadResponse> {
   const formData = new FormData();
-  formData.append("coverImage", file);
   formData.append("image", file);
-  formData.append("photo", file);
-  formData.append("file", file);
   formData.append("folder", folder);
 
   return apiClient.post<UploadResponse>("/upload", undefined, {
@@ -53,7 +50,6 @@ export async function uploadMultipleImages(
 
   files.forEach((file) => {
     formData.append("images", file);
-    formData.append("files", file);
   });
 
   formData.append("folder", folder);

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Authors } from "@/components/home/components/authors";
 import AuthorsPage from "@/components/author/AuthorsPage";
 import { AuthorPreviewCard } from "@/components/author/components/author-preview-card";
@@ -117,6 +117,30 @@ describe("Author Lifespan Integration", () => {
 
       expect(screen.getAllByText("মোহন লাল").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("1868-1946")).toBeDefined();
+    });
+
+    it("opens author details modal when tapping an author card", () => {
+      render(<Authors />);
+
+      expect(screen.queryByText("About the Author")).toBeNull();
+
+      const authorCard = screen.getByRole("heading", { name: "Mohan Lal" }).closest("article");
+      expect(authorCard).toBeInTheDocument();
+
+      fireEvent.click(authorCard!);
+
+      expect(screen.getByText("About the Author")).toBeInTheDocument();
+      expect(
+        screen.getAllByText("Historical author from Bengal.").length,
+      ).toBeGreaterThanOrEqual(2);
+    });
+
+    it("renders Explore Collection links pointing to /books?author=${author._id}", () => {
+      render(<Authors />);
+
+      const exploreLinks = screen.getAllByRole("link", { name: /explore collection/i });
+      expect(exploreLinks.length).toBeGreaterThanOrEqual(1);
+      expect(exploreLinks[0]).toHaveAttribute("href", "/books?author=author_1");
     });
   });
 

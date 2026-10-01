@@ -13,7 +13,10 @@ import { isApiClientError } from "@/lib/api";
 import { useForgotPasswordMutation } from "../hooks/use-forgot-password";
 import { useVerifyResetOtpMutation } from "../hooks/use-verify-reset-otp";
 
+import { AUTH_MODE } from "../constants/auth.constants";
+
 const OTP_LENGTH = 6;
+
 const OTP_EXPIRY_SECONDS = 5 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -136,7 +139,7 @@ export function ForgotPasswordOtpStep({
           onClick={onChangeContact}
           className="text-xs text-accent hover:underline mt-1 font-medium cursor-pointer"
         >
-          Change email or phone
+          {AUTH_MODE === "email" ? "Change email" : "Change email or phone"}
         </button>
       </div>
 

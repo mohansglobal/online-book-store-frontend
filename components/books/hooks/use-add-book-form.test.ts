@@ -22,6 +22,14 @@ vi.mock("@/lib/api", () => ({
   uploadMultipleImages: vi.fn(),
 }));
 
+vi.mock("@/features/countries", () => ({
+  useCountries: vi.fn(() => ({
+    data: {
+      data: [{ _id: "country_in_01", name: "India", code: "IN" }],
+    },
+  })),
+}));
+
 type CreateListingMutationReturn = ReturnType<typeof useCreateBookListingMutation>;
 
 describe("useAddBookForm Hook", () => {
@@ -56,13 +64,19 @@ describe("useAddBookForm Hook", () => {
     });
   };
 
+
+    
+
+
+
+
   it("should initialize with default empty form state", () => {
     const { result } = renderHook(() => useAddBookForm());
 
     expect(result.current.isbn).toBe("");
     expect(result.current.titleEn).toBe("");
     expect(result.current.titleBn).toBe("");
-    expect(result.current.language).toBe("en");
+    expect(result.current.language).toBe("bn");
     expect(result.current.publisherId).toBe("");
     expect(result.current.coverPreview).toBeNull();
     expect(result.current.extraPreviews).toEqual([]);
@@ -84,6 +98,7 @@ describe("useAddBookForm Hook", () => {
     expect(result.current.mrp).toBe("");
     expect(result.current.stock).toBe("");
     expect(result.current.isbn).toBe("");
+    expect(result.current.formKey).toBe(1);
   });
 
   it("should validate client-side required fields before submission", () => {
@@ -162,6 +177,7 @@ describe("useAddBookForm Hook", () => {
     expect(payload.mrpInPaise).toBe(65000);
     expect(payload.sellingPriceInPaise).toBe(55000);
     expect(payload.stock).toBe(20);
+    expect(payload.country).toBe("country_in_01");
   });
 
   it("should show success toast and reset form on mutation success", () => {

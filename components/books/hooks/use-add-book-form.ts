@@ -3,6 +3,7 @@
 import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { useCreateBookListingMutation } from "@/features/books";
+import { useCountries } from "@/features/countries";
 import { uploadMultipleImages, uploadSingleImage } from "@/lib/api";
 import {
   buildBookListingPayload,
@@ -15,7 +16,7 @@ export function useAddBookForm() {
   const [titleBn, setTitleBn] = useState("");
   const [publisherId, setPublisherId] = useState("");
   const [publisherName, setPublisherName] = useState("");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("bn");
   const [categoryId, setCategoryId] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [authorId, setAuthorId] = useState("");
@@ -31,10 +32,23 @@ export function useAddBookForm() {
   const [countryName, setCountryName] = useState("");
   const [description, setDescription] = useState("");
 
+  const { data: countriesData } = useCountries({ limit: 100 });
+
+  const defaultCountry = countriesData?.data?.find(
+    (c) => c.code === "IN" || c.name.toLowerCase() === "india",
+  );
+
+  const resolvedCountryId =
+    countryId || defaultCountry?._id || defaultCountry?.code || "India";
+
+  const resolvedCountryName =
+    countryName || defaultCountry?.name || "India";
+
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const { mutate: createListing, isPending: isSubmitting } =
     useCreateBookListingMutation();
@@ -43,6 +57,7 @@ export function useAddBookForm() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    event.target.value = "";
     const localUrl = URL.createObjectURL(file);
     setCoverPreview(localUrl);
     setIsUploadingCover(true);
@@ -74,6 +89,7 @@ export function useAddBookForm() {
     const fileList = Array.from(files).slice(0, maxAllowed);
     if (fileList.length === 0) return;
 
+    event.target.value = "";
     setIsUploadingGallery(true);
 
     try {
@@ -82,9 +98,13 @@ export function useAddBookForm() {
         res.data?.urls || (res.data?.url ? [res.data.url] : []);
 
       if (deployedUrls.length > 0) {
-        setExtraPreviews((prev) => [...prev, ...deployedUrls].slice(0, 4));
+        setExtraPreviews((prev) => {
+          const combined = [...prev, ...deployedUrls];
+          const unique = Array.from(new Set(combined));
+          return unique.slice(0, 4);
+        });
         toast.success(
-          `${deployedUrls.length} gallery image(s) uploaded to Cloudinary!`,
+          `${deployedUrls.length} gallery image(s) uploaded.`,
         );
       }
     } catch (err: unknown) {
@@ -102,7 +122,7 @@ export function useAddBookForm() {
     setTitleBn("");
     setPublisherId("");
     setPublisherName("");
-    setLanguage("en");
+    setLanguage("bn");
     setCategoryId("");
     setCategoryName("");
     setAuthorId("");
@@ -119,6 +139,7 @@ export function useAddBookForm() {
     setDescription("");
     setCoverPreview(null);
     setExtraPreviews([]);
+    setFormKey((prev) => prev + 1);
   }, []);
 
   const getFormState = (): AddBookFormState => ({
@@ -136,7 +157,7 @@ export function useAddBookForm() {
     sellingPrice,
     stock,
     sku,
-    countryId,
+    countryId: resolvedCountryId,
     description,
     coverPreview,
     extraPreviews,
@@ -244,9 +265,9 @@ export function useAddBookForm() {
     setStock,
     sku,
     setSku,
-    countryId,
+    countryId: resolvedCountryId,
     setCountryId,
-    countryName,
+    countryName: resolvedCountryName,
     setCountryName,
     description,
     setDescription,
@@ -257,6 +278,7 @@ export function useAddBookForm() {
     isUploadingCover,
     isUploadingGallery,
     isSubmitting,
+    formKey,
     handleCoverChange,
     handleExtraImagesChange,
     handleReset,

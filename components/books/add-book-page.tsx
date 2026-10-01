@@ -60,6 +60,7 @@ export default function AddBookPage() {
     isUploadingCover,
     isUploadingGallery,
     isSubmitting,
+    formKey,
     handleCoverChange,
     handleExtraImagesChange,
     handleReset,
@@ -76,8 +77,9 @@ export default function AddBookPage() {
       <main className="relative z-20 -mt-8 flex-1 px-4 pb-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminTopNav activeTab="add-book" />
-
+      
           <form
+            key={formKey}
             onSubmit={handleSubmit}
             className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12"
           >

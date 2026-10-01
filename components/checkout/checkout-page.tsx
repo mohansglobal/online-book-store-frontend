@@ -16,7 +16,8 @@ import { CheckoutOrderConfirmed } from "./checkout-order-confirmed";
 import { CheckoutLoadingState } from "./checkout-loading-state";
 import { CheckoutEmptyState } from "./checkout-empty-state";
 import { CheckoutInvalidBuyNowState } from "./checkout-invalid-buy-now";
-import { AddressModalForm } from "./address-modal-form";
+import { BillingAddressModal } from "./billing-address-modal";
+import { ShippingAddressModal } from "./shipping-address-modal";
 import { useCheckoutPromo, useCouponToast } from "./use-checkout-promo";
 import { useCheckoutAddressSelection } from "./use-checkout-address-selection";
 import { useCheckoutPricing } from "./use-checkout-pricing";
@@ -28,15 +29,8 @@ export default function CheckoutPage() {
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
   const { items, summary, updateQuantity, isLoading: isCartLoading } = useCart();
   const {
-    addresses,
-    defaultAddress,
-    isLoading: isAddressesLoading,
-    isMutating,
-    createAddress,
-    createDualAddress,
-    updateAddress,
-    setDefaultAddress,
-    deleteAddress,
+    addresses, defaultAddress, isLoading: isAddressesLoading, isMutating,
+    createAddress, createDualAddress, updateAddress, setDefaultAddress, deleteAddress,
   } = useAddresses();
 
   const createOrderMutation = useCreateOrderMutation();
@@ -52,21 +46,20 @@ export default function CheckoutPage() {
     setSameAsBilling,
     handleSelectBillingAddress,
     handleSelectShippingAddress,
-    isAddressModalOpen,
-    setIsAddressModalOpen,
-    addressToEdit,
-    modalAddressType,
-    handleOpenAddModal,
-    handleEditAddress,
+    isBillingModalOpen,
+    billingAddressToEdit,
+    handleOpenBillingModal,
+    handleCloseBillingModal,
+    handleEditBillingAddress,
+    isShippingModalOpen,
+    shippingAddressToEdit,
+    handleOpenShippingModal,
+    handleCloseShippingModal,
+    handleEditShippingAddress,
     handleAddressSubmit,
-    handleDualAddressSubmit,
   } = useCheckoutAddressSelection({
-    addresses,
-    defaultAddress,
-    setDefaultAddress,
-    createAddress,
-    createDualAddress,
-    updateAddress,
+    addresses, defaultAddress, setDefaultAddress,
+    createAddress, createDualAddress, updateAddress,
   });
 
   const {
@@ -78,7 +71,6 @@ export default function CheckoutPage() {
   } = useCheckoutPromo();
 
   const searchParams = useSearchParams();
-
   const checkoutMode = searchParams.get("mode");
   const listingId = searchParams.get("listingId");
   const quantityParam = searchParams.get("quantity");
@@ -87,7 +79,6 @@ export default function CheckoutPage() {
   const parsedQuantity = Number(quantityParam);
   const buyNowQuantity =
     Number.isInteger(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
-
   const isInvalidBuyNow = isBuyNow && !listingId;
 
   const summaryParams: CheckoutSummaryQueryParams = {
@@ -95,12 +86,7 @@ export default function CheckoutPage() {
     billingAddressId: selectedBillingId || undefined,
     billingSameAsShipping: sameAsBilling ? "true" : "false",
     couponCode: appliedCouponCode || undefined,
-    ...(isBuyNow && listingId
-      ? {
-          bookListingId: listingId,
-          quantity: buyNowQuantity,
-        }
-      : {}),
+    ...(isBuyNow && listingId ? { bookListingId: listingId, quantity: buyNowQuantity } : {}),
   };
 
   const isSummaryEnabled = isBuyNow ? Boolean(listingId) : items.length > 0;
@@ -109,10 +95,7 @@ export default function CheckoutPage() {
     data: summaryResponse,
     isLoading: isSummaryLoading,
     isFetching: isSummaryFetching,
-  } = useCheckoutSummaryQuery(
-    summaryParams,
-    { enabled: isSummaryEnabled },
-  );
+  } = useCheckoutSummaryQuery(summaryParams, { enabled: isSummaryEnabled });
 
   const { handleUpdateQuantity, isUpdating: isQuantityUpdating } = useCheckoutQuantity({
     isBuyNow,
@@ -144,6 +127,10 @@ export default function CheckoutPage() {
 
   useCouponToast(appliedCouponCode, checkoutSummary?.coupon);
 
+  const initialUser = user
+    ? { name: user.name, email: user.email, mobileNumber: user.mobileNumber }
+    : null;
+
   const {
     paymentMethod,
     setPaymentMethod,
@@ -166,7 +153,8 @@ export default function CheckoutPage() {
     canCheckout,
     checkoutIssues,
     captureSnapshot,
-    handleOpenAddModal,
+    handleOpenAddModal: (type) =>
+      type === "SHIPPING" ? handleOpenShippingModal() : handleOpenBillingModal(),
     createOrder: createOrderMutation.mutateAsync,
     isCreatingOrder: createOrderMutation.isPending,
     isBuyNow,
@@ -210,8 +198,8 @@ export default function CheckoutPage() {
                 addresses={billingAddresses}
                 selectedAddressId={selectedBillingId}
                 onSelectAddress={handleSelectBillingAddress}
-                onOpenAddModal={() => handleOpenAddModal("BILLING")}
-                onEditAddress={handleEditAddress}
+                onOpenAddModal={handleOpenBillingModal}
+                onEditAddress={handleEditBillingAddress}
                 onDeleteAddress={deleteAddress}
                 onSetDefaultAddress={setDefaultAddress}
                 sameAsBilling={sameAsBilling}
@@ -223,8 +211,8 @@ export default function CheckoutPage() {
                 addresses={shippingAddresses}
                 selectedShippingAddressId={selectedShippingId}
                 onSelectShippingAddress={handleSelectShippingAddress}
-                onOpenAddModal={() => handleOpenAddModal("SHIPPING")}
-                onEditAddress={handleEditAddress}
+                onOpenAddModal={handleOpenShippingModal}
+                onEditAddress={handleEditShippingAddress}
                 onDeleteAddress={deleteAddress}
                 onSetDefaultAddress={setDefaultAddress}
                 sameAsBilling={sameAsBilling}
@@ -270,14 +258,21 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      <AddressModalForm
-        isOpen={isAddressModalOpen}
-        onClose={() => setIsAddressModalOpen(false)}
-        addressToEdit={addressToEdit}
-        defaultType={modalAddressType}
-        initialUser={user ? { name: user.name, email: user.email, mobileNumber: user.mobileNumber } : null}
+      <BillingAddressModal
+        isOpen={isBillingModalOpen}
+        onClose={handleCloseBillingModal}
+        addressToEdit={billingAddressToEdit}
+        initialUser={initialUser}
         onSubmit={handleAddressSubmit}
-        onDualSubmit={handleDualAddressSubmit}
+        isSubmitting={isMutating}
+      />
+
+      <ShippingAddressModal
+        isOpen={isShippingModalOpen}
+        onClose={handleCloseShippingModal}
+        addressToEdit={shippingAddressToEdit}
+        initialUser={initialUser}
+        onSubmit={handleAddressSubmit}
         isSubmitting={isMutating}
       />
 

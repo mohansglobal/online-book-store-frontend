@@ -74,17 +74,15 @@ export default function PublishersPage() {
         }
 
         return data.pages.flatMap((page) => page.data ?? []);
-    }, [data?.pages]);
+    }, [data]);
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if ((e.key === "Tab" && !e.shiftKey) || e.key === "ArrowDown") {
-            if (publishersList.length > 0) {
+            const firstEl = document.getElementById("publisher-result-0");
+            if (firstEl) {
                 e.preventDefault();
-                const firstEl = document.getElementById("publisher-result-0");
-                if (firstEl) {
-                    firstEl.focus();
-                    firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
-                }
+                firstEl.focus();
+                firstEl.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
             }
         }
     };

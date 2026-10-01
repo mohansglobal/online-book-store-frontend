@@ -47,6 +47,8 @@ export const AUTH_COOKIE_NAMES = [
   "token",
 ] as const;
 
+export const AUTH_MODE: "email" | "both" = "email";
+
 export const DEFAULT_ROLE_HOME: Record<UserRole, string> = {
   [USER_ROLES.BUYER]: "/",
   [USER_ROLES.SELLER]: "/dashboard",

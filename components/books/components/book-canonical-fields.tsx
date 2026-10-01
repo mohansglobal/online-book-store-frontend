@@ -12,7 +12,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { AuthorSelect } from "./author-select";
 import { CategorySelect } from "./category-select";
-import { CountrySelect } from "./country-select";
 import { PublisherSelect } from "./publisher-select";
 
 interface BookCanonicalFieldsProps {
@@ -31,9 +30,9 @@ interface BookCanonicalFieldsProps {
   authorId: string;
   authorName: string;
   onAuthorChange: (id: string, name: string) => void;
-  countryId: string;
-  countryName: string;
-  onCountryChange: (id: string, name: string) => void;
+  countryId?: string;
+  countryName?: string;
+  onCountryChange?: (id: string, name: string) => void;
   edition: string;
   onEditionChange: (value: string) => void;
   pages: string;
@@ -71,9 +70,6 @@ export function BookCanonicalFields({
   authorId,
   authorName,
   onAuthorChange,
-  countryId,
-  countryName,
-  onCountryChange,
   edition,
   onEditionChange,
   pages,
@@ -173,20 +169,6 @@ export function BookCanonicalFields({
           value={authorId}
           selectedLabel={authorName}
           onChange={(id, aut) => onAuthorChange(id, aut?.name || "")}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="country" className={LABEL_CLASS}>
-          <span>Check Country</span>
-          <span className="text-accent">*</span>
-        </Label>
-        <CountrySelect
-          id="country"
-          value={countryId}
-          selectedLabel={countryName}
-          onChange={(id, ctry) => onCountryChange(id, ctry?.name || "")}
           required
         />
       </div>

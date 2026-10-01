@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePublishers, type Publisher } from "@/features/publishers";
+import { useMemo, useState } from "react";
+import { useInfinitePublishers, type Publisher } from "@/features/publishers";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SearchableCombobox, type ComboboxOption } from "@/components/ui/searchable-combobox";
 
@@ -26,18 +26,29 @@ export function PublisherSelect({
   const [internalSelectedLabel, setInternalSelectedLabel] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const { data, isLoading } = usePublishers({
-    limit: 10000,
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfinitePublishers({
+    limit: 20,
     search: debouncedSearch.trim() || undefined,
   });
 
-  const publishers = data?.data || [];
+  const publishers: Publisher[] = useMemo(() => {
+    const pages = data?.pages ?? [];
+    return pages.flatMap((page) => page.data ?? []);
+  }, [data?.pages]);
 
-  const options: ComboboxOption[] = publishers.map((pub) => ({
-    value: pub._id || pub.slug,
-    label: pub.name,
-    secondaryLabel: pub.nameBn,
-  }));
+  const options: ComboboxOption[] = useMemo(() => {
+    return publishers.map((pub) => ({
+      value: pub._id || pub.slug,
+      label: pub.name,
+      secondaryLabel: pub.nameBn,
+    }));
+  }, [publishers]);
 
   const handleValueChange = (newValue: string, option?: ComboboxOption) => {
     const selectedPublisher = publishers.find(
@@ -47,11 +58,21 @@ export function PublisherSelect({
     onChange(newValue, selectedPublisher);
   };
 
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const effectiveSelectedLabel = value
+    ? (externalSelectedLabel !== undefined ? externalSelectedLabel : internalSelectedLabel)
+    : "";
+
   return (
     <SearchableCombobox
       id={id}
       value={value}
-      selectedLabel={externalSelectedLabel || internalSelectedLabel}
+      selectedLabel={effectiveSelectedLabel}
       onValueChange={handleValueChange}
       options={options}
       placeholder="Select Publisher"
@@ -62,6 +83,9 @@ export function PublisherSelect({
       onSearchChange={setSearchTerm}
       required={required}
       disabled={disabled}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      onLoadMore={handleLoadMore}
     />
   );
 }
