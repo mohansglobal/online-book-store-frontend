@@ -24,12 +24,14 @@ import { isApiClientError } from "@/lib/api";
 
 type LoginFormProps = {
   initialIdentifier?: string;
+  initialMobileNumber?: string;
   onSwitchToRegister: () => void;
   onForgotPassword?: (identifier?: string) => void;
 };
 
 export function LoginForm({
-  initialIdentifier = "",
+  initialIdentifier,
+  initialMobileNumber = "",
   onSwitchToRegister,
   onForgotPassword,
 }: LoginFormProps) {
@@ -37,6 +39,8 @@ export function LoginForm({
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+
+  const effectiveInitial = initialIdentifier ?? initialMobileNumber ?? "";
 
   const {
     register,
@@ -48,10 +52,11 @@ export function LoginForm({
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: initialIdentifier,
+      identifier: effectiveInitial,
       password: "",
     },
   });
+
 
   const currentIdentifier = useWatch({ control, name: "identifier" }) || "";
   const isEmailInput = AUTH_MODE === "email" || currentIdentifier.includes("@");
