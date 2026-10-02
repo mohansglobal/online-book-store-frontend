@@ -336,7 +336,7 @@ class MockStore {
       isVerifiedPurchase: true,
       user: {
         _id: this.user?.id || "user_mock_01",
-        name: this.user?.name || "Mohan Das",
+        name: this.user?.name || "-",
         profilePicture: this.user?.profilePicture,
       },
       createdAt: new Date().toISOString(),

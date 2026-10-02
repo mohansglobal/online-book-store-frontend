@@ -633,6 +633,8 @@ function normalizeListing(
           ? Boolean((book as Record<string, unknown>).isWishlisted)
           : undefined,
 
+    listingImages: getValidImages(record.listingImages),
+
     effectiveImages: galleryImages,
   };
 }

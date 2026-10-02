@@ -31,7 +31,7 @@ function ProfilePersonalForm({ user }: ProfilePersonalFormProps) {
   const isUploading = uploadMutation.isPending;
   const isRemoving = removeMutation.isPending;
 
-  const displayName = user?.name || "Mohan Das";
+  const displayName = user?.name || "-";
   const profilePicture = user?.profilePicture;
 
   const initials =

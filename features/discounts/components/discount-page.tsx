@@ -13,13 +13,17 @@ import {
 import { DiscountControls } from "./discount-controls";
 import { DiscountTable } from "./discount-table";
 import { DiscountModal } from "./discount-modal";
+import { BulkDiscountModal } from "./bulk-discount-modal";
 import { InventoryPagination } from "@/components/books/inventory/inventory-pagination";
-import type { DiscountStatusFilter } from "./discount-types";
+import type { DiscountStatusFilter } from "../types/discount-types";
 
-export default function DiscountPage() {
+export function DiscountPage() {
   const [searchTerm, setSearchTerm] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<DiscountStatusFilter>("all");
+
   const [page, setPage] = useState(1);
+
   const [limit] = useState(20);
 
   const [selectedListing, setSelectedListing] =
@@ -27,21 +31,20 @@ export default function DiscountPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [selectedListingIds, setSelectedListingIds] = useState<string[]>([]);
+
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
   const trimmedSearch = searchTerm.trim();
+
   const debouncedSearch = useDebounce(trimmedSearch, 350);
 
-  // Determine active status parameter for backend query
   let isActiveParam: boolean | undefined = undefined;
 
-  if (statusFilter === "active") {
-    isActiveParam = true;
-  }
+  if (statusFilter === "active") isActiveParam = true;
 
-  if (statusFilter === "inactive") {
-    isActiveParam = false;
-  }
+  if (statusFilter === "inactive") isActiveParam = false;
 
-  // Fetch seller listings from inventory API
   const { data: response, isLoading } = useMyBookListings({
     page,
     limit,
@@ -51,14 +54,16 @@ export default function DiscountPage() {
 
   const rawListings = Array.isArray(response?.data) ? response.data : [];
 
-  // Filter for discounted items if selected
   const isDiscountedItem = (item: SellerBookListingItem) => {
     const mrpInPaise = item.mrpInPaise ?? 0;
+
     const sellingPriceInPaise = item.sellingPriceInPaise ?? mrpInPaise;
 
     const hasDiscount = mrpInPaise > 0 && sellingPriceInPaise < mrpInPaise;
 
-    return hasDiscount;
+    const hasSchedule = Boolean(item.discountSchedule?.startDate);
+
+    return hasDiscount || hasSchedule;
   };
 
   let listings = rawListings;
@@ -68,33 +73,64 @@ export default function DiscountPage() {
   }
 
   const meta = response?.meta;
+
   const total = meta?.total ?? rawListings.length;
+
   const calculatedPages = Math.ceil(total / limit);
+
   const totalPages = meta?.totalPages ?? Math.max(1, calculatedPages);
 
   const handleOpenEditModal = (listing: SellerBookListingItem) => {
     setSelectedListing(listing);
+
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setSelectedListing(null);
+
     setIsModalOpen(false);
+  };
+
+  const handleToggleSelectAll = () => {
+    const visibleIds = listings.map((l) => l._id);
+
+    const allSelected = visibleIds.every((id) => selectedListingIds.includes(id));
+
+    if (allSelected) {
+      setSelectedListingIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedListingIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
+  const handleToggleSelectListing = (listingId: string) => {
+    setSelectedListingIds((prev) =>
+      prev.includes(listingId)
+        ? prev.filter((id) => id !== listingId)
+        : [...prev, listingId],
+    );
   };
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
+
     setPage(1);
   };
 
   const handleStatusFilterChange = (status: DiscountStatusFilter) => {
     setStatusFilter(status);
+
     setPage(1);
   };
 
   const handleReset = () => {
     setSearchTerm("");
+
     setStatusFilter("all");
+
+    setSelectedListingIds([]);
+
     setPage(1);
   };
 
@@ -110,7 +146,7 @@ export default function DiscountPage() {
 
           {/* Table Container */}
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-            {/* Controls: Search, Filters, Reset, Total */}
+            {/* Controls: Search, Filters, Bulk Discounts, Reset, Total */}
             <DiscountControls
               searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
@@ -118,6 +154,8 @@ export default function DiscountPage() {
               onStatusFilterChange={handleStatusFilterChange}
               onReset={handleReset}
               totalCount={listings.length}
+              selectedCount={selectedListingIds.length}
+              onOpenBulkModal={() => setIsBulkModalOpen(true)}
             />
 
             {/* Table */}
@@ -126,6 +164,9 @@ export default function DiscountPage() {
               isLoading={isLoading}
               page={page}
               limit={limit}
+              selectedListingIds={selectedListingIds}
+              onToggleSelectAll={handleToggleSelectAll}
+              onToggleSelectListing={handleToggleSelectListing}
               onOpenEditModal={handleOpenEditModal}
             />
 
@@ -148,7 +189,17 @@ export default function DiscountPage() {
         onClose={handleCloseModal}
       />
 
+      {/* Bulk Discount Modal */}
+      <BulkDiscountModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        selectedListingIds={selectedListingIds}
+        totalListingCount={total}
+      />
+
       <Footer />
     </div>
   );
 }
+
+export default DiscountPage;

@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { SellerOrder, SellerPaginationMeta } from "../../types/seller.types";
+import type { SellerOrder } from "../../types/seller.types";
 import { SellerOrderCard } from "./seller-order-card";
 import { SellerOrdersSkeleton } from "./seller-orders-skeleton";
 import { SellerOrdersEmptyState } from "./seller-orders-empty-state";
@@ -10,22 +11,53 @@ import { SellerOrdersEmptyState } from "./seller-orders-empty-state";
 interface SellerOrdersListProps {
   orders: SellerOrder[];
   isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  onFetchNextPage: () => void;
   hasFilters: boolean;
   onResetFilters: () => void;
   onOpenStatusDialog: (order: SellerOrder) => void;
-  meta?: SellerPaginationMeta;
-  onPageChange: (page: number) => void;
 }
 
 export function SellerOrdersList({
   orders,
   isLoading,
+  isFetchingNextPage,
+  hasNextPage,
+  onFetchNextPage,
   hasFilters,
   onResetFilters,
   onOpenStatusDialog,
-  meta,
-  onPageChange,
 }: SellerOrdersListProps) {
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Auto-fetch next page on scroll when sentinel enters viewport
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          onFetchNextPage();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasNextPage, isFetchingNextPage, onFetchNextPage]);
+
   if (isLoading) {
     return <SellerOrdersSkeleton />;
   }
@@ -38,11 +70,6 @@ export function SellerOrdersList({
       />
     );
   }
-
-  const currentPage = meta?.page || 1;
-  const totalPages = meta?.totalPages || 1;
-  const canGoPrev = currentPage > 1;
-  const canGoNext = currentPage < totalPages;
 
   return (
     <div className="space-y-4">
@@ -57,41 +84,35 @@ export function SellerOrdersList({
         ))}
       </div>
 
-      {/* Pagination Bar */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 shadow-sm">
-          <p className="text-xs text-muted-foreground">
-            Page <strong className="text-foreground">{currentPage}</strong> of{" "}
-            <strong className="text-foreground">{totalPages}</strong>
-          </p>
+      {/* Infinite Scroll Sentinel & Status Indicators */}
+      <div ref={loadMoreRef} className="py-2">
+        {isFetchingNextPage && (
+          <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-muted-foreground">
+            <Loader2 size={16} className="animate-spin text-accent" />
+            <span>Loading more orders...</span>
+          </div>
+        )}
 
-          <div className="flex items-center gap-1.5">
+        {!hasNextPage && orders.length > 0 && (
+          <div className="flex items-center justify-center py-6 text-xs text-muted-foreground/80">
+            <p>You&apos;ve reached the end of your orders.</p>
+          </div>
+        )}
+
+        {hasNextPage && !isFetchingNextPage && (
+          <div className="flex justify-center py-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              disabled={!canGoPrev}
-              onClick={() => onPageChange(currentPage - 1)}
-              className="h-8 cursor-pointer gap-1 px-2.5 text-xs font-medium"
+              onClick={onFetchNextPage}
+              className="h-8 cursor-pointer rounded-xl text-xs font-semibold text-muted-foreground hover:bg-surface hover:text-foreground"
             >
-              <ChevronLeft size={13} aria-hidden="true" />
-              <span>Previous</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!canGoNext}
-              onClick={() => onPageChange(currentPage + 1)}
-              className="h-8 cursor-pointer gap-1 px-2.5 text-xs font-medium"
-            >
-              <span>Next</span>
-              <ChevronRight size={13} aria-hidden="true" />
+              Load more orders
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

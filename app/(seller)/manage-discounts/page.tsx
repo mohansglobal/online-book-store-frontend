@@ -1,4 +1,5 @@
-import DiscountPage from "@/components/discounts/discount-page";
+// Manage Discounts Page entrypoint
+import { DiscountPage } from "@/features/discounts";
 
 export default function Page() {
   return <DiscountPage />;

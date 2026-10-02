@@ -55,9 +55,9 @@ export const PAGE_INTEGRATION_FLAGS: PageIntegrationConfig = {
 
   // Seller Pages
   sellerDashboard: true,
-  sellerInventory: false,
+  sellerInventory: true,
   sellerAddBook: true,
-  sellerDiscounts: false,
+  sellerDiscounts: true,
 };
 
 // Check if a specific page or feature has real API integration enabled.

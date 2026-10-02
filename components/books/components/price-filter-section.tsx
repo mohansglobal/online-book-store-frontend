@@ -1,3 +1,4 @@
+// Price range filter section with dual range slider and responsive min/max inputs
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -13,13 +14,21 @@ import {
 
 export interface PriceFilterSectionProps {
   minPrice?: number;
+
   maxPrice?: number;
+
   minLimit?: number;
+
   maxLimit?: number;
+
   step?: number;
+
   isLoading?: boolean;
+
   onApplyPrice: (min?: number, max?: number) => void;
+
   onClearPrice: () => void;
+
   isOpenDefault?: boolean;
 }
 
@@ -36,7 +45,9 @@ export function PriceFilterSection({
   const [isOpen, setIsOpen] = useState(isOpenDefault);
 
   const effectiveMinLimit = minLimit ?? DEFAULT_PRICE_MIN;
+
   const effectiveMaxLimit = maxLimit ?? DEFAULT_PRICE_MAX;
+
   const sliderStep = step ?? getSliderStep(effectiveMinLimit, effectiveMaxLimit);
 
   // Slider range values [min, max]
@@ -49,6 +60,7 @@ export function PriceFilterSection({
   const [inputMin, setInputMin] = useState(
     minPrice !== undefined ? String(minPrice) : "",
   );
+
   const [inputMax, setInputMax] = useState(
     maxPrice !== undefined ? String(maxPrice) : "",
   );
@@ -56,31 +68,39 @@ export function PriceFilterSection({
   // Sync state when external props change
   useEffect(() => {
     const curMin = minPrice ?? effectiveMinLimit;
+
     const curMax = maxPrice ?? effectiveMaxLimit;
 
     setSliderRange([curMin, curMax]);
+
     setInputMin(minPrice !== undefined ? String(minPrice) : "");
+
     setInputMax(maxPrice !== undefined ? String(maxPrice) : "");
   }, [minPrice, maxPrice, effectiveMinLimit, effectiveMaxLimit]);
 
   const handleSliderChange = (vals: number[]) => {
     const minVal = vals[0] ?? effectiveMinLimit;
+
     const maxVal = vals[1] ?? effectiveMaxLimit;
 
     setSliderRange([minVal, maxVal]);
 
     const displayMin = minVal > effectiveMinLimit ? String(minVal) : "";
+
     const displayMax = maxVal < effectiveMaxLimit ? String(maxVal) : "";
 
     setInputMin(displayMin);
+
     setInputMax(displayMax);
   };
 
   const handleSliderCommit = (vals: number[]) => {
     const rawMin = vals[0] ?? effectiveMinLimit;
+
     const rawMax = vals[1] ?? effectiveMaxLimit;
 
     const sMin = rawMin > effectiveMinLimit ? rawMin : undefined;
+
     const sMax = rawMax < effectiveMaxLimit ? rawMax : undefined;
 
     onApplyPrice(sMin, sMax);
@@ -90,9 +110,11 @@ export function PriceFilterSection({
     event?.preventDefault();
 
     const trimmedMin = inputMin.trim();
+
     const trimmedMax = inputMax.trim();
 
     const parsedMin = trimmedMin !== "" ? Number(trimmedMin) : undefined;
+
     const parsedMax = trimmedMax !== "" ? Number(trimmedMax) : undefined;
 
     let safeMin =
@@ -108,10 +130,13 @@ export function PriceFilterSection({
     // Handle inverted range edge case
     if (safeMin !== undefined && safeMax !== undefined && safeMin > safeMax) {
       const temp = safeMin;
+
       safeMin = safeMax;
+
       safeMax = temp;
 
       setInputMin(String(safeMin));
+
       setInputMax(String(safeMax));
     }
 
@@ -132,6 +157,7 @@ export function PriceFilterSection({
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
             Price Range (₹)
           </span>
+
           {hasActivePrice && (
             <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
               Active
@@ -157,8 +183,10 @@ export function PriceFilterSection({
               onValueCommit={handleSliderCommit}
               className="w-full"
             />
+
             <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
               <span>₹{sliderRange[0]}</span>
+
               <span>₹{sliderRange[1]}</span>
             </div>
           </div>
@@ -167,30 +195,32 @@ export function PriceFilterSection({
           <form onSubmit={handleApply} className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground select-none">
                   ₹
                 </span>
+
                 <Input
                   type="number"
                   min="0"
-                  placeholder={`Min (₹${effectiveMinLimit})`}
+                  placeholder={`Min (${effectiveMinLimit})`}
                   value={inputMin}
                   onChange={(e) => setInputMin(e.target.value)}
-                  className="h-8 bg-[#F7F1E3] border-border/70 pl-6 text-xs shadow-none"
+                  className="h-8 bg-surface-soft/60 border-border/70 pl-6 pr-1.5 text-xs shadow-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
 
               <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground select-none">
                   ₹
                 </span>
+
                 <Input
                   type="number"
                   min="0"
-                  placeholder={`Max (₹${effectiveMaxLimit})`}
+                  placeholder={`Max (${effectiveMaxLimit})`}
                   value={inputMax}
                   onChange={(e) => setInputMax(e.target.value)}
-                  className="h-8 bg-[#F7F1E3] border-border/70 pl-6 text-xs shadow-none"
+                  className="h-8 bg-surface-soft/60 border-border/70 pl-6 pr-1.5 text-xs shadow-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -203,6 +233,7 @@ export function PriceFilterSection({
               >
                 Apply (₹)
               </Button>
+
               {hasActivePrice && (
                 <Button
                   type="button"

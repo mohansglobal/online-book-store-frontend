@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { apiClient } from "@/lib/api";
 import {
+  applyBulkDiscount,
   applyListingDiscount,
+  removeBulkDiscount,
+  removeListingDiscount,
   toggleListingStatus,
   updateListingStock,
 } from "./books.api";
@@ -153,6 +156,109 @@ describe("Books & Listings API Client", () => {
         "/book-listings/list_2/toggle-status",
         { isActive: false },
         { signal: undefined },
+      );
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe("scheduled and bulk discount APIs", () => {
+    it("should send scheduled discount payload with date window and campaign", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Scheduled discount applied",
+        data: { _id: "list_1" },
+      };
+
+      vi.mocked(apiClient.patch).mockResolvedValueOnce(mockResponse);
+
+      await applyListingDiscount({
+        listingId: "list_1",
+        discountType: "PERCENTAGE",
+        discountValue: 30,
+        startDate: "2026-11-10T00:00:00.000Z",
+        endDate: "2026-11-21T23:59:59.999Z",
+        campaignName: "November Super Sale",
+      });
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/listings/list_1/discount",
+        {
+          discountType: "PERCENTAGE",
+          discountValue: 30,
+          startDate: "2026-11-10T00:00:00.000Z",
+          endDate: "2026-11-21T23:59:59.999Z",
+          campaignName: "November Super Sale",
+        },
+        { signal: undefined },
+      );
+    });
+
+    it("should send DELETE /listings/:id/discount on removeListingDiscount", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Discount removed successfully",
+      };
+
+      vi.mocked(apiClient.delete).mockResolvedValueOnce(mockResponse);
+
+      const result = await removeListingDiscount("list_1");
+
+      expect(apiClient.delete).toHaveBeenCalledWith(
+        "/listings/list_1/discount",
+        { signal: undefined },
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should send POST /listings/discounts/bulk on applyBulkDiscount", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Bulk discount applied",
+        data: { modifiedCount: 5 },
+      };
+
+      vi.mocked(apiClient.post).mockResolvedValueOnce(mockResponse);
+
+      const result = await applyBulkDiscount({
+        targetType: "ALL",
+        discountType: "PERCENTAGE",
+        discountValue: 20,
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/listings/discounts/bulk",
+        {
+          targetType: "ALL",
+          discountType: "PERCENTAGE",
+          discountValue: 20,
+        },
+        { signal: undefined },
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should send DELETE /listings/discounts/bulk on removeBulkDiscount", async () => {
+      const mockResponse = {
+        success: true,
+        message: "Bulk discounts removed",
+      };
+
+      vi.mocked(apiClient.delete).mockResolvedValueOnce(mockResponse);
+
+      const result = await removeBulkDiscount({
+        targetType: "SPECIFIC",
+        listingIds: ["list_1", "list_2"],
+      });
+
+      expect(apiClient.delete).toHaveBeenCalledWith(
+        "/listings/discounts/bulk",
+        {
+          json: {
+            targetType: "SPECIFIC",
+            listingIds: ["list_1", "list_2"],
+          },
+          signal: undefined,
+        },
       );
       expect(result).toEqual(mockResponse);
     });

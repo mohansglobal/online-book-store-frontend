@@ -17,11 +17,14 @@ export function SellerOrdersHeader({
   onOpenMobileFilters,
 }: SellerOrdersHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-muted-foreground">
-          Showing <strong className="text-foreground">{totalCount}</strong> orders
-        </span>
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-0.5">
+        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          All Orders
+        </h1>
+        <p className="text-xs font-medium text-muted-foreground">
+          Showing <strong className="font-semibold text-foreground">{totalCount}</strong> {totalCount === 1 ? "order" : "orders"}
+        </p>
       </div>
 
       <div className="flex items-center gap-2">

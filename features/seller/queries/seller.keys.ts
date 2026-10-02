@@ -19,6 +19,9 @@ export const sellerKeys = {
   orders: (params?: SellerOrdersQueryParams) =>
     [...sellerKeys.all, "orders", params ?? {}] as const,
 
+  infiniteOrders: (params?: SellerOrdersQueryParams) =>
+    [...sellerKeys.all, "orders", "infinite", params ?? {}] as const,
+
   revenueAnalytics: (params?: SellerRevenueAnalyticsParams) =>
     [...sellerKeys.dashboard(), "revenue-analytics", params ?? {}] as const,
 

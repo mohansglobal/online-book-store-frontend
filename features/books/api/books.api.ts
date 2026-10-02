@@ -13,10 +13,17 @@ import {
 import type {
   ApplyListingDiscountInput,
   ApplyListingDiscountResponse,
+  BulkApplyDiscountInput,
+  BulkApplyDiscountResponse,
+  BulkRemoveDiscountInput,
+  BulkRemoveDiscountResponse,
   GetSellerListingsParams,
+  RemoveListingDiscountResponse,
   SellerListingsResponse,
   ToggleListingStatusInput,
   ToggleListingStatusResponse,
+  UpdateListingInput,
+  UpdateListingResponse,
   UpdateStockInput,
   UpdateStockResponse,
 } from "../types/listing.types";
@@ -135,12 +142,72 @@ export async function applyListingDiscount(
   const payload = {
     discountType: input.discountType,
     discountValue: input.discountValue,
+    ...(input.startDate ? { startDate: input.startDate } : {}),
+    ...(input.endDate ? { endDate: input.endDate } : {}),
+    ...(input.campaignName ? { campaignName: input.campaignName } : {}),
     ...(input.mrp !== undefined ? { mrp: input.mrp } : {}),
     ...(input.mrpInPaise !== undefined ? { mrpInPaise: input.mrpInPaise } : {}),
   };
 
   return apiClient.patch<ApplyListingDiscountResponse>(
     `/listings/${encodeURIComponent(listingId)}/discount`,
+    payload,
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
+// Removes discount for a single listing via DELETE /api/v1/listings/:id/discount
+export async function removeListingDiscount(
+  listingId: string,
+  options?: { signal?: AbortSignal },
+): Promise<RemoveListingDiscountResponse> {
+  return apiClient.delete<RemoveListingDiscountResponse>(
+    `/listings/${encodeURIComponent(listingId)}/discount`,
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
+// Applies scheduled or instant discount in bulk via POST /api/v1/listings/discounts/bulk
+export async function applyBulkDiscount(
+  input: BulkApplyDiscountInput,
+  options?: { signal?: AbortSignal },
+): Promise<BulkApplyDiscountResponse> {
+  return apiClient.post<BulkApplyDiscountResponse>(
+    "/listings/discounts/bulk",
+    input,
+    {
+      signal: options?.signal,
+    },
+  );
+}
+
+// Removes discount in bulk via DELETE /api/v1/listings/discounts/bulk
+export async function removeBulkDiscount(
+  input: BulkRemoveDiscountInput,
+  options?: { signal?: AbortSignal },
+): Promise<BulkRemoveDiscountResponse> {
+  return apiClient.delete<BulkRemoveDiscountResponse>(
+    "/listings/discounts/bulk",
+    {
+      json: input,
+      signal: options?.signal,
+    },
+  );
+}
+
+// Updates a seller listing and optional master book details via PATCH /api/v1/listings/:id
+export async function updateSellerListing(
+  input: UpdateListingInput,
+  options?: { signal?: AbortSignal },
+): Promise<UpdateListingResponse> {
+  const { listingId, ...payload } = input;
+
+  return apiClient.patch<UpdateListingResponse>(
+    `/listings/${encodeURIComponent(listingId)}`,
     payload,
     {
       signal: options?.signal,

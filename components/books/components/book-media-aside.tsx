@@ -6,6 +6,7 @@ import { Book, Loader2, Plus, Trash2 } from "lucide-react";
 
 interface BookMediaAsideProps {
   isBookFound?: boolean;
+  isEditMode?: boolean;
   coverPreview: string | null;
   isUploadingCover?: boolean;
   onCoverChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -19,6 +20,7 @@ interface BookMediaAsideProps {
 const LABEL_CLASS = "text-xs font-semibold uppercase tracking-wider text-text-secondary";
 
 export function BookMediaAside({
+  isEditMode = false,
   coverPreview,
   isUploadingCover = false,
   onCoverChange,
@@ -32,10 +34,12 @@ export function BookMediaAside({
     <aside className="sticky top-24 rounded-xl border border-border bg-surface p-6 shadow-sm sm:p-8 lg:col-span-4">
       <div className="mb-6 border-b border-border pb-4">
         <h2 className="mb-1 text-lg font-semibold text-foreground">
-          Cover Image
+          {isEditMode ? "Edit Cover & Media" : "Cover Image"}
         </h2>
         <p className="text-sm text-text-secondary">
-          Upload or review the book cover.
+          {isEditMode
+            ? "Update or replace book cover and gallery images."
+            : "Upload or review the book cover."}
         </p>
       </div>
 
@@ -80,7 +84,7 @@ export function BookMediaAside({
               <Book className="h-7 w-7 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground">
-              Upload book cover, or{" "}
+              {isEditMode ? "Change book cover, or " : "Upload book cover, or "}
               <span className="font-semibold text-accent underline">browse</span>
             </p>
             <p className="mt-1.5 text-xs text-muted-foreground">

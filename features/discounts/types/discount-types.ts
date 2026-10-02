@@ -6,11 +6,18 @@ export type DiscountStatusFilter = "all" | "active" | "inactive" | "discounted";
 
 export interface EditDiscountFormData {
   listingId: string;
+
   bookTitle: string;
+
   mrp: number;
+
   currentSellingPrice: number;
+
   discountType: DiscountType;
+
   discountValue: number;
+
   startDate?: string;
+
   endDate?: string;
 }

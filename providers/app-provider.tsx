@@ -89,12 +89,13 @@ export function AppProvider({
       <Toaster
         position="top-right"
         closeButton
+        duration={2000}
         gap={12}
 
         toastOptions={{
           classNames: {
             toast:
-              "!bg-background !border !border-border/40 !shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:!shadow-[0_8px_30px_rgb(0,0,0,0.2)] !rounded-xl !p-4 !items-start",
+              "!relative !bg-background !border !border-border/40 !shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:!shadow-[0_8px_30px_rgb(0,0,0,0.2)] !rounded-xl !p-3.5 !pr-10 !items-center",
 
             title:
               "!text-sm !font-medium !text-foreground !tracking-tight",
@@ -103,10 +104,10 @@ export function AppProvider({
               "!text-[13px] !text-muted-foreground !leading-relaxed",
 
             icon:
-              "!mt-0.5 group-data-[type=error]:!text-red-500 group-data-[type=success]:!text-emerald-500 group-data-[type=warning]:!text-amber-500 group-data-[type=info]:!text-blue-500",
+              "!mt-0 group-data-[type=error]:!text-red-500 group-data-[type=success]:!text-emerald-500 group-data-[type=warning]:!text-amber-500 group-data-[type=info]:!text-blue-500",
 
             closeButton:
-              "!bg-transparent !border-none !text-muted-foreground hover:!text-foreground hover:!bg-muted/50 !transition-colors !right-2 !top-2",
+              "!absolute !top-1/2 !-translate-y-1/2 !right-2.5 !left-auto !bottom-auto !bg-transparent !border-none !text-muted-foreground hover:!text-foreground hover:!bg-muted/50 !rounded-md !p-1 !transition-colors cursor-pointer",
           },
         }}
       />

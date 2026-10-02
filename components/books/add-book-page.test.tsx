@@ -60,6 +60,8 @@ describe("AddBookPage Component", () => {
   const mockHandleExtraImagesChange = vi.fn();
 
   const defaultMockFormState = {
+    isEditMode: false,
+    isLoadingListing: false,
     isbn: "978-0-14-345357-4",
     setIsbn: vi.fn(),
     titleEn: "Clean Code",
@@ -134,12 +136,29 @@ describe("AddBookPage Component", () => {
   it("should render standard action buttons in idle state", () => {
     renderWithQueryClient(<AddBookPage />);
 
-    const submitBtn = screen.getByRole("button", { name: "Save Changes" });
+    const submitBtn = screen.getByRole("button", { name: "Add Book" });
     const cancelBtn = screen.getByRole("button", { name: "Cancel" });
 
     expect(submitBtn).toBeInTheDocument();
     expect(submitBtn).not.toBeDisabled();
     expect(cancelBtn).not.toBeDisabled();
+  });
+
+  it("should render Edit Mode titles and buttons when isEditMode is true", () => {
+    vi.mocked(useAddBookForm).mockReturnValue({
+      ...defaultMockFormState,
+      isEditMode: true,
+    });
+
+    renderWithQueryClient(<AddBookPage />);
+
+    expect(screen.getByText("Edit Book")).toBeInTheDocument();
+    expect(
+      screen.getByText("Update book information, inventory stock, and pricing details."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Update Book" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel Edit" })).toBeInTheDocument();
+    expect(screen.getByTestId("mock-admin-nav")).toHaveTextContent("Tab: add-book");
   });
 
   it("should trigger handleReset when Cancel button is clicked", () => {

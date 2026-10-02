@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { useSellerOrders } from "../../queries/use-seller-orders";
+import { useInfiniteSellerOrders } from "../../queries/use-seller-orders";
 import { SellerOrderStatusDialog } from "../seller-order-status-dialog";
 import type { SellerOrder, SellerOrdersQueryParams } from "../../types/seller.types";
 import {
@@ -22,24 +22,34 @@ const INITIAL_FILTERS: SellerOrdersFiltersState = {
 
 export function SellerOrdersView() {
   const [filters, setFilters] = useState<SellerOrdersFiltersState>(INITIAL_FILTERS);
-  const [page, setPage] = useState(1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<SellerOrder | null>(null);
 
-  const queryParams: SellerOrdersQueryParams = useMemo(() => {
+  const queryParams: Omit<SellerOrdersQueryParams, "page"> = useMemo(() => {
     return {
-      page,
       limit: 20,
       status: filters.status !== "ALL" ? filters.status : undefined,
       dateRange: filters.dateRange !== "ALL_TIME" ? filters.dateRange : undefined,
     };
-  }, [page, filters.status, filters.dateRange]);
+  }, [filters.status, filters.dateRange]);
 
-  const { data: response, isLoading, isFetching, refetch } = useSellerOrders(queryParams);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useInfiniteSellerOrders(queryParams);
 
+  // Flatten accumulated pages from infinite query
   const rawOrders: SellerOrder[] = useMemo(() => {
-    return response?.data || [];
-  }, [response]);
+    if (data?.pages) {
+      return data.pages.flatMap((page) => page.data ?? []);
+    }
+    return [];
+  }, [data]);
 
   // Client-side filtering for search & payment method
   const filteredOrders = useMemo(() => {
@@ -83,12 +93,10 @@ export function SellerOrdersView() {
 
   const handleFilterChange = (nextFilters: SellerOrdersFiltersState) => {
     setFilters(nextFilters);
-    setPage(1);
   };
 
   const handleResetFilters = () => {
     setFilters(INITIAL_FILTERS);
-    setPage(1);
   };
 
   const hasActiveFilters =
@@ -98,12 +106,13 @@ export function SellerOrdersView() {
     filters.paymentMethod !== "ALL";
 
   const dialogOrder = selectedOrder ? toSellerRecentOrder(selectedOrder) : null;
+  const totalCount = data?.pages?.[0]?.meta?.total ?? filteredOrders.length;
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <SellerOrdersHeader
-        totalCount={filteredOrders.length}
+        totalCount={totalCount}
         isFetching={isFetching}
         onRefresh={() => refetch()}
         onOpenMobileFilters={() => setMobileFilterOpen(true)}
@@ -112,12 +121,12 @@ export function SellerOrdersView() {
       {/* Main Layout: Filters on left, Order Cards on right */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block lg:sticky lg:top-20 lg:shrink-0 lg:self-start">
           <SellerOrdersFilterSidebar
             filters={filters}
             onFilterChange={handleFilterChange}
             onReset={handleResetFilters}
-            totalOrdersCount={filteredOrders.length}
+            totalOrdersCount={totalCount}
           />
         </div>
 
@@ -138,7 +147,7 @@ export function SellerOrdersView() {
                   handleResetFilters();
                   setMobileFilterOpen(false);
                 }}
-                totalOrdersCount={filteredOrders.length}
+                totalOrdersCount={totalCount}
               />
             </div>
           </SheetContent>
@@ -149,11 +158,12 @@ export function SellerOrdersView() {
           <SellerOrdersList
             orders={filteredOrders}
             isLoading={isLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={Boolean(hasNextPage)}
+            onFetchNextPage={() => fetchNextPage()}
             hasFilters={hasActiveFilters}
             onResetFilters={handleResetFilters}
             onOpenStatusDialog={(order) => setSelectedOrder(order)}
-            meta={response?.meta}
-            onPageChange={(nextPage) => setPage(nextPage)}
           />
         </main>
       </div>

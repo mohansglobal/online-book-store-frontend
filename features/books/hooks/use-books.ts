@@ -2,10 +2,8 @@
 "use client";
 
 import {
-  useMutation,
   useQuery,
   useQueryClient,
-  type UseMutationOptions,
 } from "@tanstack/react-query";
 import {
   createBookListing,
@@ -16,9 +14,10 @@ import {
 import { bookKeys } from "../queries/book.keys";
 import type {
   CreateBookListingInput,
-  CreateBookListingResponse,
   GetBooksParams,
 } from "../types/book.types";
+import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
+import type { CreateBookListingResponse } from "../types/book.types";
 import type { ApiClientError } from "@/lib/api";
 
 // Re-export seller listing and discount mutation hooks
@@ -32,12 +31,14 @@ export function useBooks(params?: GetBooksParams) {
   });
 }
 
-// Hook to fetch a single book by ID or slug
+// Hook to fetch a single book by ID or slug with instant fresh refetching
 export function useBook(identifier: string) {
   return useQuery({
     queryKey: bookKeys.detail(identifier),
     queryFn: ({ signal }) => getBookByIdOrSlug(identifier, { signal }),
     enabled: Boolean(identifier),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
 
@@ -64,10 +65,11 @@ export function useCreateBookListingMutation(
 
   return useMutation({
     mutationFn: (input: CreateBookListingInput) => createBookListing(input),
+
     onSuccess: (...args) => {
       const [, variables] = args;
 
-      // Invalidate book listings cache
+      // Invalidate book listings and details caches
       queryClient.invalidateQueries({
         queryKey: bookKeys.lists(),
       });
@@ -76,9 +78,14 @@ export function useCreateBookListingMutation(
         queryKey: bookKeys.myListingsAll(),
       });
 
+      queryClient.invalidateQueries({
+        queryKey: bookKeys.details(),
+      });
+
       // Invalidate specific ISBN lookup if provided
       if (variables.isbn) {
         const cleanIsbn = variables.isbn.trim();
+
         queryClient.invalidateQueries({
           queryKey: bookKeys.isbnLookup(cleanIsbn),
         });
@@ -86,9 +93,7 @@ export function useCreateBookListingMutation(
 
       options?.onSuccess?.(...args);
     },
+
     ...options,
   });
 }
-
-
-

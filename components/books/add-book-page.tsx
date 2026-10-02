@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 
 export default function AddBookPage() {
   const {
+    isEditMode,
+    isLoadingListing,
     isbn,
     setIsbn,
     titleEn,
@@ -67,7 +69,7 @@ export default function AddBookPage() {
     handleSubmit,
   } = useAddBookForm();
 
-  const isFormBusy = isSubmitting || isUploadingCover || isUploadingGallery;
+  const isFormBusy = isSubmitting || isUploadingCover || isUploadingGallery || isLoadingListing;
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground selection:bg-accent selection:text-white">
@@ -86,10 +88,12 @@ export default function AddBookPage() {
             <section className="rounded-xl border border-border bg-surface p-6 shadow-sm sm:p-8 lg:col-span-8">
               <div className="mb-6 border-b border-border pb-4">
                 <h2 className="mb-1 text-lg font-semibold text-foreground">
-                  Book Details
+                  {isEditMode ? "Edit Book" : "Book Details"}
                 </h2>
                 <p className="text-sm text-text-secondary">
-                  Enter book information and inventory details to create a listing.
+                  {isEditMode
+                    ? "Update book information, inventory stock, and pricing details."
+                    : "Enter book information and inventory details to create a listing."}
                 </p>
               </div>
 
@@ -160,7 +164,7 @@ export default function AddBookPage() {
                   disabled={isFormBusy}
                   className="h-11 flex-1 cursor-pointer rounded-md border-border bg-transparent text-foreground transition-colors hover:bg-surface-hover disabled:cursor-not-allowed"
                 >
-                  Cancel
+                  {isEditMode ? "Cancel Edit" : "Cancel"}
                 </Button>
                 <Button
                   type="submit"
@@ -170,21 +174,24 @@ export default function AddBookPage() {
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating Listing...
+                      {isEditMode ? "Updating Listing..." : "Creating Listing..."}
                     </span>
                   ) : isUploadingCover || isUploadingGallery ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Uploading Images...
                     </span>
+                  ) : isEditMode ? (
+                    "Update Book"
                   ) : (
-                    "Save Changes"
+                    "Add Book"
                   )}
                 </Button>
               </div>
             </section>
 
             <BookMediaAside
+              isEditMode={isEditMode}
               coverPreview={coverPreview}
               isUploadingCover={isUploadingCover}
               onCoverChange={handleCoverChange}

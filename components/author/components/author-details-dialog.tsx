@@ -50,10 +50,11 @@ export function AuthorDetailsDialog({
     author.birthDate,
     author.deathDate,
   );
-
+  
   const birthDateFormatted = formatDateDisplay(author.birthDate);
-
+  
   const deathDateFormatted = formatDateDisplay(author.deathDate);
+  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,12 +98,7 @@ export function AuthorDetailsDialog({
 
             {/* Lifespan & Dates */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              {lifespan && (
-                <span className="inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-surface-soft px-2.5 py-0.5 text-xs font-medium text-foreground/80">
-                  <Calendar className="h-3.5 w-3.5 text-accent shrink-0" />
-                  <span>Lifespan: {lifespan}</span>
-                </span>
-              )}
+
 
               {birthDateFormatted && (
                 <span className="text-xs text-muted-foreground">

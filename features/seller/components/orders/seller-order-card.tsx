@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStatusBadgeConfig } from "@/features/orders/utils/order-helpers";
+import { resolveCoverUrl } from "@/lib/image-url";
 import type { SellerOrder } from "../../types/seller.types";
 
 interface SellerOrderCardProps {
@@ -52,7 +53,7 @@ export function SellerOrderCard({
   });
 
   const customerName =
-    order.buyer?.name || order.shippingAddress?.fullName || "Customer";
+    order.buyer?.name || order.shippingAddress?.fullName || "-";
 
   const customerAvatar = order.buyer?.profilePicture;
 
@@ -81,10 +82,9 @@ export function SellerOrderCard({
   };
 
   const primaryItem = order.items[0];
-  const primaryItemImage =
-    primaryItem?.coverImage ||
-    (primaryItem as { image?: string })?.image ||
-    (primaryItem?.book as { coverImage?: string })?.coverImage;
+  const primaryItemImage = primaryItem?.coverImage
+    ? resolveCoverUrl(primaryItem.coverImage)
+    : undefined;
 
   const extraItemsCount = order.items.length - 1;
 
@@ -184,7 +184,7 @@ export function SellerOrderCard({
             {primaryItemImage ? (
               <Image
                 src={primaryItemImage}
-                alt={primaryItem?.title || "Book"}
+                alt={primaryItem?.title || "-"}
                 fill
                 sizes="32px"
                 className="object-cover"
@@ -197,7 +197,7 @@ export function SellerOrderCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="truncate text-xs font-semibold text-foreground">
-                {primaryItem?.title || "Book item"}
+                {primaryItem?.title || "-"}
               </p>
 
               {primaryItem?.status && primaryItem.status !== order.orderStatus && (
@@ -288,10 +288,9 @@ export function SellerOrderCard({
         <div className="mt-2.5 divide-y divide-border/40 rounded-lg border border-border/40 bg-surface-soft/40 p-2">
           {order.items.slice(1).map((item, idx) => {
             const itemKey = item._id || item.id || `extra-item-${idx}`;
-            const itemImg =
-              item.coverImage ||
-              (item as { image?: string })?.image ||
-              (item.book as { coverImage?: string })?.coverImage;
+            const itemImg = item.coverImage
+              ? resolveCoverUrl(item.coverImage)
+              : undefined;
 
             return (
               <div

@@ -88,7 +88,7 @@ export function SellerOrdersFilterSidebar({
   };
 
   return (
-    <aside className="w-full space-y-6 rounded-2xl border border-border bg-surface p-5 shadow-sm lg:w-72 lg:shrink-0">
+    <aside className="w-full space-y-6 rounded-2xl border border-border bg-surface p-5 shadow-sm lg:w-72 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/40 pb-4">
         <div className="flex items-center gap-2">

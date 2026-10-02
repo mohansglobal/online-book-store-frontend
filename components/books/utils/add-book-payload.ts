@@ -5,6 +5,7 @@ import {
 } from "@/features/books";
 
 export interface AddBookFormState {
+  bookId?: string;
   isbn: string;
   titleEn: string;
   titleBn: string;
@@ -63,6 +64,7 @@ export function buildBookListingPayload(
   const images = form.extraPreviews.length > 0 ? form.extraPreviews : undefined;
 
   return {
+    book: form.bookId || undefined,
     title: form.titleEn.trim(),
     titleBn: form.titleBn.trim(),
     isbn: cleanIsbn,

@@ -4,6 +4,15 @@ import { useAddBookForm } from "./use-add-book-form";
 import { toast } from "sonner";
 import { useCreateBookListingMutation } from "@/features/books";
 
+const mockPush = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: mockPush,
+  })),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -14,6 +23,7 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/features/books", () => ({
   useCreateBookListingMutation: vi.fn(),
+  useBook: vi.fn(() => ({ data: null, isLoading: false })),
   FALLBACK_BOOK_COVER: "https://example.com/fallback-cover.jpg",
 }));
 
@@ -180,7 +190,7 @@ describe("useAddBookForm Hook", () => {
     expect(payload.country).toBe("country_in_01");
   });
 
-  it("should show success toast and reset form on mutation success", () => {
+  it("should show success toast and navigate to inventory on mutation success", () => {
     const { result } = renderHook(() => useAddBookForm());
     const dummyEvent = { preventDefault: vi.fn() } as unknown as React.FormEvent;
 
@@ -197,8 +207,7 @@ describe("useAddBookForm Hook", () => {
     });
 
     expect(toast.success).toHaveBeenCalledWith("Book and listing created successfully");
-    expect(result.current.titleEn).toBe("");
-    expect(result.current.mrp).toBe("");
+    expect(mockPush).toHaveBeenCalledWith("/inventory");
   });
 
   const isbnStandardErrorCases = [
@@ -246,7 +255,7 @@ describe("useAddBookForm Hook", () => {
     },
   );
 
-  it("should succeed and reset form when second seller adds identical publication", () => {
+  it("should succeed and navigate when second seller adds identical publication", () => {
     const { result } = renderHook(() => useAddBookForm());
     const dummyEvent = { preventDefault: vi.fn() } as unknown as React.FormEvent;
 
@@ -268,6 +277,6 @@ describe("useAddBookForm Hook", () => {
     });
 
     expect(toast.success).toHaveBeenCalledWith("Listing added to existing publication!");
-    expect(result.current.coverPreview).toBeNull();
+    expect(mockPush).toHaveBeenCalledWith("/inventory");
   });
 });
