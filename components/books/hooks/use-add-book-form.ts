@@ -403,13 +403,7 @@ export function useAddBookForm() {
     }
 
     if (!titleEn.trim()) {
-      toast.error("English Title is required");
-
-      return;
-    }
-
-    if (!titleBn.trim()) {
-      toast.error("Bengali Title is required");
+      toast.error("Book Title is required");
 
       return;
     }
@@ -469,7 +463,7 @@ export function useAddBookForm() {
           stock: parsedStock,
           sku: sku.trim() || undefined,
           title: titleEn.trim(),
-          titleBn: titleBn.trim(),
+          titleBn: titleBn.trim() || titleEn.trim(),
           isbn: isbn.trim() || undefined,
           description: description.trim() || undefined,
           authors: authorId ? [authorId] : undefined,

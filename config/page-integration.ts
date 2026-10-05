@@ -22,10 +22,12 @@ export type PageIntegrationKey =
   | "profile"
   | "wishlist"
   | "auth"
+  | "newsletter"
   | "sellerDashboard"
   | "sellerInventory"
   | "sellerAddBook"
-  | "sellerDiscounts";
+  | "sellerDiscounts"
+  | "contents";
 
 export type PageIntegrationConfig = Record<PageIntegrationKey, boolean>;
 
@@ -34,17 +36,18 @@ export const PAGE_INTEGRATION_FLAGS: PageIntegrationConfig = {
   // API Integrated Pages (Real backend at http://localhost:5000/api/v1)
   homepage: true,
   auth: true, // Login & Register
+  newsletter: true, // Newsletter API integration
   categories: true, // Category list page
   categoryDetails: true, // Category dedicated page
   publishers: true, // Publishers page 
   publisherDetails: true, // Publisher dedicated page 
   authors: true, // Authors page 
   authorDetails: true, // Author dedicated page (GET /authors/:idOrSlug & PATCH /authors/:id) 
-
+  
   // Book Catalog & Details Pages (Real backend API enabled) 
   books: true, 
   bookDetails: true, 
-   
+  
   // Book Purchase & Order Flow (Real backend at http://localhost:5000/api/v1) 
   cart: true,
   checkout: true,
@@ -58,6 +61,7 @@ export const PAGE_INTEGRATION_FLAGS: PageIntegrationConfig = {
   sellerInventory: true,
   sellerAddBook: true,
   sellerDiscounts: true,
+  contents: true,
 };
 
 // Check if a specific page or feature has real API integration enabled.
@@ -177,6 +181,10 @@ export function getEndpointPageKey(endpoint: string, params?: unknown): PageInte
     return "auth";
   }
 
+  if (firstSegment === "newsletter") {
+    return "newsletter";
+  }
+
   if (firstSegment === "seller") {
     if (secondSegment === "inventory") {
       return "sellerInventory";
@@ -192,6 +200,10 @@ export function getEndpointPageKey(endpoint: string, params?: unknown): PageInte
 
   if (firstSegment === "dashboard") {
     return "sellerDashboard";
+  }
+
+  if (firstSegment === "contents" || firstSegment === "content") {
+    return "contents";
   }
 
   return null;

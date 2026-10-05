@@ -24,6 +24,7 @@ export * from "./hooks/use-verify-email-otp";
 export * from "./hooks/use-resend-email-otp";
 export * from "./stores/use-logout-modal-store";
 export * from "./stores/use-auth-session-store";
+export * from "./stores/use-user-store";
 export * from "./components/register-form";
 export * from "./components/otp-verification-form";
 export * from "./components/verify-email-form";

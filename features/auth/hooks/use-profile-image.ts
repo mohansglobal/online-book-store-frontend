@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { removeProfileImage, uploadProfileImage } from "../api/auth.api";
 import { authKeys } from "../queries/auth.keys";
 import type {
-  CurrentUserResponse,
   RemoveProfileImageResponse,
   UploadProfileImageResponse,
+  User,
 } from "../types/auth.types";
 import type { ApiClientError } from "@/lib/api";
 
@@ -24,10 +24,7 @@ export function useUploadProfileImageMutation(
     onSuccess: (...args) => {
       const [data] = args;
       // update auth queries cache with the updated user data
-      queryClient.setQueryData<CurrentUserResponse>(authKeys.me(), {
-        success: true,
-        data: data.data.user,
-      });
+      queryClient.setQueryData<User | null>(authKeys.me(), data.data.user);
       queryClient.invalidateQueries({ queryKey: authKeys.me() });
       toast.success(data.message || "Profile image updated successfully");
       options?.onSuccess?.(...args);
@@ -53,10 +50,7 @@ export function useRemoveProfileImageMutation(
     ...options,
     onSuccess: (...args) => {
       const [data] = args;
-      queryClient.setQueryData<CurrentUserResponse>(authKeys.me(), {
-        success: true,
-        data: data.data,
-      });
+      queryClient.setQueryData<User | null>(authKeys.me(), data.data);
       queryClient.invalidateQueries({ queryKey: authKeys.me() });
       toast.success(data.message || "Profile image removed successfully");
       options?.onSuccess?.(...args);

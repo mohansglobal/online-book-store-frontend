@@ -18,6 +18,7 @@ import {
 import { useTypewriter } from "../hooks/use-typewriter";
 import { HeroStats } from "./hero-stats";
 import { useCategories } from "@/features/categories";
+import { useHeroContent } from "@/features/contents";
 
 const ROTATING_WORDS = [
   "journey.",
@@ -78,6 +79,12 @@ export function Hero() {
     hasBooks: true,
   });
 
+  const heroContent = useHeroContent();
+  const rotatingWords =
+    heroContent?.rotatingWords && heroContent.rotatingWords.length > 0
+      ? heroContent.rotatingWords
+      : ROTATING_WORDS;
+
   const { placeholderQueries, chipCategories } = useMemo(() => {
     const categoriesList = categoriesResponse?.data || [];
 
@@ -88,16 +95,8 @@ export function Hero() {
       };
     }
 
-    const shuffled = [...categoriesList];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temp = shuffled[i];
-      shuffled[i] = shuffled[j];
-      shuffled[j] = temp;
-    }
-
-    const firstSet = shuffled.slice(0, 5);
-    const secondSet = shuffled.slice(5, 10);
+    const firstSet = categoriesList.slice(0, 5);
+    const secondSet = categoriesList.slice(5, 10);
 
     const queries = firstSet.map((cat) => cat.name);
 
@@ -113,14 +112,14 @@ export function Hero() {
     const intervalId = window.setInterval(() => {
       setWordIndex(
         (currentIndex) =>
-          (currentIndex + 1) % ROTATING_WORDS.length,
+          (currentIndex + 1) % rotatingWords.length,
       );
     }, 2800);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [rotatingWords.length]);
 
   const handleSearchSubmit = (
     event: React.FormEvent<HTMLFormElement>,
@@ -136,10 +135,6 @@ export function Hero() {
     } else {
       router.push("/books");
     }
-  };
-
-  const handleTagClick = (tag: string): void => {
-    router.push(`/books?search=${encodeURIComponent(tag.trim())}`);
   };
 
   const handleCategoryClick = (categoryTarget: string): void => {
@@ -196,68 +191,77 @@ export function Hero() {
         className="relative z-10 mx-auto flex w-full max-w-[960px] flex-col items-center px-5 pt-4 text-center"
       >
         {/* Heading */}
-        <h1 className="mb-6 max-w-[860px] font-display text-5xl leading-[1.15] font-medium tracking-tight text-white md:text-7xl lg:text-[92px]">
-          <motion.span
-            variants={itemVariants}
-            className="block text-center"
-          >
-            The bookshop shelf,
-          </motion.span>
+        {heroContent ? (
+          <h1 className="mb-6 max-w-[860px] font-display text-5xl leading-[1.15] font-medium tracking-tight text-white md:text-7xl lg:text-[92px]">
+            <motion.span
+              variants={itemVariants}
+              className="block text-center"
+            >
+              {heroContent.headlinePart1}
+            </motion.span>
 
-          <motion.span
-            variants={itemVariants}
-            className="mt-2 block text-center text-3xl font-normal text-zinc-200 md:text-5xl lg:text-[58px]"
-          >
-            curated for your{" "}
-            <span className="relative inline-flex items-center justify-center overflow-hidden px-1 py-1 text-center align-baseline">
-              {/* Keeps width stable */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none invisible px-1 font-normal italic select-none"
-              >
-                curiosity.
-              </span>
-
-              <AnimatePresence
-                mode="popLayout"
-                initial={false}
-              >
-                <motion.span
-                  key={ROTATING_WORDS[wordIndex]}
-                  initial={{
-                    y: "100%",
-                    opacity: 0,
-                  }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                  }}
-                  exit={{
-                    y: "-100%",
-                    opacity: 0,
-                  }}
-                  transition={{
-                    duration: 0.55,
-                    ease: EASE_OUT,
-                  }}
-                  className="absolute inset-0 flex items-center justify-center px-1 font-normal whitespace-nowrap text-orange-400 italic drop-shadow-lg"
+            <motion.span
+              variants={itemVariants}
+              className="mt-2 block text-center text-3xl font-normal text-zinc-200 md:text-5xl lg:text-[58px]"
+            >
+              {heroContent.headlinePart2}{" "}
+              <span className="relative inline-flex items-center justify-center overflow-hidden px-1 py-1 text-center align-baseline">
+                {/* Keeps width stable */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none invisible px-1 font-normal italic select-none"
                 >
-                  {ROTATING_WORDS[wordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </motion.span>
-        </h1>
+                  curiosity.
+                </span>
+
+                <AnimatePresence
+                  mode="popLayout"
+                  initial={false}
+                >
+                  <motion.span
+                    key={rotatingWords[wordIndex % rotatingWords.length]}
+                    initial={{
+                      y: "100%",
+                      opacity: 0,
+                    }}
+                    animate={{
+                      y: 0,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      y: "-100%",
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.55,
+                      ease: EASE_OUT,
+                    }}
+                    className="absolute inset-0 flex items-center justify-center px-1 font-normal whitespace-nowrap text-orange-400 italic drop-shadow-lg"
+                  >
+                    {rotatingWords[wordIndex % rotatingWords.length]}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </motion.span>
+          </h1>
+        ) : (
+          <div className="mb-6 flex w-full max-w-[700px] flex-col items-center gap-3 py-6 animate-pulse">
+            <div className="h-14 w-3/4 rounded-2xl bg-white/10" />
+            <div className="h-10 w-1/2 rounded-2xl bg-white/10" />
+          </div>
+        )}
 
         {/* Description */}
-        <motion.p
-          variants={itemVariants}
-          className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-300 md:text-lg"
-        >
-          Discover handpicked literary masterpieces, rare
-          editions, and timeless voices waiting to be explored
-          by passionate readers and thoughtful minds.
-        </motion.p>
+        {heroContent ? (
+          <motion.p
+            variants={itemVariants}
+            className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-300 md:text-lg"
+          >
+            {heroContent.description}
+          </motion.p>
+        ) : (
+          <div className="mb-8 h-6 w-full max-w-lg rounded-lg bg-white/10 animate-pulse" />
+        )}
 
         {/* Search */}
         <motion.form

@@ -71,7 +71,7 @@ export function Footer() {
             </span>
 
             <span>
-              Folio
+              Logo
               <em className="not-italic text-primary">.</em>
             </span>
           </Link>

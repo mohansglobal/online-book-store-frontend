@@ -1,7 +1,16 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { getCategories, getAllCategories, getCategoryBySlug } from "../api/categories.api";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getCategories,
+  getAllCategories,
+  getCategoryBySlug,
+  updateCategory,
+} from "../api/categories.api";
 import { categoryKeys } from "../queries/category.keys";
-import type { GetCategoriesParams } from "../types/category.types";
+import type {
+  GetCategoriesParams,
+  UpdateCategoryInput,
+} from "../types/category.types";
+
 
 /**
  * Hook to fetch paginated/filtered categories
@@ -55,10 +64,28 @@ export function useInfiniteCategories(params?: Omit<GetCategoriesParams, "page">
 
       const currentPage = meta.page ?? 1;
       const totalPages = meta.totalPages ?? 1;
-      // Some APIs return hasNextPage, others we infer from currentPage < totalPages
-      const hasNext = (meta as any).hasNextPage ?? (currentPage < totalPages);
+      const hasNext =
+        "hasNextPage" in meta && typeof (meta as Record<string, unknown>).hasNextPage === "boolean"
+          ? Boolean((meta as Record<string, unknown>).hasNextPage)
+          : currentPage < totalPages;
 
       return hasNext ? currentPage + 1 : undefined;
     },
   });
 }
+
+/**
+ * Hook to update category details by ID
+ */
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCategoryInput }) =>
+      updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+    },
+  });
+}
+

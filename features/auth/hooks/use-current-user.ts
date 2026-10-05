@@ -1,4 +1,5 @@
-// current authenticated user query hook
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
 import { authQueries } from "../queries/auth.queries";
 
@@ -6,5 +7,5 @@ export function useCurrentUser() {
   return useQuery(authQueries.me());
 }
 
-// alias for clean imports
+// Alias for clean imports
 export const useAuthMe = useCurrentUser;

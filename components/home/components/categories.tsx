@@ -95,7 +95,7 @@ export function Categories() {
 
               const categoryImage =
                 "image" in category && category.image
-                  ? (category.image as StaticImageData)
+                  ? (category.image as unknown as StaticImageData)
                   : getCategoryImage(category.name, slug, index);
 
               const hasImage = Boolean(categoryImage);

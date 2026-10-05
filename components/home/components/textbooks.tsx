@@ -123,7 +123,7 @@ export function Textbooks({ onWish, onCart }: TextbooksProps) {
             {SUBJECTS.map((subject, index) => (
               <Link
                 key={subject}
-                href={`/books?category=${TEXTBOOKS_CATEGORY_ID}&search=${encodeURIComponent(subject)}`}
+                href={`/books?search=${encodeURIComponent(subject)}`}
                 className="group grid min-h-[64px] grid-cols-[38px_1fr_auto] items-center border-b border-border font-display text-[23px] text-foreground transition-all hover:px-2 hover:text-accent md:min-h-[72px] md:grid-cols-[60px_1fr_auto] md:text-[27px]"
               >
                 <span className="font-sans text-[9px] font-semibold text-muted-foreground">

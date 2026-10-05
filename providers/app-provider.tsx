@@ -12,6 +12,7 @@ import {
   AuthRedirectHandler,
   LogoutAlertDialog,
   useAuthSessionStore,
+  useUserStore,
 } from "@/features/auth";
 import { useCartSync } from "@/features/cart";
 import { useWishlistSync } from "@/features/wishlist";
@@ -63,10 +64,22 @@ export function AppProvider({
     const unsubscribe = onUnauthorized(() => {
       const existingUser = queryClient.getQueryData(authKeys.me());
 
-      queryClient.setQueryData(authKeys.me(), null);
-      queryClient.removeQueries({ queryKey: authKeys.all });
-
       if (existingUser) {
+        useUserStore.getState().clearUser();
+        queryClient.setQueryData(authKeys.me(), null);
+        queryClient.removeQueries({
+          predicate: (query) => {
+            const firstKey = query.queryKey[0];
+            return (
+              firstKey === "orders" ||
+              firstKey === "cart" ||
+              firstKey === "wishlist" ||
+              firstKey === "addresses" ||
+              firstKey === "profile" ||
+              firstKey === "seller"
+            );
+          },
+        });
         useAuthSessionStore.getState().setSessionExpired(true);
       }
     });

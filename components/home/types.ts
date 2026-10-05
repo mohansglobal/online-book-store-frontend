@@ -41,6 +41,7 @@ export type ButtonProps = {
   secondary?: boolean;
   onClick?: () => void;
   type?: "button" | "submit";
+  disabled?: boolean;
 };
 
 export type IconButtonProps = {

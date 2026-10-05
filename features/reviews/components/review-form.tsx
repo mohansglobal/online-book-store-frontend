@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Send, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ReviewRatingStars } from "./review-rating-stars";
 import { ReviewImageUploader } from "./review-image-uploader";
-import { useCreateReviewMutation } from "../hooks/use-reviews";
+import {
+  useCreateReviewMutation,
+  useUpdateReviewMutation,
+} from "../hooks/use-reviews";
 import { isApiClientError } from "@/lib/api";
 
 import type { Review } from "../types/review.types";
@@ -35,10 +38,35 @@ export function ReviewForm({
   const [rating, setRating] = useState(initialReview?.rating || initialRating || 5);
   const [title, setTitle] = useState(initialReview?.title || "");
   const [review, setReview] = useState(initialReview?.review || "");
+  const [existingImages, setExistingImages] = useState<string[]>(
+    Array.isArray(initialReview?.images) ? initialReview.images : []
+  );
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const createReviewMutation = useCreateReviewMutation();
+  const updateReviewMutation = useUpdateReviewMutation();
+
+  const isSubmitting = createReviewMutation.isPending || updateReviewMutation.isPending;
+  const isEditing = Boolean(initialReview?._id);
+
+  useEffect(() => {
+    if (initialReview) {
+      setRating(initialReview.rating);
+      setTitle(initialReview.title || "");
+      setReview(initialReview.review || "");
+      setExistingImages(Array.isArray(initialReview.images) ? initialReview.images : []);
+    } else {
+      setRating(initialRating || 5);
+      setTitle("");
+      setReview("");
+      setExistingImages([]);
+    }
+  }, [initialReview, initialRating]);
+
+  const handleRemoveExistingImage = (urlToRemove: string) => {
+    setExistingImages((prev) => prev.filter((url) => url !== urlToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,24 +84,39 @@ export function ReviewForm({
     setError(null);
 
     try {
-      const response = await createReviewMutation.mutateAsync({
-        bookId,
-        sellerId,
-        rating,
-        title: title.trim() || undefined,
-        review: review.trim(),
-        images: images.length > 0 ? images : undefined,
-      });
+      if (isEditing && initialReview?._id) {
+        const response = await updateReviewMutation.mutateAsync({
+          reviewId: initialReview._id,
+          bookId,
+          rating,
+          title: title.trim() || undefined,
+          review: review.trim(),
+          existingImages,
+          images: images.length > 0 ? images : undefined,
+        });
 
-      toast.success(response.message || "Review submitted successfully!");
-      onSuccess();
+        toast.success(response.message || "Review updated successfully!");
+        onSuccess();
+      } else {
+        const response = await createReviewMutation.mutateAsync({
+          bookId,
+          sellerId,
+          rating,
+          title: title.trim() || undefined,
+          review: review.trim(),
+          images: images.length > 0 ? images : undefined,
+        });
+
+        toast.success(response.message || "Review submitted successfully!");
+        onSuccess();
+      }
     } catch (err) {
       if (isApiClientError(err)) {
-        const msg = err.message || "Failed to submit review. Please try again.";
+        const msg = err.message || (isEditing ? "Failed to update review. Please try again." : "Failed to submit review. Please try again.");
         setError(msg);
         toast.error(msg);
       } else {
-        const msg = "Failed to submit review. Please try again.";
+        const msg = isEditing ? "Failed to update review. Please try again." : "Failed to submit review. Please try again.";
         setError(msg);
         toast.error(msg);
       }
@@ -89,7 +132,7 @@ export function ReviewForm({
       <div className="flex items-center justify-between border-b border-border/60 pb-2.5 shrink-0">
         <div className="flex flex-col">
           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
-            {initialReview ? "Edit Your Review" : "Write Review"}
+            {isEditing ? "Edit Your Review" : "Write Review"}
           </h4>
           {sellerName && (
             <p className="text-[11px] text-muted-foreground truncate max-w-[140px]">
@@ -108,8 +151,8 @@ export function ReviewForm({
           <button
             type="button"
             onClick={onCancel}
-            disabled={createReviewMutation.isPending}
-            className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            disabled={isSubmitting}
+            className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={14} />
@@ -124,7 +167,7 @@ export function ReviewForm({
           placeholder="Title (e.g. Crisp condition, fast delivery)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          disabled={createReviewMutation.isPending}
+          disabled={isSubmitting}
           className="h-9 text-xs"
         />
       </div>
@@ -140,7 +183,7 @@ export function ReviewForm({
             setReview(e.target.value);
             if (error) setError(null);
           }}
-          disabled={createReviewMutation.isPending}
+          disabled={isSubmitting}
           className="h-full min-h-[68px] text-xs resize-none"
         />
       </div>
@@ -157,7 +200,9 @@ export function ReviewForm({
           <ReviewImageUploader
             files={images}
             onChange={setImages}
-            disabled={createReviewMutation.isPending}
+            existingImages={existingImages}
+            onRemoveExisting={handleRemoveExistingImage}
+            disabled={isSubmitting}
           />
         </div>
 
@@ -167,7 +212,7 @@ export function ReviewForm({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            disabled={createReviewMutation.isPending}
+            disabled={isSubmitting}
             className="h-8 px-2.5 text-xs text-muted-foreground "
           >
             Cancel
@@ -176,11 +221,16 @@ export function ReviewForm({
           <Button
             type="submit"
             size="sm"
-            disabled={createReviewMutation.isPending || !review.trim()}
+            disabled={isSubmitting || !review.trim()}
             className="h-8 bg-accent font-semibold text-white hover:bg-accent-hover px-3.5 text-xs shadow-xs"
           >
-            {createReviewMutation.isPending ? (
+            {isSubmitting ? (
               <Loader2 size={13} className="animate-spin" />
+            ) : isEditing ? (
+              <div className="flex items-center gap-1.5">
+                <Check size={12} />
+                <span>Update</span>
+              </div>
             ) : (
               <div className="flex items-center gap-1.5">
                 <Send size={12} />

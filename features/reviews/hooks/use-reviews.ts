@@ -7,7 +7,12 @@ import {
   useQueryClient,
   type UseMutationOptions,
 } from "@tanstack/react-query";
-import { checkReviewEligibility, createReview, getBookReviews } from "../api/reviews.api";
+import {
+  checkReviewEligibility,
+  createReview,
+  getBookReviews,
+  updateReview,
+} from "../api/reviews.api";
 import { reviewKeys } from "../queries/review.keys";
 import { bookKeys } from "@/features/books/queries/book.keys";
 import type {
@@ -15,6 +20,8 @@ import type {
   CreateReviewResponse,
   Review,
   ReviewEligibilityResponse,
+  UpdateReviewInput,
+  UpdateReviewResponse,
 } from "../types/review.types";
 import type { ApiClientError } from "@/lib/api";
 
@@ -89,6 +96,51 @@ export function useCreateReviewMutation(
       // Invalidate book details so refreshed overall rating displays
       queryClient.invalidateQueries({
         queryKey: bookKeys.detail(variables.bookId),
+      });
+
+      options?.onSuccess?.(...args);
+    },
+    ...options,
+  });
+}
+
+/**
+ * Hook to update an existing customer review
+ */
+export function useUpdateReviewMutation(
+  options?: Omit<
+    UseMutationOptions<
+      UpdateReviewResponse,
+      ApiClientError,
+      UpdateReviewInput & { bookId?: string }
+    >,
+    "mutationFn"
+  >,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateReview,
+    onSuccess: (...args) => {
+      const [, variables] = args;
+
+      if (variables.bookId) {
+        queryClient.invalidateQueries({
+          queryKey: reviewKeys.book(variables.bookId),
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: bookKeys.detail(variables.bookId),
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: reviewKeys.all,
+        });
+      }
+
+      // Invalidate eligibility
+      queryClient.invalidateQueries({
+        queryKey: reviewKeys.eligibilities(),
       });
 
       options?.onSuccess?.(...args);

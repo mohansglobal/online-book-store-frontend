@@ -14,11 +14,14 @@ import { AuthorSelect } from "./author-select";
 import { CategorySelect } from "./category-select";
 import { PublisherSelect } from "./publisher-select";
 
+
+
+
 interface BookCanonicalFieldsProps {
   titleEn: string;
   onTitleEnChange: (value: string) => void;
-  titleBn: string;
-  onTitleBnChange: (value: string) => void;
+  titleBn?: string;
+  onTitleBnChange?: (value: string) => void;
   publisherId: string;
   publisherName: string;
   onPublisherChange: (id: string, name: string) => void;
@@ -57,8 +60,6 @@ const SELECT_CONTENT_CLASS = "border-border bg-surface text-foreground";
 export function BookCanonicalFields({
   titleEn,
   onTitleEnChange,
-  titleBn,
-  onTitleBnChange,
   publisherId,
   publisherName,
   onPublisherChange,
@@ -83,7 +84,7 @@ export function BookCanonicalFields({
     <>
       <div className="space-y-2">
         <Label htmlFor="titleEn" className={LABEL_CLASS}>
-          <span>Title (EN)</span>
+          <span>Title</span>
           <span className="text-accent">*</span>
         </Label>
         <Input
@@ -91,22 +92,7 @@ export function BookCanonicalFields({
           required
           value={titleEn}
           onChange={(e) => onTitleEnChange(e.target.value)}
-          placeholder="Book Title in English"
-          className={INPUT_CLASS}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="titleBn" className={LABEL_CLASS}>
-          <span>Title (BN)</span>
-          <span className="text-accent">*</span>
-        </Label>
-        <Input
-          id="titleBn"
-          required
-          value={titleBn}
-          onChange={(e) => onTitleBnChange(e.target.value)}
-          placeholder="Book Title in Bengali"
+          placeholder="Enter book title"
           className={INPUT_CLASS}
         />
       </div>

@@ -20,10 +20,7 @@ export function useVerifyEmailOtpMutation(
       const [data] = args;
 
       if (data.data?.user) {
-        queryClient.setQueryData(authKeys.me(), {
-          success: true,
-          data: data.data.user,
-        });
+        queryClient.setQueryData(authKeys.me(), data.data.user);
       }
 
       queryClient.invalidateQueries({ queryKey: authKeys.me() });

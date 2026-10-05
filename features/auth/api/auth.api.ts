@@ -25,13 +25,7 @@ import type {
   ResetPasswordResponse,
   ChangePasswordInput,
   ChangePasswordResponse,
-  AccountDeletionInfoResponse,
-  SendDeletionOtpResponse,
-  ConfirmAccountDeletionInput,
-  ConfirmAccountDeletionResponse,
-  CancelAccountDeletionResponse,
-  RestoreAccountInput,
-  RestoreAccountResponse,
+  User,
 } from "../types/auth.types";
 
 // register new user account
@@ -83,14 +77,15 @@ export async function logoutUser(): Promise<LogoutResponse> {
 // get current authenticated user profile
 export async function getCurrentUser(options?: {
   signal?: AbortSignal;
-}): Promise<CurrentUserResponse | null> {
+}): Promise<User | null> {
   try {
-    return await apiClient.get<CurrentUserResponse>("/auth/me", {
+    const response = await apiClient.get<CurrentUserResponse>("/auth/me", {
       signal: options?.signal,
-      skipAuthRefresh: true,
     });
+
+    return response?.data ?? null;
   } catch (err: unknown) {
-    if (isApiClientError(err) && (err.status === 401 || err.status === 403)) {
+    if (isApiClientError(err) && err.status === 401) {
       return null;
     }
 

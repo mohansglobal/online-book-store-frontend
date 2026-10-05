@@ -6,8 +6,6 @@ import type { HttpMethod, QueryParams, RequestOptions } from "./types";
 
 
 
-// mutex state for 401 logout deduplication
-let logoutPromise: Promise<void> | null = null;
 const unauthorizedListeners = new Set<() => void>();
 
 // mutex state for token refresh deduplication
@@ -80,34 +78,6 @@ function resolveUrl(endpoint: string, baseUrl?: string, params?: QueryParams): s
   return `${cleanBase}/${cleanEndpoint}${queryString}`;
 }
 
-// deduplicated 401 logout trigger
-async function triggerGlobalLogout(): Promise<void> {
-  if (logoutPromise) {
-    return logoutPromise;
-  }
-
-  logoutPromise = (async () => {
-    try {
-      const logoutUrl = resolveUrl("/auth/logout");
-      await fetch(logoutUrl, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-    } catch (err) {
-      console.error("Global 401 logout request failed:", err);
-    } finally {
-      notifyUnauthorized();
-      logoutPromise = null;
-    }
-  })();
-
-  return logoutPromise;
-}
-
 // deduplicated access token refresh via http-only cookies
 async function refreshAccessToken(): Promise<boolean> {
   if (refreshPromise) {
@@ -132,9 +102,8 @@ async function refreshAccessToken(): Promise<boolean> {
 
       // backend automatically sets the updated HTTP-only accessToken cookie
       return true;
-    } catch (err) {
-      console.warn("Refresh token invalid or expired. Triggering global logout:", err);
-      await triggerGlobalLogout();
+    } catch {
+      notifyUnauthorized();
       return false;
     } finally {
       refreshPromise = null;
@@ -231,8 +200,7 @@ async function request<T>(
       endpoint.includes("/auth/send-otp") ||
       endpoint.includes("/auth/verify-otp") ||
       endpoint.includes("/auth/refresh-token") ||
-      endpoint.includes("/auth/logout") ||
-      endpoint.includes("/auth/me");
+      endpoint.includes("/auth/logout");
 
     // handle 401: attempt cookie refresh and retry request seamlessly
     if (response.status === 401 && !skipAuthRefresh && !isAuthEndpoint) {

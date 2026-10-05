@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   CheckCircle,
+  Edit3,
   ChevronLeft,
   ChevronRight,
   User as UserIcon,
@@ -15,9 +16,11 @@ import { resolveCoverUrl } from "@/lib/image-url";
 
 type ReviewItemProps = {
   review: Review;
+  isAuthor?: boolean;
+  onEdit?: () => void;
 };
 
-export function ReviewItem({ review }: ReviewItemProps) {
+export function ReviewItem({ review, isAuthor, onEdit }: ReviewItemProps) {
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
   const reviewerName = review.user?.name || "Customer";
@@ -109,7 +112,20 @@ export function ReviewItem({ review }: ReviewItemProps) {
           </div>
         </div>
 
-        <ReviewRatingStars value={review.rating} size={14} />
+        <div className="flex items-center gap-2">
+          <ReviewRatingStars value={review.rating} size={14} />
+          {isAuthor && onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-accent hover:bg-accent/10 transition-colors cursor-pointer"
+              title="Edit your review"
+            >
+              <Edit3 size={11} />
+              <span>Edit</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}

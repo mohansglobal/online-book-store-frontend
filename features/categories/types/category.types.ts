@@ -6,6 +6,7 @@ export type Category = {
   nameBn?: string;
   slug: string;
   description?: string;
+  image?: string;
   isActive?: boolean;
   bookCount?: number;
   createdAt?: string;
@@ -39,4 +40,16 @@ export type GetCategoriesParams = {
   isActive?: boolean;
   hasBooks?: boolean;
   sort?: string;
+  sortBy?: "name" | "createdAt";
+  sortOrder?: "asc" | "desc";
 };
+
+export type UpdateCategoryInput = {
+  name?: string;
+  nameBn?: string;
+  slug?: string;
+  description?: string;
+  image?: string | File | null;
+  isActive?: boolean;
+};
+

@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useSiteContent } from "@/features/contents";
 import {
     Authors,
     Bestsellers,
@@ -20,6 +21,9 @@ import {
 } from "./components";
 
 export function BookstoreHome() {
+    // Automatically fetch and sync site CMS texts from MongoDB database
+    useSiteContent();
+
     return (
         <main className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
             {/* <Navbar wish={wishCount} cart={cartCount} /> */}

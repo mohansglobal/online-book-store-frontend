@@ -8,13 +8,12 @@ import {
   type Variants,
 } from "framer-motion";
 import {
-  ArrowRight,
   MoveHorizontal,
 } from "lucide-react";
 
 import arrowImg from "@/assets/arrow.png";
 
-import { Button } from "./button";
+import { useEbooksContent } from "@/features/contents";
 
 interface BookPage {
   title: string;
@@ -87,10 +86,17 @@ function getWrappedIndex(page: number, length: number): number {
 }
 
 export function Ebooks() {
+  const ebooksContent = useEbooksContent();
   const [[page, direction], setPage] = useState<PageState>([0, 0]);
 
-  const pageIndex = getWrappedIndex(page, BOOK_PAGES.length);
-  const currentBook = BOOK_PAGES[pageIndex];
+  const booksList =
+    ebooksContent?.books && ebooksContent.books.length > 0
+      ? ebooksContent.books
+      : BOOK_PAGES;
+
+  const pageIndex = getWrappedIndex(page, booksList.length);
+  const currentBook = booksList[pageIndex] || booksList[0];
+  const progressVal = currentBook?.progress ?? 50;
 
   const paginate = (newDirection: PaginationDirection): void => {
     setPage(([currentPage]) => [
@@ -104,32 +110,32 @@ export function Ebooks() {
       <div className="relative mx-auto grid min-h-[500px] w-[min(1320px,calc(100%-36px))] grid-cols-1 items-center gap-12 overflow-hidden rounded-lg border border-border bg-gradient-to-br from-surface-elevated to-card px-6 py-12 md:min-h-[600px] md:w-[min(1320px,calc(100%-72px))] md:grid-cols-2 md:gap-20 md:px-[8%] md:py-[70px]">
         {/* Left Content */}
         <div className="z-10">
-          <p className="mb-4.5 text-[11px] font-semibold tracking-[0.18em] text-accent uppercase">
-            DIGITAL EDITIONS
-          </p>
+          {ebooksContent ? (
+            <>
+              <p className="mb-4.5 text-[11px] font-semibold tracking-[0.18em] text-accent uppercase">
+                {ebooksContent.badge}
+              </p>
 
-          <h2 className="mb-6 font-display text-[clamp(44px,5vw,76px)] leading-[0.9] font-normal text-foreground">
-            Carry your library
-            <br />
+              <h2 className="mb-6 font-display text-[clamp(44px,5vw,76px)] leading-[0.9] font-normal text-foreground">
+                {ebooksContent.heading}
+                <br />
 
-            <em className="italic text-accent">
-              everywhere.
-            </em>
-          </h2>
+                <em className="italic text-accent">
+                  {ebooksContent.headingAccent}
+                </em>
+              </h2>
 
-          <p className="mb-7.5 max-w-[450px] text-base leading-relaxed text-muted-foreground">
-            Discover thousands of books available instantly as digital
-            editions.{" "}
-            <strong>
-              Drag or swipe the text on the reader
-            </strong>{" "}
-            to experience seamless page turning.
-          </p>
-
-          <Button>
-            Explore E-Books
-            <ArrowRight size={17} />
-          </Button>
+              <p className="mb-7.5 max-w-[450px] text-base leading-relaxed text-muted-foreground">
+                {ebooksContent.description}
+              </p>
+            </>
+          ) : (
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 w-32 rounded bg-muted" />
+              <div className="h-16 w-3/4 rounded bg-muted" />
+              <div className="h-12 w-full rounded bg-muted" />
+            </div>
+          )}
         </div>
 
         {/* Interactive E-Reader */}
@@ -262,7 +268,7 @@ export function Ebooks() {
                       width: 0,
                     }}
                     animate={{
-                      width: `${currentBook.progress}%`,
+                      width: `${progressVal}%`,
                     }}
                     transition={{
                       type: "spring",
@@ -274,7 +280,7 @@ export function Ebooks() {
                   />
 
                   <small className="float-right text-[8px] font-bold opacity-80">
-                    {currentBook.progress}%
+                    {progressVal}%
                   </small>
                 </div>
               </div>

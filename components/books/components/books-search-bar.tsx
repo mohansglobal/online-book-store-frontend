@@ -18,7 +18,7 @@ export function BooksSearchBar({
   onChange,
   onSubmit,
   onClear,
-  placeholder = "Search books by title, Bangla title, tags, description...",
+  placeholder = "Search books by title...",
   inputRef,
   onTabToResults,
 }: BooksSearchBarProps) {

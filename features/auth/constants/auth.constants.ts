@@ -10,6 +10,8 @@ export const USER_ROLES = {
 
 export const SELLER_ROUTES = [
   "/dashboard",
+  "/admin-dashboard",
+  "/contents",
   "/inventory",
   "/add-book",
   "/add-author",
@@ -52,6 +54,7 @@ export const AUTH_MODE: "email" | "both" = "email";
 export const DEFAULT_ROLE_HOME: Record<UserRole, string> = {
   [USER_ROLES.BUYER]: "/",
   [USER_ROLES.SELLER]: "/dashboard",
-  [USER_ROLES.ADMIN]: "/dashboard",
+  [USER_ROLES.ADMIN]: "/admin-dashboard",
 };
+
 

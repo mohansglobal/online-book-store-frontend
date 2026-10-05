@@ -89,19 +89,7 @@ export function DailyOrdersAnalyticsCard() {
                     {averageDailyOrdersFormatted}
                   </span>
 
-                  <span
-                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${isGrowthPositive
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                      }`}
-                  >
-                    {isGrowthPositive ? (
-                      <TrendingUp size={13} aria-hidden="true" />
-                    ) : (
-                      <TrendingDown size={13} aria-hidden="true" />
-                    )}
-                    {formattedGrowth}
-                  </span>
+
                 </>
               )}
             </div>
@@ -110,19 +98,28 @@ export function DailyOrdersAnalyticsCard() {
               {analytics?.subtitle || "Average daily orders"}
             </p>
           </div>
-
-          {/* Growth badge box (Fixed) */}
-          <div className="flex shrink-0 flex-col items-end rounded-xl border border-emerald-900 bg-emerald-950 p-2.5 text-emerald-50 sm:p-3">
-            <span className="mb-0.5 text-[10px] font-semibold tracking-wide text-emerald-400 uppercase">
+          {/* Growth badge box */}
+          <div
+            className={`flex shrink-0 flex-col items-end rounded-xl border p-2.5 sm:p-3 transition-colors ${isGrowthPositive
+                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+              }`}
+          >
+            <span className="mb-0.5 text-[10px] font-semibold tracking-wide uppercase opacity-80">
               Growth
             </span>
 
             {isLoading ? (
-              <div className="mt-1 h-4 w-10 rounded bg-emerald-400/25 animate-pulse" />
+              <div className="mt-1 h-5 w-12 rounded bg-foreground/15 dark:bg-white/15 animate-pulse" />
             ) : (
-              <span className="text-lg leading-none font-bold tracking-tight">
-                {growthBadge}
-              </span>
+              <div className="flex items-center gap-1 text-base sm:text-lg font-bold leading-none tracking-tight">
+                {isGrowthPositive ? (
+                  <TrendingUp size={16} aria-hidden="true" />
+                ) : (
+                  <TrendingDown size={16} aria-hidden="true" />
+                )}
+                <span>{formattedGrowth}</span>
+              </div>
             )}
           </div>
         </div>

@@ -42,6 +42,21 @@ export type CreateReviewResponse = {
   data: Review;
 };
 
+export type UpdateReviewInput = {
+  reviewId: string;
+  rating?: number;
+  title?: string;
+  review?: string;
+  existingImages?: string[];
+  images?: File[] | string[];
+};
+
+export type UpdateReviewResponse = {
+  success: boolean;
+  message: string;
+  data: Review;
+};
+
 export type BookReviewsData = {
   reviews: Review[];
   totalReviews?: number;

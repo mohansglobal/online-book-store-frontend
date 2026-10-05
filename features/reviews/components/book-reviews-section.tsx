@@ -52,7 +52,14 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
   const canReview = Boolean(isLoggedInUser && eligibility?.canReview);
   const hasPurchased = Boolean(isLoggedInUser && eligibility?.hasPurchased);
   const hasDelivered = Boolean(isLoggedInUser && eligibility?.hasDelivered);
-  const existingReview = eligibility?.existingReview;
+  const existingReview =
+    eligibility?.existingReview ||
+    reviews.find(
+      (r) =>
+        currentUser?.id &&
+        (r.user?._id === currentUser.id ||
+          (r.user as unknown as string) === currentUser.id)
+    );
   const primaryEligibleSeller = eligibility?.eligibleSellers?.[0];
 
   const effectiveSellerId = primaryEligibleSeller?.sellerId || fallbackSellerId;
@@ -80,12 +87,14 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
   const averageRating =
     backendAverageRating > 0 ? backendAverageRating : fallbackReviewsAverage;
 
+  const canWriteOrEdit = canReview || Boolean(existingReview);
+
   const handleOpenReviewForm = (initialRating?: number) => {
     if (!currentUser) {
       redirectToLogin();
       return;
     }
-    if (!isLoggedInUser || !canReview) {
+    if (!isLoggedInUser || !canWriteOrEdit) {
       return;
     }
     if (initialRating) {
@@ -119,9 +128,22 @@ export function BookReviewsSection({ book }: BookReviewsSectionProps) {
               </div>
             ) : reviews.length > 0 ? (
               <div className="space-y-4">
-                {reviews.map((item) => (
-                  <ReviewItem key={item._id} review={item} />
-                ))}
+                {reviews.map((item) => {
+                  const isAuthor = Boolean(
+                    currentUser?.id &&
+                      (item.user?._id === currentUser.id ||
+                        (item.user as unknown as string) === currentUser.id)
+                  );
+
+                  return (
+                    <ReviewItem
+                      key={item._id}
+                      review={item}
+                      isAuthor={isAuthor}
+                      onEdit={() => handleOpenReviewForm(item.rating)}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border/80 p-8 text-center bg-muted/20 space-y-3 my-auto">

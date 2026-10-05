@@ -26,13 +26,11 @@ import { isApiClientError } from "@/lib/api";
 type RegisterFormProps = {
   onSuccessRedirect?: () => void;
   onSwitchToLogin: () => void;
-  onRequireOtp?: (mobileNumber: string) => void;
 };
 
 export function RegisterForm({
   onSuccessRedirect,
   onSwitchToLogin,
-  onRequireOtp,
 }: RegisterFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);

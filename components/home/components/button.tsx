@@ -7,6 +7,7 @@ export function Button({
   secondary = false,
   onClick,
   type = "button",
+  disabled = false,
 }: ButtonProps) {
   const variantClasses = secondary
     ? "border border-border bg-secondary text-foreground hover:bg-surface-hover"
@@ -16,6 +17,7 @@ export function Button({
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       className={`
         inline-flex
         min-h-[48px]
@@ -30,6 +32,8 @@ export function Button({
         transition-all
         duration-200
         hover:-translate-y-0.5
+        disabled:pointer-events-none
+        disabled:opacity-50
         ${variantClasses}
       `}
     >

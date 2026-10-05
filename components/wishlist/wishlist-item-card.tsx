@@ -23,14 +23,9 @@ export function WishlistItemCard({
   const resolvedCover = resolveCoverUrl(item.coverImage);
   const imgSrc = hasError ? FALLBACK_BOOK_COVER : resolvedCover;
 
-  const discountPercent =
-    item.originalPrice && item.originalPrice > item.price
-      ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
-      : 0;
-
   const isOutOfStock = item.inStock === false;
 
-  const targetBookId = item.id;
+  const targetBookId = item.listingId
 
   return (
     <article className="group relative flex flex-col min-w-0 h-full rounded-2xl border border-border bg-surface p-3 transition-all duration-300 hover:border-border-hover hover:shadow-md">
@@ -44,18 +39,10 @@ export function WishlistItemCard({
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setHasError(true)}
             unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
-            className={`h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 ${
-              isOutOfStock ? "grayscale opacity-75" : ""
-            }`}
+            className={`h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 ${isOutOfStock ? "grayscale opacity-75" : ""
+              }`}
           />
         </Link>
-
-        {/* Discount Badge */}
-        {/* {discountPercent > 0 && !isOutOfStock && (
-          <span className="absolute top-2 left-2 rounded-md bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-xs">
-            {discountPercent}% OFF
-          </span>
-        )} */}
 
         {/* Stock Status Badge */}
         {isOutOfStock ? (
@@ -123,11 +110,10 @@ export function WishlistItemCard({
             type="button"
             onClick={() => onMoveToCart(item)}
             disabled={isOutOfStock}
-            className={`mt-2.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold shadow-xs transition-all duration-200 ${
-              isOutOfStock
+            className={`mt-2.5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-semibold shadow-xs transition-all duration-200 ${isOutOfStock
                 ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
                 : "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.98]"
-            }`}
+              }`}
           >
             <ShoppingBag size={14} />
             <span>{isOutOfStock ? "Out of Stock" : "Move to Cart"}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ export function ForgotPasswordPhoneStep({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setError,
     formState: { errors },
   } = useForm<ForgotPasswordIdentifierFormValues>({
@@ -44,7 +44,7 @@ export function ForgotPasswordPhoneStep({
   const forgotPasswordMutation = useForgotPasswordMutation();
   const isSending = forgotPasswordMutation.isPending;
 
-  const currentIdentifier = watch("identifier") || "";
+  const currentIdentifier = useWatch({ control, name: "identifier" }) || "";
   const isEmailInput = AUTH_MODE === "email" || currentIdentifier.includes("@");
 
   const onSubmit = async (values: ForgotPasswordIdentifierFormValues) => {

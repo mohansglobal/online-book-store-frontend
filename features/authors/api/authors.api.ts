@@ -12,8 +12,6 @@ import type {
   UpdateAuthorResponse,
 } from "../types/author.types";
 
-// Fetches paginated or filtered authors from /api/v1/authors
-// Defaults to alphabetical sort (A to Z) via sortOrder=asce
 export async function getAuthors(
   params?: GetAuthorsParams,
   options?: { signal?: AbortSignal },

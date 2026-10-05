@@ -700,6 +700,80 @@ export async function handleMockRequest<T>(
     } as unknown as T;
   }
 
+  // 17. Newsletter endpoints
+  if (pathParts[0] === "newsletter") {
+    const action = pathParts[1];
+
+    if (method === "POST" && action === "subscribe") {
+      const email = typeof json?.email === "string" ? json.email.toLowerCase().trim() : "user@example.com";
+      const source = typeof json?.source === "string" ? json.source : "footer";
+      const preferences = json?.preferences ?? {
+        newReleases: true,
+        priceDrops: true,
+        offers: true,
+      };
+
+      return {
+        success: true,
+        message: "Successfully subscribed to newsletter updates",
+        data: {
+          _id: "6704b123a45c6789de001122",
+          email,
+          source,
+          isSubscribed: true,
+          preferences,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      } as unknown as T;
+    }
+
+    if (method === "POST" && action === "unsubscribe") {
+      const email = typeof json?.email === "string" ? json.email.toLowerCase().trim() : "user@example.com";
+
+      return {
+        success: true,
+        message: "Successfully unsubscribed from newsletter updates",
+        data: {
+          _id: "6704b123a45c6789de001122",
+          email,
+          isSubscribed: false,
+          unsubscribedAt: new Date().toISOString(),
+        },
+      } as unknown as T;
+    }
+
+    if (method === "GET" && action === "subscribers") {
+      return {
+        success: true,
+        message: "Newsletter subscribers retrieved successfully",
+        data: [
+          {
+            _id: "6704b123a45c6789de001122",
+            email: "user@example.com",
+            source: "footer",
+            isSubscribed: true,
+            preferences: {
+              newReleases: true,
+              priceDrops: true,
+              offers: true,
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+        meta: {
+          page: 1,
+          limit: 20,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      } as unknown as T;
+    }
+  }
+
   // Fallback generic response
   return { success: true, message: "Mock response", data: null } as unknown as T;
 }

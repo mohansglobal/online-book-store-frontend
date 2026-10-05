@@ -8,6 +8,7 @@ import { motion, type Transition } from "framer-motion";
 import {
   ArrowUpRight,
   BookOpen,
+  FileText,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -65,16 +66,17 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
   const resolvedWishCount =
     wish > 0 ? wish : isWishHydrated ? storeWishCount : 0;
 
-  const { data: user } = useCurrentUser();
+  const { data: user, isLoading: isAuthLoading } = useCurrentUser();
+  const isAuthInitializing = isAuthLoading && !user;
   const { redirectToLogin } = useRequireAuth();
   const openLogoutModal = useLogoutModalStore((state) => state.open);
-
-  // Categories popover query and state commented out
-  // const { data: categoriesResponse, isLoading: isCategoriesLoading } =
-  //   useCategories({ limit: 10 });
-  // const categoriesList = categoriesResponse?.data || [];
-
-  const userAvatar = user?.profilePicture || user?.avatar;
+  
+  const rawAvatar = user?.profilePicture || user?.avatar;
+  const userAvatar = rawAvatar
+    ? rawAvatar.startsWith("http") || rawAvatar.startsWith("/") || rawAvatar.startsWith("data:")
+      ? rawAvatar
+      : `https://indobanglabooks.in/${rawAvatar}`
+    : null;
 
   const [menuOpen, setMenuOpen] = useState(false);
   // const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -115,12 +117,12 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
           opacity: 1,
         }}
         transition={isHomePage ? NAVBAR_ANIMATION_TRANSITION : { duration: 0 }}
-        className={`fixed inset-x-0 top-0 z-50 h-[76px] transition-all duration-300 ${scrolled
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled
           ? "border-b border-border bg-background/88 shadow-sm backdrop-blur-xl"
           : "border-0 bg-gradient-to-b from-black/60 via-black/25 to-transparent"
           }`}
       >
-        <div className="mx-auto grid h-full w-[min(1420px,calc(100%-44px))] grid-cols-2 items-center md:grid-cols-[1fr_auto_1fr]">
+        <div className="mx-auto grid h-[76px] w-[min(1420px,calc(100%-44px))] grid-cols-2 items-center md:grid-cols-[1fr_auto_1fr]">
           {/* Brand */}
           <Link
             href="/#top"
@@ -291,7 +293,11 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
               <ShoppingBag size={19} />
             </IconButton>
 
-            {user ? (
+            {isAuthInitializing ? (
+              <div className="hidden sm:block">
+                <div className="h-9 w-9 animate-pulse rounded-full bg-white/20" />
+              </div>
+            ) : user ? (
               <div className="hidden sm:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -357,6 +363,26 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
 
+                    {user.role === "ADMIN" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => router.push("/admin-dashboard")}
+                          className="group cursor-pointer py-2 text-xs font-medium"
+                        >
+                          <LayoutDashboard className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
+                          Admin Dashboard
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => router.push("/contents")}
+                          className="group cursor-pointer py-2 text-xs font-medium"
+                        >
+                          <FileText className="mr-2.5 h-4 w-4 text-muted-foreground transition-colors group-hover:text-white group-focus:text-white group-data-[highlighted]:text-white" />
+                          Contents
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
                     {user.role === "SELLER" && (
                       <DropdownMenuItem
                         onClick={() => router.push("/dashboard")}
@@ -404,13 +430,17 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
               </div>
             ) : (
               <div className="hidden sm:block">
-                <IconButton
-                  label="Log in"
+                <button
+                  type="button"
                   onClick={() => redirectToLogin()}
-                  className={iconButtonClassName}
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all ${scrolled
+                    ? "bg-accent text-white shadow-sm hover:bg-accent-hover"
+                    : "border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+                    }`}
                 >
-                  <User size={19} />
-                </IconButton>
+                  <User size={15} aria-hidden="true" />
+                  <span>Sign In</span>
+                </button>
               </div>
             )}
 
@@ -425,6 +455,8 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
             </div>
           </div>
         </div>
+
+        {/* <AnnouncementBar /> */}
       </motion.nav>
 
       {/* Mobile Menu */}
@@ -456,7 +488,12 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
             </div>
           </div>
 
-          {user ? (
+          {isAuthInitializing ? (
+            <div className="mt-8 flex items-center gap-3 border-t border-border pt-6">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-muted" />
+              <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+            </div>
+          ) : user ? (
             <div className="mt-8 flex flex-col gap-3 border-t border-border pt-6">
               <div className="flex items-center gap-3">
                 {userAvatar ? (
@@ -480,6 +517,28 @@ export function Navbar({ wish = 0, cart }: NavbarProps) {
                   <div className="text-xs text-muted-foreground">{user.email}</div>
                 </div>
               </div>
+              {user.role === "ADMIN" && (
+                <>
+                  <Link
+                    href="/admin-dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-lg bg-surface px-4 py-2.5 text-sm font-medium text-foreground"
+                  >
+                    <LayoutDashboard size={16} />
+                    Admin Dashboard
+                  </Link>
+
+                  <Link
+                    href="/contents"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 rounded-lg bg-surface px-4 py-2.5 text-sm font-medium text-foreground"
+                  >
+                    <FileText size={16} />
+                    Contents
+                  </Link>
+                </>
+              )}
+
               {user.role === "SELLER" && (
                 <Link
                   href="/dashboard"

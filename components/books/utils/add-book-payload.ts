@@ -62,11 +62,11 @@ export function buildBookListingPayload(
   const coverImage = form.coverPreview || FALLBACK_BOOK_COVER;
 
   const images = form.extraPreviews.length > 0 ? form.extraPreviews : undefined;
-
+  
   return {
     book: form.bookId || undefined,
     title: form.titleEn.trim(),
-    titleBn: form.titleBn.trim(),
+    titleBn: (form.titleBn && form.titleBn.trim()) || form.titleEn.trim(),
     isbn: cleanIsbn,
     authors: [form.authorId],
     publisher: form.publisherId,

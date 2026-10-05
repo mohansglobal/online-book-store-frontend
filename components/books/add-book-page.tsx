@@ -106,8 +106,6 @@ export default function AddBookPage() {
                 <BookCanonicalFields
                   titleEn={titleEn}
                   onTitleEnChange={setTitleEn}
-                  titleBn={titleBn}
-                  onTitleBnChange={setTitleBn}
                   publisherId={publisherId}
                   publisherName={publisherName}
                   onPublisherChange={(id, name) => {

@@ -1,7 +1,7 @@
-import type { ApiError } from "./types";
+import type { ApiError as IApiError } from "./types";
 
 // application error class adhering to predictable error shape
-export class ApiClientError extends Error implements ApiError {
+export class ApiClientError extends Error implements IApiError {
   readonly status: number;
   readonly code?: string;
   readonly fieldErrors?: Record<string, string[]>;
@@ -14,7 +14,7 @@ export class ApiClientError extends Error implements ApiError {
     message,
     fieldErrors,
     details,
-  }: ApiError) {
+  }: IApiError) {
     super(message);
     this.name = "ApiClientError";
     this.status = status;
@@ -26,6 +26,10 @@ export class ApiClientError extends Error implements ApiError {
     Object.setPrototypeOf(this, ApiClientError.prototype);
   }
 }
+
+export const ApiError = ApiClientError;
+export type ApiErrorClass = ApiClientError;
+export const isApiError = isApiClientError;
 
 // type guard to check if error is ApiClientError
 export function isApiClientError(error: unknown): error is ApiClientError {

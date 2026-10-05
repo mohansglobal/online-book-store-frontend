@@ -30,7 +30,7 @@ export function WishlistItemRow({
 
   const isOutOfStock = item.inStock === false;
 
-  const targetBookId = item.id;
+  const targetBookId = item.listingId
 
   return (
     <article className="group flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-3.5 sm:p-4 transition-all duration-200 hover:border-border-hover hover:shadow-sm">
@@ -45,9 +45,8 @@ export function WishlistItemRow({
               sizes="64px"
               onError={() => setHasError(true)}
               unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
-              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                isOutOfStock ? "grayscale opacity-75" : ""
-              }`}
+              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${isOutOfStock ? "grayscale opacity-75" : ""
+                }`}
             />
           </Link>
         </div>
@@ -121,11 +120,10 @@ export function WishlistItemRow({
             type="button"
             onClick={() => onMoveToCart(item)}
             disabled={isOutOfStock}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold shadow-xs transition-all duration-200 ${
-              isOutOfStock
+            className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold shadow-xs transition-all duration-200 ${isOutOfStock
                 ? "cursor-not-allowed bg-muted text-muted-foreground opacity-60"
                 : "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.98]"
-            }`}
+              }`}
           >
             <ShoppingBag size={14} />
             <span className="hidden sm:inline">Move to Cart</span>

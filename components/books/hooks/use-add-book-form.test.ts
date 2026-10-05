@@ -23,6 +23,7 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/features/books", () => ({
   useCreateBookListingMutation: vi.fn(),
+  useUpdateListingMutation: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   useBook: vi.fn(() => ({ data: null, isLoading: false })),
   FALLBACK_BOOK_COVER: "https://example.com/fallback-cover.jpg",
 }));
@@ -118,7 +119,7 @@ describe("useAddBookForm Hook", () => {
     act(() => {
       result.current.handleSubmit(dummyEvent);
     });
-    expect(toast.error).toHaveBeenCalledWith("English Title is required");
+    expect(toast.error).toHaveBeenCalledWith("Book Title is required");
     expect(mockMutate).not.toHaveBeenCalled();
 
     act(() => {

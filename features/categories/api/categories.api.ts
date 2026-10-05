@@ -5,6 +5,7 @@ import type {
   Category,
   GetCategoriesParams,
   SingleCategoryResponse,
+  UpdateCategoryInput,
 } from "../types/category.types";
 
 /**
@@ -57,3 +58,32 @@ export async function getCategoryBySlug(
     signal: options?.signal,
   });
 }
+
+/**
+ * Updates an existing category by its ID (supports both JSON and multipart/form-data for direct image upload)
+ */
+export async function updateCategory(
+  id: string,
+  data: UpdateCategoryInput,
+): Promise<SingleCategoryResponse> {
+  const encodedId = encodeURIComponent(id);
+
+  if (typeof window !== "undefined" && data.image instanceof File) {
+    const formData = new FormData();
+
+    if (data.name !== undefined) formData.append("name", data.name);
+    if (data.nameBn !== undefined) formData.append("nameBn", data.nameBn);
+    if (data.slug !== undefined) formData.append("slug", data.slug);
+    if (data.description !== undefined) formData.append("description", data.description);
+    if (data.isActive !== undefined) formData.append("isActive", String(data.isActive));
+    formData.append("image", data.image);
+
+    return apiClient.patch<SingleCategoryResponse>(`/categories/${encodedId}`, undefined, {
+      body: formData,
+    });
+  }
+
+  return apiClient.patch<SingleCategoryResponse>(`/categories/${encodedId}`, data);
+}
+
+

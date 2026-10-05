@@ -1,7 +1,7 @@
-// login mutation hook
 import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
 import { loginUser } from "../api/auth.api";
 import { authKeys } from "../queries/auth.keys";
+import { useUserStore } from "../stores/use-user-store";
 import type { LoginInput, LoginResponse } from "../types/auth.types";
 import type { ApiClientError } from "@/lib/api";
 
@@ -18,11 +18,13 @@ export function useLoginMutation(
     ...options,
     onSuccess: (...args) => {
       const [data] = args;
-      queryClient.setQueryData(authKeys.me(), {
-        success: true,
-        data: data.data.user,
-      });
-      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+      const user = data.data.user;
+
+      if (user) {
+        useUserStore.getState().setUser(user);
+        queryClient.setQueryData(authKeys.me(), user);
+      }
+
       options?.onSuccess?.(...args);
     },
   });

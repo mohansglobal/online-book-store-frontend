@@ -5,6 +5,8 @@ import type {
   CreateReviewInput,
   CreateReviewResponse,
   ReviewEligibilityResponse,
+  UpdateReviewInput,
+  UpdateReviewResponse,
 } from "../types/review.types";
 
 /**
@@ -66,6 +68,77 @@ export async function createReview(
   }
 
   return apiClient.post<CreateReviewResponse>("/reviews", payload);
+}
+
+/**
+ * Update an existing customer review for a book
+ */
+export async function updateReview(
+  input: UpdateReviewInput,
+): Promise<UpdateReviewResponse> {
+  const { reviewId, ...data } = input;
+  const hasFileAttachments =
+    Array.isArray(data.images) &&
+    data.images.some((img) => typeof File !== "undefined" && img instanceof File);
+
+  if (hasFileAttachments) {
+    const formData = new FormData();
+
+    if (data.rating !== undefined) {
+      formData.append("rating", String(data.rating));
+    }
+
+    if (data.title?.trim()) {
+      formData.append("title", data.title.trim());
+    }
+
+    if (data.review?.trim()) {
+      formData.append("review", data.review.trim());
+    }
+
+    if (Array.isArray(data.existingImages)) {
+      if (data.existingImages.length === 0) {
+        formData.append("existingImages", "[]");
+      } else {
+        data.existingImages.forEach((url) => {
+          formData.append("existingImages", url);
+        });
+      }
+    }
+
+    if (Array.isArray(data.images)) {
+      data.images.forEach((img) => {
+        if (typeof File !== "undefined" && img instanceof File) {
+          formData.append("images", img);
+        }
+      });
+    }
+
+    return apiClient.patch<UpdateReviewResponse>(`/reviews/${reviewId}`, undefined, {
+      body: formData,
+    });
+  }
+
+  // JSON payload
+  const payload: Record<string, unknown> = {};
+
+  if (data.rating !== undefined) {
+    payload.rating = data.rating;
+  }
+
+  if (data.title?.trim()) {
+    payload.title = data.title.trim();
+  }
+
+  if (data.review?.trim()) {
+    payload.review = data.review.trim();
+  }
+
+  if (Array.isArray(data.existingImages)) {
+    payload.existingImages = data.existingImages;
+  }
+
+  return apiClient.patch<UpdateReviewResponse>(`/reviews/${reviewId}`, payload);
 }
 
 /**

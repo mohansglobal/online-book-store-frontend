@@ -10,6 +10,7 @@ import {
 } from "@/features/books/types/book.types";
 import { useCart } from "@/features/cart";
 import { BookCard } from "./book-card";
+import { usePoetryContent } from "@/features/contents";
 import type { Book } from "../types";
 
 export const POETRY_CATEGORY_ID = "6a9eb5b4463e5a288a801292";
@@ -20,6 +21,7 @@ interface PoetryProps {
 }
 
 export function Poetry({ onWish, onCart }: PoetryProps) {
+  const poetryContent = usePoetryContent();
   const { addItem: addToCart } = useCart();
 
   const { data: apiResponse, isLoading } = useBooks({
@@ -94,69 +96,94 @@ export function Poetry({ onWish, onCart }: PoetryProps) {
 
   const actionHref = `/books?category=${POETRY_CATEGORY_ID}`;
 
+  const accentIndex = poetryContent?.quoteAccent
+    ? poetryContent.quote.indexOf(poetryContent.quoteAccent)
+    : -1;
+
+  const hasValidAccent = accentIndex !== -1;
+
   return (
     <section className="bg-card py-[76px] md:py-[120px]">
       <div className="mx-auto grid w-[min(1320px,calc(100%-36px))] grid-cols-1 items-center gap-12 md:w-[min(1320px,calc(100%-72px))] md:grid-cols-[1fr_1.2fr] md:gap-[100px]">
         {/* Poetry Content */}
         <div>
-          <p className="mb-4.5 text-[11px] font-semibold tracking-[0.18em] text-accent uppercase">
-            POETRY & PROSE
-          </p>
+          {poetryContent ? (
+            <>
+              <p className="mb-4.5 text-[11px] font-semibold tracking-[0.18em] text-accent uppercase">
+                {poetryContent.badge}
+              </p>
 
-          <blockquote className="m-0 font-display text-[clamp(44px,5vw,78px)] leading-[0.98] font-normal text-foreground">
-            “A poem begins in delight and ends in{" "}
-            <em className="italic text-accent">
-              wisdom.
-            </em>
-            ”
-          </blockquote>
+              <blockquote className="m-0 font-display text-[clamp(44px,5vw,78px)] leading-[0.98] font-normal text-foreground">
+                {hasValidAccent && poetryContent.quoteAccent ? (
+                  <>
+                    {poetryContent.quote.slice(0, accentIndex)}
 
-          <span className="my-6 mb-11 block text-sm font-medium text-muted-foreground">
-            — Robert Frost
-          </span>
+                    <em className="italic text-accent">
+                      {poetryContent.quoteAccent}
+                    </em>
 
-          <Link
-            href={actionHref}
-            className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-medium text-muted-foreground transition-all hover:gap-3 hover:text-foreground"
-          >
-            Explore the collection
+                    {poetryContent.quote.slice(
+                      accentIndex + poetryContent.quoteAccent.length,
+                    )}
+                  </>
+                ) : (
+                  poetryContent.quote
+                )}
+              </blockquote>
 
-            <ArrowUpRight
-              size={16}
-              aria-hidden="true"
-            />
-          </Link>
-        </div>
+              <span className="my-6 mb-11 block text-sm font-medium text-muted-foreground">
+                {poetryContent.author}
+              </span>
 
-        {/* Featured Poetry Books */}
-        <div className="grid grid-cols-2 gap-3.5 md:gap-7.5">
-          {isLoading ? (
-            Array.from({ length: 2 }).map((_, index) => (
-              <div
-                key={index}
-                className={`animate-pulse space-y-3 ${index === 0 ? "md:translate-y-12" : ""}`}
+              <Link
+                href={poetryContent.ctaLink || actionHref}
+                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-medium text-muted-foreground transition-all hover:gap-3 hover:text-foreground"
               >
-                <div className="aspect-[2/3] rounded-md bg-muted" />
-                <div className="h-4 w-3/4 rounded bg-muted" />
-                <div className="h-3 w-1/2 rounded bg-muted" />
-              </div>
-            ))
+                {poetryContent.ctaText}
+
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            </>
           ) : (
-            poetryBooks.map((book, index) => (
-              <div
-                key={book.id || `${book.title}-${index}`}
-                className={index === 0 ? "md:translate-y-12" : ""}
-              >
-                <BookCard
-                  book={book}
-                  onWish={onWish ? () => onWish(book) : undefined}
-                  onCart={onCart ? () => onCart(book) : undefined}
-                />
-              </div>
-            ))
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 w-32 rounded bg-muted" />
+              <div className="h-20 w-3/4 rounded bg-muted" />
+              <div className="h-4 w-40 rounded bg-muted" />
+            </div>
           )}
         </div>
+
+      {/* Featured Poetry Books */}
+      <div className="grid grid-cols-2 gap-3.5 md:gap-7.5">
+        {isLoading ? (
+          Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className={`animate-pulse space-y-3 ${
+                index === 0 ? "md:translate-y-12" : ""
+              }`}
+            >
+              <div className="aspect-[2/3] rounded-md bg-muted" />
+              <div className="h-4 w-3/4 rounded bg-muted" />
+              <div className="h-3 w-1/2 rounded bg-muted" />
+            </div>
+          ))
+        ) : (
+          poetryBooks.map((book, index) => (
+            <div
+              key={book.id || `${book.title}-${index}`}
+              className={index === 0 ? "md:translate-y-12" : ""}
+            >
+              <BookCard
+                book={book}
+                onWish={onWish ? () => onWish(book) : undefined}
+                onCart={() => handleCartClick(book)}
+              />
+            </div>
+          ))
+        )}
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

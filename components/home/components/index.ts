@@ -20,4 +20,6 @@ export { Textbooks, TEXTBOOKS_CATEGORY_ID } from "./textbooks";
 export { Bestsellers } from "./bestsellers";
 export { Newsletter } from "./newsletter";
 export { PopularNovels, POPULAR_NOVELS_CATEGORY_ID } from "./popular-novels";
+export { AnnouncementBar } from "./announcement-bar";
 export { Footer } from "./footer";
+
