@@ -103,8 +103,8 @@ export function RevenueAnalyticsCard() {
                       setIsDropdownOpen(false);
                     }}
                     className={`cursor-pointer rounded-lg px-3 py-2 text-xs transition-colors ${isSelected
-                        ? "bg-accent/10 font-bold text-accent"
-                        : "text-text-secondary hover:bg-surface-soft hover:text-foreground"
+                      ? "bg-accent/10 font-bold text-accent"
+                      : "text-text-secondary hover:bg-surface-soft hover:text-foreground"
                       }`}
                   >
                     {item.label}
@@ -149,8 +149,8 @@ export function RevenueAnalyticsCard() {
 
                       <span
                         className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${isGrowthPositive
-                            ? "border-emerald-500/15 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "border-rose-500/15 bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                          ? "border-emerald-500/15 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "border-rose-500/15 bg-rose-500/10 text-rose-600 dark:text-rose-400"
                           }`}
                       >
                         {growthFormatted}
@@ -259,8 +259,8 @@ export function RevenueAnalyticsCard() {
 
                       <p
                         className={`text-[9px] font-semibold ${analytics?.trend?.isTrendGrowthPositive
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-rose-600 dark:text-rose-400"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400"
                           }`}
                       >
                         {trendGrowthFormatted}

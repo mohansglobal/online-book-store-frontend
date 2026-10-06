@@ -40,6 +40,7 @@ export function BookCard({ book, priority = false, isFirst = false, resultIndex 
       : parseFloat(String(book.price || 0).replace(/[^0-9.]/g, "")) || 0);
 
   const rawOriginalPrice =
+    book.rawOriginalPrice ||
     book.rawPriceIn ||
     (typeof book.originalPrice === "number"
       ? book.originalPrice
@@ -48,9 +49,12 @@ export function BookCard({ book, priority = false, isFirst = false, resultIndex 
   const origPrice = rawOriginalPrice > 0 ? rawOriginalPrice : rawPrice;
 
   const hasDiscount = origPrice > rawPrice && rawPrice > 0;
-  const discountPercent = hasDiscount
-    ? Math.round(((origPrice - rawPrice) / origPrice) * 100)
-    : 0;
+  const discountPercent =
+    book.discountPercentage && book.discountPercentage > 0
+      ? book.discountPercentage
+      : hasDiscount
+        ? Math.round(((origPrice - rawPrice) / origPrice) * 100)
+        : 0;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -230,9 +234,9 @@ export function BookCard({ book, priority = false, isFirst = false, resultIndex 
             {book.price || "-"}
           </span>
 
-          {hasDiscount && book.originalPrice && (
+          {hasDiscount && (
             <span className="text-[12px] text-muted-foreground/70 line-through shrink-0">
-              {book.originalPrice}
+              {book.originalPrice || `₹${origPrice}`}
             </span>
           )}
 

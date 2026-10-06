@@ -376,4 +376,190 @@ export interface SellerOrdersResponse {
   meta: SellerPaginationMeta;
 }
 
+// Top sellers analytics types matching backend GET /api/v1/dashboard/top-sellers
+export interface TopSellerAnalyticsSeller {
+  id: string;
+  name: string;
+  email: string;
+  mobileNumber?: string;
+  profilePicture?: string;
+  isActive: boolean;
+}
+
+export interface TopSellerAnalyticsItem {
+  rank: number;
+  sellerId: string;
+  seller: TopSellerAnalyticsSeller;
+  itemsSold: number;
+  formattedItemsSold: string;
+  percentage: number;
+  formattedPercentage: string;
+  revenueInRupees: number;
+  revenueInPaise: number;
+  formattedRevenue: string;
+  orderCount: number;
+  activeListingsCount: number;
+}
+
+export interface TopSellersAnalyticsData {
+  title: string;
+  subtitle: string;
+  timeframe: string;
+  limit: number;
+  totalRegisteredSellers: number;
+  totalSellersWithSales: number;
+  totalItemsSold: number;
+  formattedTotalItemsSold: string;
+  totalRevenueInRupees: number;
+  totalRevenueInPaise: number;
+  items: TopSellerAnalyticsItem[];
+}
+
+export interface TopSellersAnalyticsResponse {
+  success: boolean;
+  statusCode?: number;
+  message: string;
+  data: TopSellersAnalyticsData;
+}
+
+export interface TopSellersAnalyticsParams {
+  timeframe?: "all" | "weekly" | "monthly" | "yearly";
+  limit?: number;
+  year?: number;
+  month?: number;
+  [key: string]: string | number | undefined;
+}
+
+
+
+export type TopSellingBooksTimeframe = "1w" | "1m" | "1y" | "5y" | "all";
+
+export interface TopSellingBookItem {
+  rank: number;
+  bookId: string;
+  title: string;
+  titleBn: string;
+  slug: string;
+  coverImage: string;
+  format: string;
+  authors: { id: string; name: string; slug: string }[];
+  primaryAuthor: string;
+  categories: { id: string; name: string; slug: string }[];
+  primaryCategory: string;
+  unitsSold: number;
+  formattedUnitsSold: string;
+  percentage: number;
+  formattedPercentage: string;
+  revenueInRupees: number;
+  revenueInPaise: number;
+  formattedRevenue: string;
+  orderCount: number;
+  currentPriceInRupees: number;
+  stock: number;
+}
+
+export interface TopSellingBooksData {
+  title: string;
+  subtitle: string;
+  timeframe: string;
+  timeframeLabel: string;
+  limit: number;
+  startDate: string | null;
+  endDate: string | null;
+  totalBooksWithSales: number;
+  totalUnitsSold: number;
+  formattedTotalUnitsSold: string;
+  totalRevenueInRupees: number;
+  totalRevenueInPaise: number;
+  formattedTotalRevenue: string;
+  items: TopSellingBookItem[];
+}
+
+export interface TopSellingBooksResponse {
+  success: boolean;
+  statusCode?: number;
+  message: string;
+  data: TopSellingBooksData;
+}
+
+export interface TopSellingBooksParams {
+  timeframe?: TopSellingBooksTimeframe;
+  limit?: number;
+  year?: number;
+  month?: number;
+  [key: string]: string | number | undefined;
+}
+
+export type OrderHealthTimeframe =
+  | "all"
+  | "7d"
+  | "30d"
+  | "this_month"
+  | "last_month"
+  | "yearly";
+
+export interface OrderHealthRate {
+  count: number;
+  percentage: number;
+  formatted: string;
+}
+
+export interface OrderHealthDispatchTime {
+  days: number;
+  hours: number;
+  formatted: string;
+}
+
+export interface OrderHealthCancellationTrend {
+  direction: "down" | "up" | "neutral";
+  percentage: number;
+  rateDifference: number;
+  currentWeekRate: number;
+  previousWeekRate: number;
+  currentWeekCancelledCount: number;
+  previousWeekCancelledCount: number;
+  currentWeekTotalOrders: number;
+  previousWeekTotalOrders: number;
+  volumePercentageChange: number;
+  formatted: string;
+}
+
+export interface OrderHealthTimelinePoint {
+  date: string;
+  label: string;
+  delivered: number;
+  processing: number;
+  cancelled: number;
+}
+
+export interface OrderHealthAnalyticsData {
+  title: string;
+  timeframe: string;
+  timeframeLabel: string;
+  startDate: string | null;
+  endDate: string | null;
+  totalOrders: number;
+  formattedTotalOrders: string;
+  delivered: OrderHealthRate;
+  cancelled: OrderHealthRate;
+  failed: OrderHealthRate;
+  inFlight: OrderHealthRate;
+  avgDispatchTime: OrderHealthDispatchTime;
+  cancellationTrend: OrderHealthCancellationTrend;
+  timeline?: OrderHealthTimelinePoint[];
+}
+
+export interface OrderHealthAnalyticsResponse {
+  success: boolean;
+  statusCode?: number;
+  message: string;
+  data: OrderHealthAnalyticsData;
+}
+
+export interface OrderHealthAnalyticsParams {
+  timeframe?: OrderHealthTimeframe;
+  year?: number;
+  month?: number;
+  [key: string]: string | number | undefined;
+}
 

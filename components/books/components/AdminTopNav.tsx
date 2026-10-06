@@ -135,7 +135,7 @@ export function AdminTopNav({ activeTab }: AdminTopNavProps) {
           href={isAdmin ? "/admin-dashboard" : "/dashboard"}
           title={isAdmin ? "Admin Dashboard" : "Seller Dashboard"}
           aria-label={isAdmin ? "Admin Dashboard" : "Seller Dashboard"}
-          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent text-white shadow-sm transition-colors hover:bg-accent-hover"
+          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent text-white shadow-sm transition-all duration-200 hover:bg-accent-hover hover:shadow-md active:scale-[0.96]"
         >
           <BookOpen size={20} aria-hidden="true" />
         </Link>
@@ -155,10 +155,10 @@ export function AdminTopNav({ activeTab }: AdminTopNavProps) {
               key={item.id}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className={`relative z-10 inline-flex cursor-pointer select-none items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
+              className={`relative z-10 inline-flex cursor-pointer select-none items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98] ${
                 isActive
                   ? "font-semibold text-accent"
-                  : "text-text-secondary hover:bg-surface/30 hover:text-foreground"
+                  : "text-text-secondary hover:bg-surface hover:text-foreground hover:shadow-2xs"
               }`}
             >
               {isActive && (
@@ -190,7 +190,7 @@ export function AdminTopNav({ activeTab }: AdminTopNavProps) {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-text-secondary transition-all hover:border-accent hover:text-accent"
+          className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-background text-text-secondary transition-all duration-200 hover:border-accent hover:bg-surface-soft hover:text-accent active:scale-[0.95]"
         >
           <Bell size={16} aria-hidden="true" />
 
@@ -203,5 +203,6 @@ export function AdminTopNav({ activeTab }: AdminTopNavProps) {
     </div>
   );
 }
+
 
 export default AdminTopNav;

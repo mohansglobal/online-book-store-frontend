@@ -89,13 +89,12 @@ export function Categories() {
           <div className="grid auto-rows-[145px] grid-cols-2 gap-3 md:auto-rows-[180px] md:grid-cols-4">
             {categoriesList.map((category, index) => {
               const slug =
-                "slug" in category && category.slug
-                  ? category.slug
-                  : category.name.toLowerCase().replace(/\s+/g, "-");
+                category.slug ||
+                category.name.toLowerCase().replace(/\s+/g, "-");
 
-              const categoryImage =
-                "image" in category && category.image
-                  ? (category.image as unknown as StaticImageData)
+              const categoryImage: string | StaticImageData =
+                category.image?.trim()
+                  ? category.image
                   : getCategoryImage(category.name, slug, index);
 
               const hasImage = Boolean(categoryImage);
@@ -114,11 +113,10 @@ export function Categories() {
                 <Link
                   key={`${category.name}-${index}`}
                   href={`/books?category=${encodeURIComponent(categoryTarget)}`}
-                  className={`group relative flex flex-col justify-between overflow-hidden rounded-sm border p-5 transition-all duration-300 hover:-translate-y-1 ${
-                    hasImage
-                      ? "border-border/60 shadow-sm hover:border-primary"
-                      : "border-border bg-background hover:border-primary hover:bg-surface-elevated"
-                  } ${getGridClasses(index)}`}
+                  className={`group relative flex flex-col justify-between overflow-hidden rounded-sm border p-5 transition-all duration-300 hover:-translate-y-1 ${hasImage
+                    ? "border-border/60 shadow-sm hover:border-primary"
+                    : "border-border bg-background hover:border-primary hover:bg-surface-elevated"
+                    } ${getGridClasses(index)}`}
                 >
                   {/* Background Image */}
                   {categoryImage && (
@@ -162,11 +160,10 @@ export function Categories() {
                   {/* Category Information */}
                   <div className="relative z-10">
                     <h3
-                      className={`m-0 font-display font-normal leading-tight transition-transform duration-300 group-hover:translate-x-0.5 ${
-                        hasImage
-                          ? "text-white drop-shadow-sm"
-                          : "text-foreground group-hover:text-primary"
-                      } ${titleSizeClass}`}
+                      className={`m-0 font-display font-normal leading-tight transition-transform duration-300 group-hover:translate-x-0.5 ${hasImage
+                        ? "text-white drop-shadow-sm"
+                        : "text-foreground group-hover:text-primary"
+                        } ${titleSizeClass}`}
                     >
                       {category.name}
                     </h3>
@@ -174,11 +171,10 @@ export function Categories() {
                     <div className="mt-1 flex items-center gap-2">
                       {"nameBn" in category && category.nameBn && (
                         <p
-                          className={`text-[12px] font-medium ${
-                            hasImage
-                              ? "text-white/80"
-                              : "text-muted-foreground"
-                          }`}
+                          className={`text-[12px] font-medium ${hasImage
+                            ? "text-white/80"
+                            : "text-muted-foreground"
+                            }`}
                         >
                           {category.nameBn}
                         </p>
@@ -192,11 +188,10 @@ export function Categories() {
                             </span>
                           )}
                           <p
-                            className={`flex items-center gap-1 text-[12px] font-medium ${
-                              hasImage
-                                ? "text-white/90"
-                                : "text-foreground/80"
-                            }`}
+                            className={`flex items-center gap-1 text-[12px] font-medium ${hasImage
+                              ? "text-white/90"
+                              : "text-foreground/80"
+                              }`}
                           >
                             {category.bookCount} {category.bookCount === 1 ? 'Book' : 'Books'}
                           </p>

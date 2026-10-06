@@ -7,7 +7,7 @@ import { useBooks } from "@/features/books/hooks/use-books";
 import {
   transformApiBookToCatalogBook,
   FALLBACK_BOOK_COVER,
-} from "@/features/books/types/book.types";
+} from "@/features/books/types/book.types"
 import { Rating } from "./rating";
 import { SectionHeading } from "./section-heading";
 import type { Book } from "../types";
@@ -28,6 +28,27 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
   const imageWrapperClasses = isTopSeller
     ? "h-[173px] w-[115px] sm:h-[345px] sm:w-[230px]"
     : "h-[135px] w-[90px] sm:h-[165px] sm:w-[110px]";
+
+  const rawPrice =
+    book.rawPrice ??
+    (typeof book.price === "number"
+      ? book.price
+      : parseFloat(String(book.price || 0).replace(/[^0-9.]/g, "")) || 0);
+
+  const rawOriginalPrice =
+    book.rawOriginalPrice ??
+    (typeof book.originalPrice === "number"
+      ? book.originalPrice
+      : parseFloat(String(book.originalPrice || 0).replace(/[^0-9.]/g, "")) || 0);
+
+  const origPrice = rawOriginalPrice > 0 ? rawOriginalPrice : rawPrice;
+  const hasDiscount = origPrice > rawPrice && rawPrice > 0;
+  const discountPercent =
+    book.discountPercentage && book.discountPercentage > 0
+      ? book.discountPercentage
+      : hasDiscount
+        ? Math.round(((origPrice - rawPrice) / origPrice) * 100)
+        : 0;
 
   const content = (
     <article
@@ -57,6 +78,13 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
           onError={() => setImgSrc(FALLBACK_BOOK_COVER)}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
+
+        {/* Top-Left Discount Badge */}
+        {/* {hasDiscount && discountPercent > 0 && (
+          <span className="absolute top-2 left-2 z-10 rounded-md bg-accent px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white shadow-xs">
+            {discountPercent}% OFF
+          </span>
+        )} */}
       </div>
 
       {/* Book Information */}
@@ -75,9 +103,24 @@ function BestsellerItem({ book, index }: { book: Book; index: number }) {
 
         <Rating value={book.rating} />
 
-        <strong className="mt-4 block text-[13px] font-semibold text-foreground">
-          {book.price}
-        </strong>
+        {/* Price & Discount */}
+        <div className="mt-4 flex items-baseline gap-2 flex-wrap">
+          <strong className="text-[14px] font-bold text-foreground">
+            {book.price}
+          </strong>
+
+          {hasDiscount && (
+            <span className="text-[12px] text-muted-foreground/70 line-through">
+              {book.originalPrice || `₹${origPrice}`}
+            </span>
+          )}
+
+          {hasDiscount && discountPercent > 0 && (
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              {discountPercent}% off
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -115,6 +158,9 @@ export function Bestsellers() {
       rawPrice: catalog.rawPrice,
       priceIn: catalog.priceIn,
       originalPrice: catalog.originalPrice,
+      rawOriginalPrice: catalog.rawOriginalPrice,
+      discountPercentage: catalog.discountPercentage,
+      isDiscountActive: catalog.isDiscountActive,
       rating: catalog.rating,
       totalRatings: catalog.totalRatings,
       ratingCount: catalog.ratingCount,

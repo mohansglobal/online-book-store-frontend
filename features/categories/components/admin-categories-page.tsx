@@ -54,7 +54,7 @@ export function AdminCategoriesPage() {
     setSelectedCategory(cat);
     setIsEditModalOpen(true);
   };
-
+  
   const handleCloseModal = () => {
     setIsEditModalOpen(false);
     setSelectedCategory(null);

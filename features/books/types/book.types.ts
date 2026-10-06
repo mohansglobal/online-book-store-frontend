@@ -95,8 +95,13 @@ export type ApiBook = {
   listingId?: string;
   bookId?: string;
   seller?: ListingSeller;
+  mrp?: number | string;
   mrpInPaise?: number;
   sellingPriceInPaise?: number;
+  priceInPaise?: number;
+  discountPercentage?: number;
+  discountStatus?: string;
+  isDiscountActive?: boolean;
   sku?: string;
   isActive?: boolean;
   effectiveImages?: string[];
@@ -177,6 +182,9 @@ export interface CatalogBook {
   rawPriceIn?: number;
   originalPrice?: string;
   originalPriceIn?: string;
+  rawOriginalPrice?: number;
+  discountPercentage?: number;
+  isDiscountActive?: boolean;
   rating: string;
   totalRatings?: number;
   ratingCount?: number;

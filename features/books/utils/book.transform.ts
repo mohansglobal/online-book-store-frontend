@@ -128,15 +128,31 @@ function getCalculatedPrice(
   book: Partial<ApiBook>,
   record?: Record<string, unknown>,
 ): number | string | undefined {
-  if (sellingPriceInPaise !== undefined) {
-    return sellingPriceInPaise / 100;
+  if (typeof record?.priceInPaise === "number" && record.priceInPaise > 0) {
+    return record.priceInPaise / 100;
   }
 
   if (typeof record?.price === "number") {
     return record.price;
   }
 
-  return book.price;
+  if (typeof book.price === "number") {
+    return book.price;
+  }
+
+  if (sellingPriceInPaise !== undefined) {
+    return sellingPriceInPaise / 100;
+  }
+
+  if (book.price !== undefined) {
+    return book.price;
+  }
+
+  if (typeof record?.price === "string" && record.price.trim()) {
+    return record.price.trim();
+  }
+
+  return undefined;
 }
 
 function getCalculatedMrp(
@@ -145,19 +161,32 @@ function getCalculatedMrp(
   calculatedPrice: number | string | undefined,
   record?: Record<string, unknown>,
 ): number | string | undefined {
-  if (mrpInPaise !== undefined) {
+  if (typeof mrpInPaise === "number" && mrpInPaise > 0) {
     return mrpInPaise / 100;
   }
 
-  if (typeof record?.mrp === "number") {
+  if (typeof record?.mrp === "number" && record.mrp > 0) {
     return record.mrp;
   }
 
-  if (book.priceIn !== undefined) {
+  const numericCalculatedPrice =
+    typeof calculatedPrice === "number"
+      ? calculatedPrice
+      : parseFloat(String(calculatedPrice || 0));
+
+  if (typeof record?.sellingPriceInPaise === "number") {
+    const regularSellingPrice = record.sellingPriceInPaise / 100;
+
+    if (regularSellingPrice > numericCalculatedPrice) {
+      return regularSellingPrice;
+    }
+  }
+
+  if (book.priceIn !== undefined && Number(book.priceIn) > 0) {
     return book.priceIn;
   }
 
-  if (book.originalPrice !== undefined) {
+  if (book.originalPrice !== undefined && Number(book.originalPrice) > 0) {
     return book.originalPrice;
   }
 
@@ -620,8 +649,18 @@ function normalizeListing(
 
     seller: record.seller as ListingSeller | undefined,
 
+    mrp: typeof record.mrp === "number" ? record.mrp : undefined,
     mrpInPaise,
     sellingPriceInPaise,
+    priceInPaise: typeof record.priceInPaise === "number" ? record.priceInPaise : undefined,
+    discountPercentage:
+      typeof record.discountPercentage === "number"
+        ? record.discountPercentage
+        : typeof (record.activeDiscount as Record<string, unknown>)?.discountValue === "number"
+          ? ((record.activeDiscount as Record<string, unknown>).discountValue as number)
+          : undefined,
+    discountStatus: typeof record.discountStatus === "string" ? record.discountStatus : undefined,
+    isDiscountActive: typeof record.isDiscountActive === "boolean" ? record.isDiscountActive : undefined,
 
     sku: record.sku as string | undefined,
     isActive: record.isActive as boolean | undefined,
@@ -1077,6 +1116,25 @@ export function transformApiBookToCatalogBook(
     originalPriceIn = parsedOriginalPriceIn.text;
   }
 
+  const rawOriginalPrice =
+    parsedOriginalPrice.num > 0
+      ? parsedOriginalPrice.num
+      : parsedOriginalPriceIn.num > 0
+        ? parsedOriginalPriceIn.num
+        : parsedPriceIn.num;
+
+  const discountPercentage =
+    typeof book.discountPercentage === "number" && book.discountPercentage > 0
+      ? book.discountPercentage
+      : rawOriginalPrice > finalRawPrice && rawOriginalPrice > 0
+        ? Math.round(((rawOriginalPrice - finalRawPrice) / rawOriginalPrice) * 100)
+        : undefined;
+
+  const isDiscountActive =
+    book.isDiscountActive !== undefined
+      ? book.isDiscountActive
+      : Boolean(rawOriginalPrice > finalRawPrice && finalRawPrice > 0);
+
   let format = "-";
 
   if (book.format) {
@@ -1097,7 +1155,7 @@ export function transformApiBookToCatalogBook(
 
   const canonicalBookId = book.bookId || (book.listingId ? undefined : book._id);
   const listingId = book.listingId || (book.bookId ? book._id : undefined) || id;
-
+  
   return {
     id: listingId,
     bookId: canonicalBookId,
@@ -1119,6 +1177,9 @@ export function transformApiBookToCatalogBook(
 
     originalPrice,
     originalPriceIn,
+    rawOriginalPrice: rawOriginalPrice > 0 ? rawOriginalPrice : undefined,
+    discountPercentage,
+    isDiscountActive,
 
     rating,
     totalRatings,

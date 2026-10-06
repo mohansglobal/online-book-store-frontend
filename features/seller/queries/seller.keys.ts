@@ -6,6 +6,9 @@ import type {
   SellerRecentOrdersParams,
   SellerRevenueAnalyticsParams,
   TopAuthorsAnalyticsParams,
+  TopSellersAnalyticsParams,
+  TopSellingBooksParams,
+  OrderHealthAnalyticsParams,
 } from "../types/seller.types";
 
 export const sellerKeys = {
@@ -33,6 +36,23 @@ export const sellerKeys = {
 
   topAuthors: (params?: TopAuthorsAnalyticsParams) =>
     [...sellerKeys.dashboard(), "top-authors", params ?? {}] as const,
+
+  topSellers: (params?: TopSellersAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "top-sellers", params ?? {}] as const,
+
+  topBooks: (params?: TopSellingBooksParams) =>
+    [...sellerKeys.dashboard(), "top-books", params ?? {}] as const,
+
+  orderHealth: (params?: OrderHealthAnalyticsParams) =>
+    [...sellerKeys.dashboard(), "order-health", params ?? {}] as const,
 };
+
+
+
+
+
+
+
+
 
 

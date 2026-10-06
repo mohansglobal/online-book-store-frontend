@@ -121,7 +121,7 @@ export function Translated() {
           action="Explore All"
           actionHref={actionHref}
         />
-
+        
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           {isLoading
             ? Array.from({ length: 3 }).map((_, index) => (

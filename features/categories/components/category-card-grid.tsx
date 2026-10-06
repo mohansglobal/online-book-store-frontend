@@ -1,11 +1,10 @@
-// Category cards grid view with background images, metadata badges, and edit button
+// Category cards grid view matching the homepage bento layout, with edit button and status badges
 "use client";
 
 import React from "react";
 import Image from "next/image";
 import { Edit2, BookOpen, Layers, CheckCircle2, PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getCategoryImage } from "@/components/categories/category-images";
 import type { Category } from "../types/category.types";
 
@@ -15,6 +14,23 @@ interface CategoryCardGridProps {
   onEditCategory: (category: Category) => void;
 }
 
+function getGridClasses(index: number): string {
+  switch (index) {
+    case 0:
+      return "col-span-2";
+    case 3:
+      return "row-span-1 md:row-span-2";
+    case 5:
+      return "col-span-2 row-span-1 md:row-span-2";
+    case 7:
+      return "col-span-1 md:col-span-2";
+    case 8:
+      return "col-span-2";
+    default:
+      return "";
+  }
+}
+
 export function CategoryCardGrid({
   categories,
   isLoading,
@@ -22,22 +38,19 @@ export function CategoryCardGrid({
 }: CategoryCardGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, idx) => (
+      <div className="grid auto-rows-[145px] grid-cols-2 gap-3 md:auto-rows-[180px] md:grid-cols-4">
+        {Array.from({ length: 9 }).map((_, index) => (
           <div
-            key={idx}
-            className="relative h-[270px] w-full overflow-hidden rounded-2xl border border-border/60 bg-muted/40 p-5 shadow-xs"
+            key={index}
+            className={`relative flex flex-col justify-between overflow-hidden rounded-sm border border-border/60 bg-muted/30 p-5 ${getGridClasses(index)}`}
           >
-            <div className="flex h-full flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="h-8 w-8 rounded-full" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-16 rounded-full" />
-                <Skeleton className="h-6 w-3/4 rounded-md" />
-                <Skeleton className="h-3 w-1/2 rounded-md" />
-              </div>
+            <div className="flex items-center justify-between">
+              <div className="h-4 w-6 rounded bg-muted/60 animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-muted/60 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-6 w-3/4 rounded bg-muted/60 animate-pulse" />
+              <div className="h-3 w-1/4 rounded bg-muted/60 animate-pulse" />
             </div>
           </div>
         ))}
@@ -64,59 +77,54 @@ export function CategoryCardGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid auto-rows-[145px] grid-cols-2 gap-3 md:auto-rows-[180px] md:grid-cols-4">
       {categories.map((category, index) => {
         const hasCustomImage = Boolean(category.image && category.image.trim() !== "");
         const bgImage = hasCustomImage
           ? (category.image as string).trim()
           : getCategoryImage(category.name, category.slug, index);
+
         const isActive = category.isActive !== false;
         const bookCount = category.bookCount ?? 0;
+
+        const titleSizeClass =
+          index === 5
+            ? "text-[32px] md:text-[46px]"
+            : index === 0
+              ? "text-[28px] md:text-[36px]"
+              : "text-[22px] md:text-[28px]";
 
         return (
           <div
             key={category._id}
-            className="group relative flex h-[270px] flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-xl"
+            className={`group relative flex flex-col justify-between overflow-hidden rounded-sm border border-border/60 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary ${getGridClasses(index)}`}
           >
-            {/* Background Image with Zoom Effect */}
+            {/* Background image */}
             <Image
               src={bgImage}
               alt={category.name}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
             />
 
-            {/* Gradient Overlays for optimal text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/35 transition-opacity duration-300 group-hover:from-black/98 group-hover:via-black/65" />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25 transition-colors duration-300 group-hover:from-black/90 group-hover:via-black/50" />
 
-            <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-white/5 blur-2xl transition-all duration-500 group-hover:bg-accent/15" />
+            {/* Top row: status badge + edit button */}
+            <div className="relative z-10 flex items-center justify-between gap-2">
+              {isActive ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/25 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 backdrop-blur-md">
+                  <CheckCircle2 size={11} />
+                  Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/25 px-2 py-0.5 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
+                  <PowerOff size={11} />
+                  Inactive
+                </span>
+              )}
 
-            {/* Top Bar: Status Badges and Edit Icon Button */}
-            <div className="relative z-10 flex items-start justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {/* Bengali Name Badge */}
-                {/* {category.nameBn && (
-                  <span className="rounded-full border border-white/20 bg-black/45 px-2.5 py-0.5 font-bengali text-xs font-medium text-white/95 backdrop-blur-md">
-                    {category.nameBn}
-                  </span>
-                )} */}
-
-                {/* Active / Inactive Status Badge */}
-                {isActive ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/25 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 backdrop-blur-md">
-                    <CheckCircle2 size={11} />
-                    Active
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/25 px-2 py-0.5 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
-                    <PowerOff size={11} />
-                    Inactive
-                  </span>
-                )}
-              </div>
-
-              {/* Edit Icon Button */}
               <Button
                 type="button"
                 variant="ghost"
@@ -124,37 +132,47 @@ export function CategoryCardGrid({
                 onClick={() => onEditCategory(category)}
                 title={`Edit ${category.name}`}
                 aria-label={`Edit ${category.name}`}
-                className="h-8 w-8 shrink-0 cursor-pointer rounded-full border border-white/25 bg-black/45 text-white backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-accent hover:border-accent hover:text-white active:scale-95 shadow-sm"
+                className="h-8 w-8 shrink-0 cursor-pointer rounded-full border border-white/25 bg-black/45 text-white backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-primary hover:border-primary hover:text-primary-foreground active:scale-95 shadow-sm"
               >
                 <Edit2 size={13} aria-hidden="true" />
               </Button>
             </div>
 
-            {/* Bottom Content: Book Count, Name, Slug, Description */}
-            <div className="relative z-10 flex flex-col space-y-1.5">
-              {/* Book Count Pill */}
-              <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur-md">
-                <BookOpen size={12} className="text-sky-300" />
-                <span>
-                  {bookCount} {bookCount === 1 ? "Book" : "Books"}
-                </span>
-              </div>
-
-              {/* Category Name */}
-              <h3 className="font-display text-xl font-bold tracking-tight text-white drop-shadow-sm transition-colors group-hover:text-accent-foreground">
+            {/* Bottom content: name + metadata */}
+            <div className="relative z-10">
+              <h3
+                className={`m-0 font-display font-normal leading-tight text-white drop-shadow-sm transition-transform duration-300 group-hover:translate-x-0.5 ${titleSizeClass}`}
+              >
                 {category.name}
               </h3>
 
-              {/* Slug */}
-              {/* <div className="inline-flex w-fit items-center rounded-md border border-white/10 bg-black/35 px-2 py-0.5 font-mono text-[11px] text-white/70 backdrop-blur-xs">
-                {category.slug}
-              </div> */}
+              <div className="mt-1 flex items-center gap-2">
+                {category.nameBn && (
+                  <p className="text-[12px] font-medium text-white/80">
+                    {category.nameBn}
+                  </p>
+                )}
 
-              {/* Description */}
+                {category.nameBn && (
+                  <span className="text-[10px] text-white/60">•</span>
+                )}
+
+                <p className="flex items-center gap-1 text-[12px] font-medium text-white/90">
+                  <BookOpen size={11} className="text-sky-300" />
+                  {bookCount} {bookCount === 1 ? "Book" : "Books"}
+                </p>
+              </div>
+
               {category.description && (
-                <p className="line-clamp-2 text-xs text-white/75 leading-relaxed pt-0.5">
+                <p className="mt-1 line-clamp-1 text-[11px] text-white/70 leading-relaxed">
                   {category.description}
                 </p>
+              )}
+
+              {category.slug && (
+                <div className="mt-1 inline-flex w-fit items-center rounded-md border border-white/10 bg-black/35 px-2 py-0.5 font-mono text-[10px] text-white/70 backdrop-blur-xs">
+                  {category.slug}
+                </div>
               )}
             </div>
           </div>

@@ -62,7 +62,13 @@ export function BookDetailsHeaderInfo({
       ? typeof book.originalPrice === "number"
         ? book.originalPrice
         : parseFloat(String(book.originalPrice).replace(/[^0-9.]/g, ""))
-      : undefined;
+      : book.mrp !== undefined && book.mrp !== null && book.mrp !== ""
+        ? typeof book.mrp === "number"
+          ? book.mrp
+          : parseFloat(String(book.mrp).replace(/[^0-9.]/g, ""))
+        : typeof book.sellingPriceInPaise === "number" && book.sellingPriceInPaise > 0
+          ? book.sellingPriceInPaise / 100
+          : undefined;
 
   const priceText =
     rawPrice !== undefined && !isNaN(rawPrice)
@@ -84,9 +90,11 @@ export function BookDetailsHeaderInfo({
       : null;
 
   const discountPercent =
-    rawOriginalPrice && rawPrice && rawOriginalPrice > rawPrice
-      ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100)
-      : null;
+    typeof book.discountPercentage === "number" && book.discountPercentage > 0
+      ? book.discountPercentage
+      : rawOriginalPrice && rawPrice && rawOriginalPrice > rawPrice
+        ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100)
+        : null;
 
   const numericAverageRating =
     book.averageRating !== undefined && book.averageRating !== null
@@ -216,9 +224,9 @@ export function BookDetailsHeaderInfo({
                 {originalPriceText}
               </span>
             )}
-            {savingsAmount && discountPercent ? (
+            {discountPercent && discountPercent > 0 ? (
               <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                Save ₹{savingsAmount} ({discountPercent}% OFF)
+                {savingsAmount ? `Save ₹${savingsAmount} ` : ""}({discountPercent}% OFF)
               </span>
             ) : null}
           </div>

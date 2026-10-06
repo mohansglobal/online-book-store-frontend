@@ -13,6 +13,12 @@ import type {
   SellerRevenueAnalyticsResponse,
   TopAuthorsAnalyticsParams,
   TopAuthorsAnalyticsResponse,
+  TopSellersAnalyticsParams,
+  TopSellersAnalyticsResponse,
+  TopSellingBooksParams,
+  TopSellingBooksResponse,
+  OrderHealthAnalyticsParams,
+  OrderHealthAnalyticsResponse,
 } from "../types/seller.types";
 
 // GET /api/v1/orders/seller
@@ -86,6 +92,50 @@ export async function getTopAuthorsAnalytics(
 ): Promise<TopAuthorsAnalyticsResponse> {
   return apiClient.get<TopAuthorsAnalyticsResponse>(
     "/dashboard/top-authors",
+    {
+      params: params as Record<string, string | number | undefined>,
+      signal: options?.signal,
+    },
+  );
+}
+
+// GET /api/v1/dashboard/top-sellers
+export async function getTopSellersAnalytics(
+  params?: TopSellersAnalyticsParams,
+  options?: { signal?: AbortSignal },
+): Promise<TopSellersAnalyticsResponse> {
+  return apiClient.get<TopSellersAnalyticsResponse>(
+    "/dashboard/top-sellers",
+    {
+      params: params as Record<string, string | number | undefined>,
+      signal: options?.signal,
+    },
+  );
+}
+
+
+
+// GET /api/v1/dashboard/top-books
+export async function getTopSellingBooksAnalytics(
+  params?: TopSellingBooksParams,
+  options?: { signal?: AbortSignal },
+): Promise<TopSellingBooksResponse> {
+  return apiClient.get<TopSellingBooksResponse>(
+    "/dashboard/top-books",
+    {
+      params: params as Record<string, string | number | undefined>,
+      signal: options?.signal,
+    },
+  );
+}
+
+// GET /api/v1/dashboard/admin/order-health
+export async function getOrderHealthAnalytics(
+  params?: OrderHealthAnalyticsParams,
+  options?: { signal?: AbortSignal },
+): Promise<OrderHealthAnalyticsResponse> {
+  return apiClient.get<OrderHealthAnalyticsResponse>(
+    "/dashboard/admin/order-health",
     {
       params: params as Record<string, string | number | undefined>,
       signal: options?.signal,

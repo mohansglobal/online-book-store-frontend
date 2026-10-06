@@ -57,7 +57,9 @@ export default function AdminDashboardPage() {
               </h1>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Here is what&apos;s happening with your store today.
+                {user?.role === "ADMIN"
+                  ? "Here is what's happening across the platform today."
+                  : "Here is what's happening with your store today."}
               </p>
             </div>
 

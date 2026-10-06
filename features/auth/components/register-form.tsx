@@ -26,11 +26,13 @@ import { isApiClientError } from "@/lib/api";
 type RegisterFormProps = {
   onSuccessRedirect?: () => void;
   onSwitchToLogin: () => void;
+  onRequireOtp?: (mobileNumber: string) => void;
 };
 
 export function RegisterForm({
   onSuccessRedirect,
   onSwitchToLogin,
+  onRequireOtp,
 }: RegisterFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
@@ -79,7 +81,10 @@ export function RegisterForm({
 
       toast.success("Account registered successfully! Verification code sent to your email.");
 
-      if (onSuccessRedirect) {
+      if (onRequireOtp && formattedMobile) {
+        toast.success("Account registered! Please verify your phone number.");
+        onRequireOtp(formattedMobile);
+      } else if (onSuccessRedirect) {
         onSuccessRedirect();
       } else {
         const verifyUrl = `/verify-email?email=${encodeURIComponent(userEmail)}`;

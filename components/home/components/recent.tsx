@@ -30,8 +30,6 @@ export function Recent({ onWish, onCart }: RecentProps) {
 
   const apiBooks = apiResponse?.data || [];
 
-  console.log('apibooks==>', apiBooks)
-
   const recentBooks: Book[] = apiBooks.map((b) => {
     const catalog = transformApiBookToCatalogBook(b, FALLBACK_BOOK_COVER);
     return {
@@ -45,6 +43,9 @@ export function Recent({ onWish, onCart }: RecentProps) {
       rawPrice: catalog.rawPrice,
       priceIn: catalog.priceIn,
       originalPrice: catalog.originalPrice,
+      rawOriginalPrice: catalog.rawOriginalPrice,
+      discountPercentage: catalog.discountPercentage,
+      isDiscountActive: catalog.isDiscountActive,
       rating: catalog.rating,
       totalRatings: catalog.totalRatings,
       ratingCount: catalog.ratingCount,

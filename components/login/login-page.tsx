@@ -178,6 +178,10 @@ export default function LoginPage() {
               >
                 <RegisterForm
                   onSwitchToLogin={() => setAuthMode("login")}
+                  onRequireOtp={(mobileNumber: string) => {
+                    setPendingIdentifier(mobileNumber);
+                    setAuthMode("otp");
+                  }}
                 />
               </motion.div>
             )}

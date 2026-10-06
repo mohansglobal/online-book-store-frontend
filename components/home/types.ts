@@ -15,6 +15,9 @@ export type Book = {
   rawPrice?: number;
   priceIn?: string;
   originalPrice?: string;
+  rawOriginalPrice?: number;
+  discountPercentage?: number;
+  isDiscountActive?: boolean;
   rating: string;
   totalRatings?: number;
   ratingCount?: number;
