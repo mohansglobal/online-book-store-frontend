@@ -1,0 +1,81 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: CI - Build Next.js App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Node version
+        run: node -v
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js app with dummy env
+        env:
+          NEXT_PUBLIC_DATA_SOURCE=mock
+	  NEXT_PUBLIC_API_URL=https://onlinebookstore.2sglobal.uk/api/v1
+          NEXT_PUBLIC_RAZORPAY_KEY_ID=9hgtwJBroT3NCHO31Z3YlmG
+        run: npm run build
+
+  deploy:
+    name: CD - Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+
+          script: |
+            set -e
+
+            echo "Going to project directory..."
+            cd /var/www/onlinebookstore.2sglobal.uk/frontend
+
+            echo "Current directory:"
+            pwd
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Loading environment variables from server .env..."
+            if [ -f .env ]; then
+              export $(grep -v '^#' .env | xargs)
+            else
+              echo "Error: .env file not found on VPS!"
+              exit 1
+            fi
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Building Next.js app on VPS..."
+            npm run build
+
+            echo "Restarting Next.js application..."
+            pm2 restart bookstore-frontend --update-env
+
+            echo "Checking PM2 status..."
+            pm2 status bookstore-frontend
+
+            echo "Deployment completed successfully!"
