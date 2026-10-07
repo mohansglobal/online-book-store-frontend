@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { SectionHeading } from "./section-heading";
 import { getCategoryImage } from "./category-images";
+import { resolveCategoryImageUrl } from "@/lib/image-url";
 import { useCategories } from "@/features/categories";
 
 function getGridClasses(index: number): string {
@@ -92,10 +93,9 @@ export function Categories() {
                 category.slug ||
                 category.name.toLowerCase().replace(/\s+/g, "-");
 
-              const categoryImage: string | StaticImageData =
-                category.image?.trim()
-                  ? category.image
-                  : getCategoryImage(category.name, slug, index);
+              const fallbackImage = getCategoryImage(category.name, slug, index);
+              const resolvedRemote = resolveCategoryImageUrl(category.image);
+              const categoryImage = resolvedRemote || fallbackImage;
 
               const hasImage = Boolean(categoryImage);
 
@@ -126,6 +126,7 @@ export function Categories() {
                         alt={category.name}
                         fill
                         sizes="(max-width: 768px) 50vw, 25vw"
+                        unoptimized={typeof categoryImage === "string" && !categoryImage.startsWith("/")}
                         className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                       />
 

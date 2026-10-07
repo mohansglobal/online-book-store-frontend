@@ -48,9 +48,9 @@ export default function AddAuthorPage() {
       <main className="relative z-20 -mt-8 flex-1 px-4 pb-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminTopNav activeTab="add-author" />
-
+          
           {/* Side-by-side grid: Author Form (Add / Edit) on left, Recent Authors on right */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+          <div className="grid grid-cols-1 gap-0 lg:grid-cols-12 items-start">
             <div className="lg:col-span-7">
               <AuthorForm
                 name={name}

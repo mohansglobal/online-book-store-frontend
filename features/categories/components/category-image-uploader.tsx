@@ -46,8 +46,11 @@ export function CategoryImageUploader({
   }, [localPreview]);
 
   const fallbackAssetImage = getCategoryImage(categoryName, categorySlug, 0);
-  const hasUploadedCustomImage = Boolean(currentImageUrl && currentImageUrl.trim() !== "");
-  const displayImage = localPreview || (hasUploadedCustomImage ? currentImageUrl!.trim() : fallbackAssetImage);
+  const hasCustomImage = Boolean(currentImageUrl?.trim());
+  const displayImage =
+    localPreview ||
+    currentImageUrl?.trim() ||
+    fallbackAssetImage;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -115,7 +118,7 @@ export function CategoryImageUploader({
               className="h-8 cursor-pointer gap-1.5 rounded-lg text-xs shadow-none hover:bg-surface"
             >
               <UploadCloud size={14} />
-              {selectedFile ? "Change File" : hasUploadedCustomImage ? "Replace Image" : "Upload Image"}
+              {selectedFile ? "Change File" : hasCustomImage ? "Replace Image" : "Upload Image"}
             </Button>
 
             {selectedFile && (

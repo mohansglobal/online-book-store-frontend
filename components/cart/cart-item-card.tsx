@@ -35,9 +35,8 @@ export function CartItemCard({
 
   return (
     <article
-      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${
-        isUnavailable ? "opacity-85 border-destructive/30" : ""
-      }`}
+      className={`group flex items-stretch overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 hover:border-border-hover hover:shadow-sm ${isUnavailable ? "opacity-85 border-destructive/30" : ""
+        }`}
     >
       {/* Cover (Standard 2:3 Book Aspect Ratio, flush to left card edge) */}
       <div className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden border-r border-border/50 bg-surface-soft sm:w-28">
@@ -50,9 +49,8 @@ export function CartItemCard({
             alt={`${item.title} cover`}
             fill
             sizes="(max-width: 640px) 96px, 112px"
-            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
-              isUnavailable ? "grayscale" : ""
-            }`}
+            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUnavailable ? "grayscale" : ""
+              }`}
             onError={() => setHasError(true)}
             unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
           />

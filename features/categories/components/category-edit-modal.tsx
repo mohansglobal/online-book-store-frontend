@@ -57,66 +57,66 @@ export function CategoryEditModal({
     resolver: zodResolver(editCategorySchema),
     defaultValues: {
       name: category?.name ?? "",
-      nameBn: category?.nameBn ?? "",
-      slug: category?.slug ?? "",
-      description: category?.description ?? "",
-      isActive: category?.isActive ?? true,
-    },
-  });
+        nameBn: category?.nameBn ?? "",
+        slug: category?.slug ?? "",
+        description: category?.description ?? "",
+        isActive: category?.isActive ?? true,
+      },
+    });
 
-  const onSubmit = async (values: EditCategoryFormValues) => {
-    if (!category?._id) return;
+    const onSubmit = async (values: EditCategoryFormValues) => {
+      if (!category?._id) return;
 
-    try {
-      await updateMutation.mutateAsync({
-        id: category._id,
-        data: {
-          name: values.name,
-          nameBn: values.nameBn || undefined,
-          slug: values.slug,
-          description: values.description || undefined,
-          isActive: values.isActive,
-          image: selectedImageFile || undefined,
-        },
-      });
+      try {
+        await updateMutation.mutateAsync({
+          id: category._id,
+          data: {
+            name: values.name,
+            nameBn: values.nameBn || undefined,
+            slug: values.slug,
+            description: values.description || undefined,
+            isActive: values.isActive,
+            image: selectedImageFile || undefined,
+          },
+        });
 
-      toast.success(
-        selectedImageFile
-          ? "Category and image uploaded to Cloudinary successfully!"
-          : "Category updated successfully",
-      );
-      onClose();
-    } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Failed to update category";
+        toast.success(
+          selectedImageFile
+            ? "Category and image uploaded to Cloudinary successfully!"
+            : "Category updated successfully",
+        );
+        onClose();
+      } catch (err: unknown) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to update category";
 
-      toast.error(errorMsg);
-    }
-  };
+        toast.error(errorMsg);
+      }
+    };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[520px]">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Edit Category</DialogTitle>
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Edit Category</DialogTitle>
 
-          <DialogDescription className="text-xs text-muted-foreground">
-            Update category taxonomy details, slug, and store visibility.
-          </DialogDescription>
-        </DialogHeader>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Update category taxonomy details, slug, and store visibility.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-          {/* Category Name */}
-          <div className="space-y-1.5">
-            <Label htmlFor="category-name" className="text-xs font-semibold">
-              Category Name (English) <span className="text-destructive">*</span>
-            </Label>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+            {/* Category Name */}
+            <div className="space-y-1.5">
+              <Label htmlFor="category-name" className="text-xs font-semibold">
+                Category Name (English) <span className="text-destructive">*</span>
+              </Label>
 
-            <Input
-              id="category-name"
-              {...register("name")}
-              placeholder="e.g. Fiction, History, Science"
-              className="rounded-xl"
+              <Input
+                id="category-name"
+                {...register("name")}
+                placeholder="e.g. Fiction, History, Science"
+                className="rounded-xl"
             />
 
             {errors.name && (

@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Tag } from "lucide-react";
 import type { ApiBook } from "@/features/books/types/book.types";
 import { resolveAuthorPhoto } from "@/features/books/types/book.types";
 import { getBookStockInfo } from "@/features/books/utils/stock.utils";
 import { BookReviewsSection } from "@/features/reviews";
+import { AuthorDetailsDialog } from "@/components/author/components/author-details-dialog";
+import { useAuthor, type Author } from "@/features/authors";
 
 export type TabType = "SUMMARY" | "AUTHOR" | "SPECIFICATIONS" | "REVIEWS";
 
@@ -24,8 +25,24 @@ export interface BookDetailsTabsProps {
 
 export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("SUMMARY");
+  const [isAuthorModalOpen, setIsAuthorModalOpen] = useState(false);
 
   const firstAuthor = book.authors?.[0];
+  const authorIdentifier = firstAuthor?._id || firstAuthor?.slug || "";
+  const { data: authorResponse } = useAuthor(authorIdentifier, isAuthorModalOpen);
+
+  const activeAuthor: Author | null =
+    authorResponse?.data ||
+    (firstAuthor
+      ? {
+          _id: firstAuthor._id,
+          name: firstAuthor.name,
+          nameBn: firstAuthor.nameBn,
+          slug: firstAuthor.slug,
+          bio: firstAuthor.bio,
+          photo: firstAuthor.photo,
+        }
+      : null);
 
   const authorName =
     book.authors && book.authors.length > 0
@@ -154,13 +171,14 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
                 {firstAuthor?.bio || "-"}
               </p>
 
-              {firstAuthor?.slug ? (
-                <Link
-                  href={`/authors?author=${firstAuthor.slug}`}
+              {firstAuthor ? (
+                <button
+                  type="button"
+                  onClick={() => setIsAuthorModalOpen(true)}
                   className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-accent transition-transform hover:translate-x-0.5 hover:underline"
                 >
-                  View author profile →
-                </Link>
+                  View author profile
+                </button>
               ) : (
                 <span className="text-xs text-muted-foreground">-</span>
               )}
@@ -190,6 +208,14 @@ export function BookDetailsTabs({ book }: BookDetailsTabsProps) {
           </div>
         )}
       </div>
+
+      {activeAuthor && (
+        <AuthorDetailsDialog
+          author={activeAuthor}
+          open={isAuthorModalOpen}
+          onOpenChange={setIsAuthorModalOpen}
+        />
+      )}
     </section>
   );
 }

@@ -11,7 +11,7 @@ export function CartEmptyState() {
           aria-hidden="true"
           className="absolute inset-0 -z-10 rounded-full bg-accent/5 blur-2xl"
         />
-
+          
         <Image
           src={cartIllustration}
           alt="Illustration of an empty shopping cart"

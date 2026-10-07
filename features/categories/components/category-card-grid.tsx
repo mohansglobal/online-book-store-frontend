@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Edit2, BookOpen, Layers, CheckCircle2, PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getCategoryImage } from "@/components/categories/category-images";
+import { resolveCategoryImageUrl } from "@/lib/image-url";
 import type { Category } from "../types/category.types";
 
 interface CategoryCardGridProps {
@@ -79,14 +80,13 @@ export function CategoryCardGrid({
   return (
     <div className="grid auto-rows-[145px] grid-cols-2 gap-3 md:auto-rows-[180px] md:grid-cols-4">
       {categories.map((category, index) => {
-        const hasCustomImage = Boolean(category.image && category.image.trim() !== "");
-        const bgImage = hasCustomImage
-          ? (category.image as string).trim()
-          : getCategoryImage(category.name, category.slug, index);
+        const fallbackImage = getCategoryImage(category.name, category.slug, index);
+        const resolvedRemote = resolveCategoryImageUrl(category.image);
+        const bgImage = resolvedRemote || fallbackImage;
 
         const isActive = category.isActive !== false;
         const bookCount = category.bookCount ?? 0;
-
+          
         const titleSizeClass =
           index === 5
             ? "text-[32px] md:text-[46px]"
@@ -105,6 +105,7 @@ export function CategoryCardGrid({
               alt={category.name}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
+              unoptimized={typeof bgImage === "string" && !bgImage.startsWith("/")}
               className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
             />
 

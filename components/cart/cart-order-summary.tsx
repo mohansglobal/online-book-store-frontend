@@ -10,8 +10,10 @@ import {
   Truck,
 } from "lucide-react";
 import { toast } from "sonner";
+import type { CartItemView } from "@/features/cart/types/cart.types";
 
 type CartOrderSummaryProps = {
+  items?: CartItemView[];
   subtotal: number;
   totalMrp: number;
   mrpSavings: number;
@@ -20,7 +22,80 @@ type CartOrderSummaryProps = {
 
 const DELIVERY_CHARGE: number = 0;
 
+function CartSummaryItemsBreakdown({
+  items,
+  totalCount,
+}: {
+  items: CartItemView[];
+  totalCount: number;
+}) {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-4 rounded-lg border border-border/70 bg-surface-soft/60 p-3">
+      <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <span>Items Breakdown</span>
+        <span>
+          {totalCount} {totalCount === 1 ? "unit" : "units"}
+        </span>
+      </div>
+
+      <div className="max-h-56 divide-y divide-border/60 overflow-y-auto pr-1">
+        {items.map((item) => {
+          const unitPrice = item.price;
+          const quantity = item.quantity;
+
+          const itemSubtotal = unitPrice * quantity;
+          const itemSavings = Math.max(0, (item.originalPrice - item.price) * quantity);
+
+          return (
+            <div key={item.id} className="py-2.5 first:pt-1 last:pb-1">
+              <div className="flex items-start justify-between gap-2">
+                <p
+                  className="line-clamp-1 text-xs font-semibold text-foreground"
+                  title={item.title}
+                >
+                  {item.title}
+                </p>
+
+                <span className="shrink-0 text-xs font-bold tabular-nums text-foreground">
+                  ₹{itemSubtotal.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1 font-mono text-[11px]">
+                  <span className="font-semibold text-foreground">
+                    ₹{unitPrice.toFixed(2)}
+                  </span>
+                  <span className="text-muted-foreground">×</span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+                    {quantity} {quantity === 1 ? "unit" : "units"}
+                  </span>
+                  <span className="text-muted-foreground">=</span>
+                  <span className="font-bold text-foreground">
+                    ₹{itemSubtotal.toFixed(2)}
+                  </span>
+                </div>
+
+                {itemSavings > 0 && (
+                  <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    Saved ₹{itemSavings.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function CartOrderSummary({
+  items = [],
   subtotal,
   totalMrp,
   mrpSavings,
@@ -69,6 +144,10 @@ export function CartOrderSummary({
         <h2 className="mb-5 border-b border-border pb-3 text-lg font-semibold">
           Order Summary
         </h2>
+
+        {items && items.length > 0 && (
+          <CartSummaryItemsBreakdown items={items} totalCount={totalCount} />
+        )}
 
         <div className="space-y-3 text-sm text-text-secondary">
           <div className="flex justify-between">

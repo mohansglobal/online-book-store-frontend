@@ -1,10 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import { useState } from "react";
+import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen } from "lucide-react";
 import type { Category } from "@/features/categories";
+import { resolveCategoryImageUrl } from "@/lib/image-url";
 import {
   USE_ASSET_IMAGES,
   CARD_GRADIENTS,
@@ -24,7 +26,13 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const router = useRouter();
   const isFeatured = index === 0;
-  const image = getCategoryImage(category.name, category.slug, index);
+
+  const fallbackImage = getCategoryImage(category.name, category.slug, index);
+  const resolvedRemote = resolveCategoryImageUrl(category.image);
+  const [imgSrc, setImgSrc] = useState<string | StaticImageData>(
+    resolvedRemote || fallbackImage,
+  );
+
   const gradientClass = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
   const targetHref = `/books?category=${category._id || encodeURIComponent(category.slug)}`;
 
@@ -52,7 +60,7 @@ export function CategoryCard({
       {USE_ASSET_IMAGES ? (
         <>
           <Image
-            src={image}
+            src={imgSrc}
             alt={category.name}
             fill
             sizes={
@@ -60,6 +68,8 @@ export function CategoryCard({
                 ? "(max-width: 768px) 100vw, (max-width: 1280px) 66vw, 50vw"
                 : "(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
             }
+            unoptimized={typeof imgSrc === "string" && !imgSrc.startsWith("/")}
+            onError={() => setImgSrc(fallbackImage)}
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           />
 

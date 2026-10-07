@@ -19,3 +19,23 @@ export function resolveCoverUrl(image?: string | null): string {
   }
   return trimmed;
 }
+
+export function resolveCategoryImageUrl(image?: string | null): string | null {
+  if (!image || typeof image !== "string" || !image.trim()) {
+    return null;
+  }
+  const trimmed = image.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("upload/")) {
+    return `https://indobanglabooks.in/${trimmed}`;
+  }
+  if (!trimmed.includes("/")) {
+    return `https://indobanglabooks.in/upload/category/${trimmed}`;
+  }
+  return trimmed;
+}

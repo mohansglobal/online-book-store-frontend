@@ -32,7 +32,7 @@ export function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const { isAuthenticated, redirectToLogin } = useRequireAuth();
   const { addItem: addToCart } = useCart();
   const { isInWishlist, toggleWishlist, wishlistIds } = useWishlist();
-
+  
   const [quantity, setQuantity] = useState(1);
   const [previewOpen, setPreviewOpen] = useState(false);
 
